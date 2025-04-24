@@ -1,5 +1,7 @@
+'use client';
+
 import clsx from 'clsx';
-import LogoIcon from './icons/logo';
+import IgnIcon from './icons/ignIcon';
 
 export default function LogoSquare({ size }: { size?: 'sm' | undefined }) {
   return (
@@ -12,10 +14,10 @@ export default function LogoSquare({ size }: { size?: 'sm' | undefined }) {
         }
       )}
     >
-      <LogoIcon
+      <IgnIcon
         className={clsx({
-          'h-[16px] w-[16px]': !size,
-          'h-[10px] w-[10px]': size === 'sm'
+          'h-[40px] w-[40px]': !size,
+          'h-[30px] w-[30px]': size === 'sm'
         })}
       />
     </div>
