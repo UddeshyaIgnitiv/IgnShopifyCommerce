@@ -9,18 +9,21 @@ export default function RegisterCompanyPage() {
     email: '',
     firstName: '',
     lastName: '',
+    phone: '',
     locationName: '',
     address1: '',
     city: '',
     province: '',
     zip: '',
     country: '',
+    password: ''
   });
   const [status, setStatus] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
+  console.log("Formdata", JSON.stringify(formData));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -61,21 +64,21 @@ export default function RegisterCompanyPage() {
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Register Your Company</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Column 1 */}
+          {/* Column 1 */}               
           <input
             type="text"
-            name="name"
-            placeholder="Company Name"
-            value={formData.name}
+            name="firstName"
+            placeholder="First Name"
+            value={formData.firstName}
             onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="text"
-            name="externalId"
-            placeholder="External ID"
-            value={formData.externalId}
+            name="lastName"
+            placeholder="Last Name"
+            value={formData.lastName}
             onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -91,18 +94,27 @@ export default function RegisterCompanyPage() {
           />
           <input
             type="text"
-            name="firstName"
-            placeholder="First Name"
-            value={formData.firstName}
+            name="phone" 
+            placeholder="Phone Number"
+            value={formData.phone} 
             onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <input
             type="text"
-            name="lastName"
-            placeholder="Last Name"
-            value={formData.lastName}
+            name="name"
+            placeholder="Company Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="text"
+            name="externalId"
+            placeholder="External ID"
+            value={formData.externalId}
             onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -159,6 +171,15 @@ export default function RegisterCompanyPage() {
             name="country"
             placeholder="Country"
             value={formData.country}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
             onChange={handleChange}
             required
             className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
