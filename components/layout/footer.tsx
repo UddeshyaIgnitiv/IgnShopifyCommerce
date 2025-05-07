@@ -66,6 +66,10 @@ export default async function Footer() {
           </p>
         </div>
       </div>
+      <p>&copy; 2025 Your Company</p>
+      <nav style={{ marginTop: '1rem' }}>
+        <Link href="/register-company">Register Company</Link>
+      </nav>
     </footer>
   );
 }

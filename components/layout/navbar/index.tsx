@@ -12,49 +12,53 @@ const { SITE_NAME } = process.env;
 export async function Navbar() {
   const menu = await getMenu('next-js-frontend-header-menu');
 
-  // console.log("This is menu  --> ", menu)
-
   return (
-    <nav className="relative flex items-center justify-between p-4 lg:px-6">
-      <div className="block flex-none md:hidden">
-        <Suspense fallback={null}>
-          <MobileMenu menu={menu} />
-        </Suspense>
-      </div>
-      <div className="flex w-full items-center">
-        <div className="flex w-full md:w-1/3">
-          <Link
-            href="/"
-            prefetch={true}
-            className="mr-2 flex w-full items-center justify-center md:w-auto lg:mr-6"
-          >
+    <nav className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
+      <div className="flex items-center justify-between px-4 py-3 lg:px-8">
+        {/* Left: Mobile menu or Logo + nav links */}
+        <div className="flex items-center space-x-4 md:flex-1">
+          {/* Mobile Menu */}
+          <div className="md:hidden">
+            <Suspense fallback={null}>
+              <MobileMenu menu={menu} />
+            </Suspense>
+          </div>
+
+          {/* Logo */}
+          <Link href="/" prefetch className="flex items-center space-x-2">
             <LogoSquare />
-            <div className="ml-2 flex-none text-sm font-medium uppercase md:hidden lg:block">
+            <span className="text-sm font-semibold uppercase whitespace-nowrap md:hidden lg:block">
               {SITE_NAME}
-            </div>
+            </span>
           </Link>
-          {menu.length ? (
-            <ul className="hidden gap-6 text-sm md:flex md:items-center">
+
+          {/* Desktop Nav */}
+          {menu.length > 0 && (
+            <ul className="hidden md:flex items-center space-x-6 text-sm ml-6">
               {menu.map((item: Menu) => (
-                <li key={item.title}>
+                <li key={item.title} className="whitespace-nowrap">
                   <Link
                     href={item.path}
-                    prefetch={true}
-                    className="text-neutral-500 underline-offset-4 hover:text-black hover:underline dark:text-neutral-400 dark:hover:text-neutral-300"
+                    prefetch
+                    className="text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white underline-offset-4 hover:underline"
                   >
                     {item.title}
                   </Link>
                 </li>
               ))}
             </ul>
-          ) : null}
+          )}
         </div>
-        <div className="hidden justify-center md:flex md:w-1/3">
+
+        {/* Center: Search with left padding */}
+        <div className="hidden md:flex md:flex-1 justify-center pl-4">
           <Suspense fallback={<SearchSkeleton />}>
             <Search />
           </Suspense>
         </div>
-        <div className="flex justify-end md:w-1/3">
+
+        {/* Right: Cart */}
+        <div className="flex justify-end md:flex-1">
           <CartModal />
         </div>
       </div>
