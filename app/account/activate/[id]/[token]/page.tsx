@@ -1,13 +1,11 @@
-// app/account/activate/[id]/[token]/page.tsx
-
-import { redirect } from 'next/navigation';
+import { redirect } from "next/navigation";
 
 export default async function ActivatePage({
   params,
 }: {
-  params: { id: string; token: string };
+  params: Promise<{ id: string; token: string }>;
 }) {
-  const { id, token } = params;
+  const { id, token } = await params;
 
   const password = 'TempPassword123!';
 
@@ -20,6 +18,7 @@ export default async function ActivatePage({
     });
 
     const result = await res.json();
+    //console.log("result", result);
 
     if (!res.ok) {
       throw new Error(result?.error || 'Activation failed');
@@ -36,5 +35,4 @@ export default async function ActivatePage({
       </div>
     );
   }
-
 }

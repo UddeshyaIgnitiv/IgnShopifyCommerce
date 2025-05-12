@@ -24,7 +24,7 @@ export default function LoginPage() {
 
             const data = await res.json();
 
-            console.log("Data Response", data);
+            //console.log("Data Response", data);
 
             if (res.ok) {
                 router.push(data.url);

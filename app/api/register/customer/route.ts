@@ -1,7 +1,8 @@
 import {
-  CREATE_CUSTOMER_MUTATION,
+  COMPANY_ASSIGN_MAIN_CONTACT_MUTATION,
+  COMPANY_CONTACT_CREATE_MUTATION,
   UPDATE_CUSTOMER_TAGS_MUTATION
-} from 'lib/shopify/mutations/customerCreate';
+} from 'lib/shopify/mutations/companyCreateMainContactAndAssign';
 import { GET_COMPANY_QUERY } from 'lib/shopify/queries/getCompany';
 import { shopifyFetch } from 'lib/shopify_service';
 import { NextResponse } from 'next/server';
@@ -10,101 +11,123 @@ export async function POST(req: Request) {
   try {
     // Step 1: Parse request body
     const body = await req.json();
-    const { email, firstName, lastName, phone, companyId } = body;
+    const {
+      email,
+      firstName,
+      lastName,
+      phone,
+      companyId,
+      assignAsMainContact = true
+    } = body;
 
-    // Log input to debug (optional)
-    //console.log("Received customer data:", { email, firstName, lastName, phone, companyId });
-
-    // Step 2: Validate required fields
+    // Step 2: Validate input
     if (!email || !firstName || !lastName || !phone || !companyId) {
       return NextResponse.json(
-        { error: 'All fields (email, firstName, lastName, phone, companyId) are required.' },
+        {
+          error:
+            'Fields email, firstName, lastName, phone and companyId are required.'
+        },
         { status: 400 }
       );
     }
 
-    // Step 3: Create Customer
-    const customerInput = {
-      input: { email, firstName, lastName, phone },
-    };
-    const customerRes = await shopifyFetch(CREATE_CUSTOMER_MUTATION, customerInput);
-
-    // Log the response for debugging
-    //console.log("customerRes", customerRes);
-
-    // Check if userErrors are present
-    const userErrors = customerRes?.customerCreate?.userErrors;
-
-    if (userErrors && userErrors.length > 0) {
-      const errorMessages = userErrors.map((error: { message: any; }) => error.message).join(', ');
-      return NextResponse.json(
-        { error: `Customer creation failed: ${errorMessages}` },
-        { status: 400 }
-      );
-    }
-
-    // Handle successful customer creation
-    const customer = customerRes?.customerCreate?.customer;
-    if (!customer || !customer.id) {
-      return NextResponse.json(
-        { error: 'Customer creation failed. No customer returned.' },
-        { status: 400 }
-      );
-    }
-
-    // const companyQuery = `
-    //   query getCompany($id: ID!) {
-    //     company(id: $id) {
-    //       externalId
-    //     }
-    //   }
-    // `;
-
+    // Step 3: Fetch Company
     const companyRes = await shopifyFetch(GET_COMPANY_QUERY, { id: companyId });
+    const company = companyRes?.company;
 
-    console.log("companyRes", companyRes);
-    const externalId = companyRes?.company?.externalId;
-    console.log("externalId", externalId);
-    if (!externalId) {
-      return NextResponse.json({ error: 'Company not found or externalId is missing.' }, { status: 400 });
+    if (!company) {
+      return NextResponse.json({ error: 'Company not found.' }, { status: 404 });
     }
 
-    // Step 4: (Optional) Tagging Customer or Other Actions
-    // If you plan to tag the customer, you can do it here. Example:
-    const variables = {
-  input: {
-    id: customer.id,
-    tags: [`Company:${externalId}`],
-  },
-};
+    const externalId = company.externalId || company.id;
 
-const tagRes = await shopifyFetch(UPDATE_CUSTOMER_TAGS_MUTATION, variables);
+    // Step 4: Create Company Contact
+    const contactRes = await shopifyFetch(COMPANY_CONTACT_CREATE_MUTATION, {
+      companyId,
+      input: { email, firstName, lastName, phone }
+    });
 
-const tagUserErrors  = tagRes?.data?.customerUpdate?.userErrors;
+    const contactErrors = contactRes?.companyContactCreate?.userErrors;
+    if (contactErrors?.length > 0) {
+      return NextResponse.json(
+        {
+          error: 'Company contact creation failed.',
+          details: contactErrors
+        },
+        { status: 400 }
+      );
+    }
 
-if ((tagRes.errors && tagRes.errors.length > 0) || (tagUserErrors  && tagUserErrors .length > 0)) {
-  return NextResponse.json(
-    {
-      error: 'Tagging failed',
-      details: tagRes.errors || tagUserErrors ,
-    },
-    { status: 400 }
-  );
-}
+    const contact = contactRes?.companyContactCreate?.companyContact;
+    const customer = contact?.customer;
 
+    if (!contact?.id || !customer?.id) {
+      return NextResponse.json(
+        { error: 'Company contact or customer not returned.' },
+        { status: 500 }
+      );
+    }
 
-    // Step 5: Return Success Response
+    // Step 5: Assign Main Contact (if requested)
+    if (assignAsMainContact) {
+      const assignRes = await shopifyFetch(
+        COMPANY_ASSIGN_MAIN_CONTACT_MUTATION,
+        {
+          companyContactId: contact.id,
+          companyId
+        }
+      );
+
+      const assignErrors = assignRes?.companyAssignMainContact?.userErrors;
+      if (assignErrors?.length > 0) {
+        return NextResponse.json(
+          {
+            error: 'Failed to assign main contact.',
+            details: assignErrors
+          },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Step 6: Tag Associated Customer
+    const tagRes = await shopifyFetch(UPDATE_CUSTOMER_TAGS_MUTATION, {
+      input: {
+        id: customer.id,
+        tags: [`Company:${externalId}`]
+      }
+    });
+
+    const tagErrors = tagRes?.customerUpdate?.userErrors;
+    if ((tagRes.errors && tagRes.errors.length > 0) || (tagErrors?.length > 0)) {
+      return NextResponse.json(
+        {
+          error: 'Tagging customer failed.',
+          details: tagRes.errors || tagErrors
+        },
+        { status: 400 }
+      );
+    }
+
+    // Step 7: Return Success Response
     return NextResponse.json({
-      message: '✅ Customer created successfully.',
+      message: '✅ Company contact created and tagged successfully.',
+      contact,
       customer,
+      assignedAsMainContact: assignAsMainContact,
+      userErrors: []
     });
 
   } catch (error: unknown) {
-    // Step 6: Handle unexpected errors
-    console.error('Error in createCustomerWithTags:', error);
+    console.error('Error in companyContactCreate handler:', error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Unexpected error occurred.',
+        userErrors: [
+          {
+            message:
+              error instanceof Error ? error.message : 'Unexpected error occurred.'
+          }
+        ]
       },
       { status: 500 }
     );
