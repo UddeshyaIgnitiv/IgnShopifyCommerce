@@ -2,6 +2,7 @@ import {
   CREATE_CUSTOMER_MUTATION,
   UPDATE_CUSTOMER_TAGS_MUTATION
 } from 'lib/shopify/mutations/customerCreate';
+import { GET_COMPANY_QUERY } from 'lib/shopify/queries/getCompany';
 import { shopifyFetch } from 'lib/shopify_service';
 import { NextResponse } from 'next/server';
 
@@ -51,12 +52,29 @@ export async function POST(req: Request) {
       );
     }
 
+    // const companyQuery = `
+    //   query getCompany($id: ID!) {
+    //     company(id: $id) {
+    //       externalId
+    //     }
+    //   }
+    // `;
+
+    const companyRes = await shopifyFetch(GET_COMPANY_QUERY, { id: companyId });
+
+    console.log("companyRes", companyRes);
+    const externalId = companyRes?.company?.externalId;
+    console.log("externalId", externalId);
+    if (!externalId) {
+      return NextResponse.json({ error: 'Company not found or externalId is missing.' }, { status: 400 });
+    }
+
     // Step 4: (Optional) Tagging Customer or Other Actions
     // If you plan to tag the customer, you can do it here. Example:
     const variables = {
   input: {
     id: customer.id,
-    tags: [`Company:${companyId}`],
+    tags: [`Company:${externalId}`],
   },
 };
 

@@ -8,7 +8,7 @@ export async function POST(req: NextRequest) {
     try {
         const { id, activationToken, password } = await req.json();
 
-        const response = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/admin/api/2024-01/graphql.json`, {
+        const response = await fetch(`https://${SHOPIFY_STORE_DOMAIN}/admin/api/2025-04/graphql.json`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
