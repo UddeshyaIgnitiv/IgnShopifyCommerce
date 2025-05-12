@@ -15,40 +15,88 @@ export default function RegisterCompanyPage() {
     city: '',
     province: '',
     zip: '',
-    country: '',
-    password: ''
+    country: ''
   });
+
   const [status, setStatus] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
-  console.log("Formdata", JSON.stringify(formData));
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('Submitting...');
 
     try {
-      const res = await fetch('/api/register-company', {
+      const res = await fetch('/api/register/company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) {
-        const errorText = await res.text();
-        console.error('API error response:', errorText);
-        setStatus(`❌ Error: ${res.status} - ${errorText}`);
+      const result = await res.json();
+      const companyData = result?.company;
+
+      if (!res.ok || !companyData) {
+        const message = result?.message || 'Unknown error during company creation.';
+        setStatus(`❌ Company creation failed: ${message}`);
         return;
+      } else {
+        setStatus(`✅ Company "${companyData.name}" created!`);
       }
 
-      const result = await res.json();
-      if (result.error) {
-        setStatus(`❌ Error: ${result.error[0].message}`);
+      const companyId = companyData.id;
+      //console.log("companyId", companyId);
+
+      const contactRes = await fetch('/api/register/customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...formData, companyId }),
+      });
+
+      //console.log("contactRes", contactRes);
+
+      const contactResult = await contactRes.json();
+
+      //console.log("contactResult", contactResult);
+      const customerData = contactResult?.contact?.customer;
+
+      //console.log("customerData", customerData);
+
+      const customerErrors = contactResult?.error || customerData?.userErrors;
+
+      if (!contactRes.ok || !customerData || (customerErrors && customerErrors.length > 0)) {
+        const message =
+          (Array.isArray(customerErrors) ? customerErrors[0]?.message : customerErrors) ||
+          'Unknown error during customer creation.';
+        setStatus(`❌ Contact/customer creation failed: ${message}`);
+        return;
       } else {
-        setStatus(`✅ Company "${result.company.name}" created!`);
+        setStatus((prev) => `${prev}\n✅ Contact "${customerData.firstName}" created!`);
       }
+
+      const customerId = customerData.id;
+
+      const inviteRes = await fetch('/api/register/email-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ customerId }),
+      });
+
+      const inviteResult = await inviteRes.json();
+      const inviteErrors = inviteResult?.error || inviteResult?.data?.customerSendAccountInviteEmail?.userErrors;
+
+      if (!inviteRes.ok || inviteErrors?.length > 0) {
+        const message =
+          (Array.isArray(inviteErrors) ? inviteErrors[0]?.message : inviteErrors) ||
+          'Unknown error while sending invite.';
+        setStatus((prev) => `${prev}\n❌ Invite failed: ${message}`);
+        return;
+      } else {
+        setStatus((prev) => `${prev}\n✅ Invite sent successfully!`);
+      }
+
     } catch (error: unknown) {
       console.error('Client-side error:', error);
       if (error instanceof Error) {
@@ -64,138 +112,44 @@ export default function RegisterCompanyPage() {
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Register Your Company</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Column 1 */}               
-          <input
-            type="text"
-            name="firstName"
-            placeholder="First Name"
-            value={formData.firstName}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            name="lastName"
-            placeholder="Last Name"
-            value={formData.lastName}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            name="phone" 
-            placeholder="Phone Number"
-            value={formData.phone} 
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            name="name"
-            placeholder="Company Name"
-            value={formData.name}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            name="externalId"
-            placeholder="External ID"
-            value={formData.externalId}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            name="locationName"
-            placeholder="Location Name"
-            value={formData.locationName}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          
-          {/* Column 2 */}
-          <input
-            type="text"
-            name="address1"
-            placeholder="Address Line 1"
-            value={formData.address1}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            name="city"
-            placeholder="City"
-            value={formData.city}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            name="province"
-            placeholder="Province"
-            value={formData.province}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            name="zip"
-            placeholder="Postal/ZIP Code"
-            value={formData.zip}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="text"
-            name="country"
-            placeholder="Country"
-            value={formData.country}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            value={formData.password}
-            onChange={handleChange}
-            required
-            className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          {[
+            { name: 'firstName', placeholder: 'First Name' },
+            { name: 'lastName', placeholder: 'Last Name' },
+            { name: 'email', placeholder: 'Email', type: 'email' },
+            { name: 'phone', placeholder: 'Phone Number' },
+            { name: 'name', placeholder: 'Company Name' },
+            { name: 'externalId', placeholder: 'External ID' },
+            { name: 'locationName', placeholder: 'Location Name' },
+            { name: 'address1', placeholder: 'Address Line 1' },
+            { name: 'city', placeholder: 'City' },
+            { name: 'province', placeholder: 'Province' },
+            { name: 'zip', placeholder: 'Postal/ZIP Code' },
+            { name: 'country', placeholder: 'Country' },
+          ].map(({ name, placeholder, type = 'text' }) => (
+            <input
+              key={name}
+              type={type}
+              name={name}
+              placeholder={placeholder}
+              value={(formData as any)[name]}
+              onChange={handleChange}
+              required
+              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          ))}
 
-          <div className="col-span-2 text-center">
+          <div className="col-span-1 sm:col-span-2 text-center mt-4">
             <button
               type="submit"
-              className="bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700 transition mx-auto"
+              className="bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700 transition"
             >
               Register Company
             </button>
           </div>
         </form>
+
         {status && (
-          <p className="mt-4 text-sm text-center text-gray-700">{status}</p>
+          <pre className="mt-4 text-sm text-center text-gray-700 whitespace-pre-wrap">{status}</pre>
         )}
       </div>
     </div>

@@ -57,6 +57,11 @@ export async function Navbar() {
           </Suspense>
         </div>
 
+        <ul className="hidden md:flex items-center space-x-6 text-sm ml-6">
+          <li className="whitespace-nowrap"><Link href="/register-company" className="text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white underline-offset-4 hover:underline">Register</Link></li>
+          <li className="whitespace-nowrap"><Link href="/login" className="text-neutral-600 hover:text-black dark:text-neutral-400 dark:hover:text-white underline-offset-4 hover:underline">Login</Link></li>
+        </ul>
+
         {/* Right: Cart */}
         <div className="flex justify-end md:flex-1">
           <CartModal />

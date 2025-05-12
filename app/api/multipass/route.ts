@@ -4,41 +4,44 @@ import { NextResponse } from 'next/server';
 import Multipassify from 'multipassify';
 
 export async function POST(request: Request) {
-    // 1. Parse JSON body
-    const { email, password } = await request.json();
+    try {
+        const { email, password } = await request.json();
 
-    // 2. Validate credentials (replace with your real logic or database)
-    const dummyUser = { email: 'user@example.com', password: 'pass123' };
-    if (email !== dummyUser.email || password !== dummyUser.password) {
-        // Invalid login
-        return NextResponse.json(
-            { error: 'Invalid email or password' },
-            { status: 401 }
-        );
+        // Basic validation
+        if (!email || !password || typeof email !== 'string' || typeof password !== 'string') {
+            return NextResponse.json({ error: 'Invalid input' }, { status: 400 });
+        }
+
+        // Dummy user (for testing)
+        const dummyUser = { email: 'ranjeet.d@ignitiv.com', password: 'Ign@2949' };
+
+        // Check credentials
+        if (email !== dummyUser.email || password !== dummyUser.password) {
+            return NextResponse.json({ error: 'Invalid email or password' }, { status: 401 });
+        }
+
+        // Env variables
+        const secret = process.env.SHOPIFY_MULTIPASS_SECRET;
+        const shopDomain = process.env.SHOPIFY_STORE_DOMAIN;
+        const returnPath = process.env.SHOPIFY_RETURN_TO || '/account';
+
+        if (!secret || !shopDomain) {
+            console.error('Missing Shopify config:', { hasSecret: !!secret, hasDomain: !!shopDomain });
+            return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
+        }
+
+        // Generate Multipass token
+        const multipass = new Multipassify(secret);
+        const customerData = {
+            email,
+            return_to: `https://${shopDomain}${returnPath}`
+        };
+        const multipassUrl = multipass.generateUrl(customerData, shopDomain);
+
+        return NextResponse.json({ url: multipassUrl });
+
+    } catch (error) {
+        console.error('Multipass API error:', error);
+        return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
     }
-
-    // 3. Get Shopify Multipass settings from environment
-    const secret = process.env.SHOPIFY_MULTIPASS_SECRET;
-    const shopDomain = process.env.SHOPIFY_DOMAIN;
-    if (!secret || !shopDomain) {
-        return NextResponse.json(
-            { error: 'Server configuration error' },
-            { status: 500 }
-        );
-    }
-
-    // 4. Generate the Multipass token and URL
-    const multipass = new Multipassify(secret);
-    // Prepare customer data; at minimum include email.
-    // We also use return_to to send the user to their account page after login.
-    const customerData = {
-        email,
-        return_to: `https://${shopDomain}/account`
-    };
-    // Generate a Multipass login URL, e.g.:
-    //   https://yourshopname.myshopify.com/account/login/multipass/<token>
-    const multipassUrl = multipass.generateUrl(customerData, shopDomain);
-
-    // 5. Respond with the URL
-    return NextResponse.json({ url: multipassUrl });
 }
