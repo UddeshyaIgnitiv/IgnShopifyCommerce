@@ -5,8 +5,17 @@ import { getPage } from 'lib/shopify';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
-export async function generateMetadata({ params }: { params: { page: string } }): Promise<Metadata> {
-  const shopifyPage = await getPage(params.page);
+// Optional: move this to env
+const BUILDER_API_KEY = 'f5207819654341769eb944c6d04b9ee7';
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ page: string }>;
+}): Promise<Metadata> {
+  const { page } = await params;
+
+  const shopifyPage = await getPage(page);
 
   if (shopifyPage) {
     return {
@@ -15,14 +24,13 @@ export async function generateMetadata({ params }: { params: { page: string } })
       openGraph: {
         publishedTime: shopifyPage.createdAt,
         modifiedTime: shopifyPage.updatedAt,
-        type: 'article'
-      }
+        type: 'article',
+      },
     };
   }
 
-  // ✅ Use fetch to Builder.io CDN (server-safe)
   const builderRes = await fetch(
-    `https://cdn.builder.io/api/v2/content/page?apiKey=f5207819654341769eb944c6d04b9ee7&url=/${params.page}`
+    `https://cdn.builder.io/api/v2/content/page?apiKey=${BUILDER_API_KEY}&url=/${page}`
   );
   const builderJson = await builderRes.json();
   const builderContent = builderJson?.results?.[0];
@@ -30,12 +38,18 @@ export async function generateMetadata({ params }: { params: { page: string } })
   if (!builderContent) return notFound();
 
   return {
-    title: builderContent.data?.title || 'Builder Page'
+    title: builderContent.data?.title || 'Builder Page',
   };
 }
 
-export default async function Page({ params }: { params: { page: string } }) {
-  const shopifyPage = await getPage(params.page);
+export default async function Page({
+  params,
+}: {
+  params: Promise<{ page: string }>;
+}) {
+  const { page } = await params;
+
+  const shopifyPage = await getPage(page);
 
   if (shopifyPage) {
     return (
@@ -46,16 +60,15 @@ export default async function Page({ params }: { params: { page: string } }) {
           {`This document was last updated on ${new Intl.DateTimeFormat(undefined, {
             year: 'numeric',
             month: 'long',
-            day: 'numeric'
+            day: 'numeric',
           }).format(new Date(shopifyPage.updatedAt))}.`}
         </p>
       </>
     );
   }
 
-  // ✅ Fetch Builder content server-side, render via client wrapper
   const builderRes = await fetch(
-    `https://cdn.builder.io/api/v2/content/page?apiKey=f5207819654341769eb944c6d04b9ee7&url=/${params.page}`
+    `https://cdn.builder.io/api/v2/content/page?apiKey=${BUILDER_API_KEY}&url=/${page}`
   );
   const builderJson = await builderRes.json();
   const builderContent = builderJson?.results?.[0];
