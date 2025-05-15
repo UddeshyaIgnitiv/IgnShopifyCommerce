@@ -5,7 +5,7 @@ import Image from 'next/image';
 export default function IgnIcon({ className }: { className?: string }) {
     return (
         <Image
-            src="/images/ignitiv_logo.jpeg"
+            src="/images/ignitiv.svg"
             alt="Ignitiv Logo"
             width={50}
             height={50}
