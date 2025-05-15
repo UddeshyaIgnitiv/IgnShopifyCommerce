@@ -31,8 +31,6 @@ export default async function HomePage() {
   const builderJson = await builderRes.json();
   const content = builderJson?.results?.[0];
 
-  console.log("content", content);
-
   if (!content) return <h1>Not Found</h1>;
 
   return (
