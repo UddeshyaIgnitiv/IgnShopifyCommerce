@@ -3,31 +3,6 @@ import { COMPANY_CREATE_MUTATION } from 'lib/shopify/mutations/companyCreate';
 import { shopifyFetch } from 'lib/shopify_service';
 import { NextResponse } from 'next/server';
 
-
-// Helper to map full country names to ISO 2-letter codes
-function getCountryCode(countryName: string): string {
-  const countries: Record<string, string> = {
-    India: 'IN',
-    'United States': 'US',
-    Canada: 'CA',
-    Australia: 'AU',
-    // Extend as needed
-  };
-  return countries[countryName] || countryName;
-}
-
-// Helper to map full state/province names to Shopify zone codes
-function getZoneCode(provinceName: string): string {
-  const provinces: Record<string, string> = {
-    'South West': 'DL',
-    Delhi: 'DL',
-    Maharashtra: 'MH',
-    Karnataka: 'KA',
-    // Extend as needed
-  };
-  return provinces[provinceName] || provinceName;
-}
-
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -70,9 +45,9 @@ export async function POST(req: Request) {
           shippingAddress: {
             address1,
             city,
-            zoneCode: getZoneCode(province),
+            zoneCode: province,
             zip,
-            countryCode: getCountryCode(country),
+            countryCode: country,
           },
           billingSameAsShipping: true,
         },

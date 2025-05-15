@@ -1,37 +1,54 @@
 import {
   COMPANY_ASSIGN_MAIN_CONTACT_MUTATION,
   COMPANY_CONTACT_CREATE_MUTATION,
-  UPDATE_CUSTOMER_TAGS_MUTATION
+  UPDATE_CUSTOMER_TAGS_MUTATION,
 } from 'lib/shopify/mutations/companyCreateMainContactAndAssign';
 import { GET_COMPANY_QUERY } from 'lib/shopify/queries/getCompany';
 import { shopifyFetch } from 'lib/shopify_service';
+import { CountryCode, parsePhoneNumberFromString } from 'libphonenumber-js/max'; // ✅ full metadata
 import { NextResponse } from 'next/server';
+
+function formatPhoneE164(rawPhone: string, countryCode: string): string | null {
+  const cleaned = rawPhone.replace(/[\s\-().]/g, '');
+  const parsed = parsePhoneNumberFromString(cleaned, countryCode.toUpperCase() as CountryCode);
+  return parsed?.isValid() ? parsed.number : null; // E.164 format
+}
 
 export async function POST(req: Request) {
   try {
-    // Step 1: Parse request body
     const body = await req.json();
     const {
       email,
       firstName,
       lastName,
       phone,
+      country,
       companyId,
-      assignAsMainContact = true
+      assignAsMainContact = true,
     } = body;
 
-    // Step 2: Validate input
-    if (!email || !firstName || !lastName || !phone || !companyId) {
+    if (!email || !firstName || !lastName || !phone || !country || !companyId) {
       return NextResponse.json(
         {
-          error:
-            'Fields email, firstName, lastName, phone and companyId are required.'
+          error: 'Fields email, firstName, lastName, phone, country and companyId are required.',
         },
         { status: 400 }
       );
     }
 
-    // Step 3: Fetch Company
+    // ✅ Format phone number server-side
+    const formattedPhone = formatPhoneE164(phone, country);
+
+    console.log("formattedPhone", formattedPhone);
+    if (!formattedPhone) {
+      return NextResponse.json(
+        {
+          error: 'Invalid phone number format. Please use a valid number like 9958157784 for India.',
+        },
+        { status: 400 }
+      );
+    }
+
     const companyRes = await shopifyFetch(GET_COMPANY_QUERY, { id: companyId });
     const company = companyRes?.company;
 
@@ -41,10 +58,9 @@ export async function POST(req: Request) {
 
     const externalId = company.externalId || company.id;
 
-    // Step 4: Create Company Contact
     const contactRes = await shopifyFetch(COMPANY_CONTACT_CREATE_MUTATION, {
       companyId,
-      input: { email, firstName, lastName, phone }
+      input: { email, firstName, lastName, phone: formattedPhone },
     });
 
     const contactErrors = contactRes?.companyContactCreate?.userErrors;
@@ -52,7 +68,7 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: 'Company contact creation failed.',
-          details: contactErrors
+          details: contactErrors,
         },
         { status: 400 }
       );
@@ -68,34 +84,29 @@ export async function POST(req: Request) {
       );
     }
 
-    // Step 5: Assign Main Contact (if requested)
     if (assignAsMainContact) {
-      const assignRes = await shopifyFetch(
-        COMPANY_ASSIGN_MAIN_CONTACT_MUTATION,
-        {
-          companyContactId: contact.id,
-          companyId
-        }
-      );
+      const assignRes = await shopifyFetch(COMPANY_ASSIGN_MAIN_CONTACT_MUTATION, {
+        companyContactId: contact.id,
+        companyId,
+      });
 
       const assignErrors = assignRes?.companyAssignMainContact?.userErrors;
       if (assignErrors?.length > 0) {
         return NextResponse.json(
           {
             error: 'Failed to assign main contact.',
-            details: assignErrors
+            details: assignErrors,
           },
           { status: 400 }
         );
       }
     }
 
-    // Step 6: Tag Associated Customer
     const tagRes = await shopifyFetch(UPDATE_CUSTOMER_TAGS_MUTATION, {
       input: {
         id: customer.id,
-        tags: [`Company:${externalId}`]
-      }
+        tags: [`Company:${externalId}`],
+      },
     });
 
     const tagErrors = tagRes?.customerUpdate?.userErrors;
@@ -103,19 +114,18 @@ export async function POST(req: Request) {
       return NextResponse.json(
         {
           error: 'Tagging customer failed.',
-          details: tagRes.errors || tagErrors
+          details: tagRes.errors || tagErrors,
         },
         { status: 400 }
       );
     }
 
-    // Step 7: Return Success Response
     return NextResponse.json({
       message: '✅ Company contact created and tagged successfully.',
       contact,
       customer,
       assignedAsMainContact: assignAsMainContact,
-      userErrors: []
+      userErrors: [],
     });
 
   } catch (error: unknown) {
@@ -125,9 +135,9 @@ export async function POST(req: Request) {
         userErrors: [
           {
             message:
-              error instanceof Error ? error.message : 'Unexpected error occurred.'
-          }
-        ]
+              error instanceof Error ? error.message : 'Unexpected error occurred.',
+          },
+        ],
       },
       { status: 500 }
     );
