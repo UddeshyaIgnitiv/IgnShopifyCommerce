@@ -20,6 +20,7 @@ export default function RegisterCompanyPage() {
   });
 
   const [status, setStatus] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
   const [regions, setRegions] = useState<{ name: string; shortCode?: string }[]>([]);
   const [countries, setCountries] = useState<{ name: string; code: string }[]>([]);
 
@@ -30,6 +31,7 @@ export default function RegisterCompanyPage() {
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: '' }));
 
     if (name === 'country') {
       const countryRegions = getRegionsByCountryCode(value);
@@ -38,13 +40,46 @@ export default function RegisterCompanyPage() {
     }
   };
 
+  const validateFields = () => {
+    const requiredFields = [
+      'name',
+      'externalId',
+      'email',
+      'firstName',
+      'lastName',
+      'phone',
+      'locationName',
+      'address1',
+      'city',
+      'province',
+      'zip',
+      'country',
+    ];
+
+    const newErrors: Record<string, string> = {};
+    requiredFields.forEach((field) => {
+      if (!formData[field as keyof typeof formData]?.trim()) {
+        newErrors[field] = 'This field is required.';
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus('Submitting...');
+    setStatus('');
+    if (!validateFields()) return;
+
+    let companyId = null;
+    let customerId = null;
 
     try {
-      // ✅ Step 2: Create Company (no phone sent)
-      const { phone, ...companyData } = formData; // Exclude raw phone from this request
+      const { phone, ...companyData } = formData;
+      setStatus('🚀 Validating company creation...');
+
+      // Step 1: Try to create the company
       const res = await fetch('/api/register/company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -55,21 +90,19 @@ export default function RegisterCompanyPage() {
       const company = result?.company;
 
       if (!res.ok || !company) {
-        const msg = result?.message || 'Unknown error during company creation.';
-        setStatus(`❌ Company creation failed: ${msg}`);
+        const msg = result?.error?.[0]?.message || result?.message || 'Unknown error during company creation.';
+        setStatus((prev) => `${prev}\n❌ Company creation failed: ${msg}`);
         return;
       }
 
-      setStatus(`✅ Company "${company.name}" created!`);
+      companyId = company.id;
+      setStatus((prev) => `${prev}\n✅ Company "${company.name}" created!`);
 
-      // ✅ Step 3: Register customer/contact
+      // Step 2: Try to create the customer and assign them to the company
       const contactRes = await fetch('/api/register/customer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          ...formData,
-          companyId: company.id,
-        }),
+        body: JSON.stringify({ ...formData, companyId: company.id }),
       });
 
       const contactResult = await contactRes.json();
@@ -80,17 +113,21 @@ export default function RegisterCompanyPage() {
         const msg = Array.isArray(contactErrors)
           ? contactErrors[0]?.message
           : contactErrors || 'Unknown error during contact creation.';
-        setStatus(`❌ Contact/customer creation failed: ${msg}`);
+        setStatus((prev) => `${prev}\n❌ Customer creation failed: ${msg}`);
+
+        // Rollback company creation if customer creation fails
+        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });  // Rollback company
         return;
       }
 
-      setStatus((prev) => `${prev}\n✅ Contact "${customer.firstName}" created!`);
+      customerId = customer.id;
+      setStatus((prev) => `${prev}\n✅ Customer "${customer.firstName}" created and assigned to company!`);
 
-      // ✅ Step 4: Send invite
+      // Step 3: Send an email invite to the customer
       const inviteRes = await fetch('/api/register/email-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerId: customer.id }),
+        body: JSON.stringify({ customerId }),
       });
 
       const inviteResult = await inviteRes.json();
@@ -101,12 +138,17 @@ export default function RegisterCompanyPage() {
           ? inviteErrors[0]?.message
           : inviteErrors || 'Unknown error while sending invite.';
         setStatus((prev) => `${prev}\n❌ Invite failed: ${msg}`);
-      } else {
-        setStatus((prev) => `${prev}\n✅ Invite sent successfully!`);
+
+        // Rollback customer and company creation if invite sending fails
+        await fetch(`/api/delete/customer/${customerId}`, { method: 'DELETE' });  // Rollback customer
+        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });  // Rollback company
+        return;
       }
+
+      setStatus((prev) => `${prev}\n✅ Invite sent successfully!`);
     } catch (error: unknown) {
       console.error('Client-side error:', error);
-      setStatus(`❌ Error: ${(error as Error).message || 'Unexpected error'}`);
+      setStatus((prev) => `${prev}\n❌ Unexpected error: ${(error as Error).message || 'Something went wrong'}`);
     }
   };
 
@@ -115,7 +157,8 @@ export default function RegisterCompanyPage() {
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Register Your Company</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[{ name: 'firstName', placeholder: 'First Name' },
+          {[
+            { name: 'firstName', placeholder: 'First Name' },
             { name: 'lastName', placeholder: 'Last Name' },
             { name: 'email', placeholder: 'Email', type: 'email' },
             { name: 'phone', placeholder: 'Phone Number' },
@@ -124,48 +167,60 @@ export default function RegisterCompanyPage() {
             { name: 'locationName', placeholder: 'Location Name' },
             { name: 'address1', placeholder: 'Address Line 1' },
             { name: 'city', placeholder: 'City' },
-            { name: 'zip', placeholder: 'Postal/ZIP Code' }].map(({ name, placeholder, type = 'text' }) => (
-            <input
-              key={name}
-              type={type}
-              name={name}
-              placeholder={placeholder}
-              value={(formData as any)[name]}
-              onChange={handleChange}
-              required
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            { name: 'zip', placeholder: 'Postal/ZIP Code' },
+          ].map(({ name, placeholder, type = 'text' }) => (
+            <div key={name} className="flex flex-col">
+              <input
+                type={type}
+                name={name}
+                placeholder={placeholder}
+                value={formData[name as keyof typeof formData]}
+                onChange={handleChange}
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                  errors?.[name] ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                }`}
+              />
+              {errors?.[name] && <span className="text-red-500 text-xs mt-1">{errors[name]}</span>}
+            </div>
           ))}
 
-          <select
-            name="country"
-            value={formData.country}
-            onChange={handleChange}
-            required
-            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Select Country</option>
-            {countries.map((c) => (
-              <option key={c.code} value={c.code}>
-                {c.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col">
+            <select
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                errors?.country ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              }`}
+            >
+              <option value="">Select Country</option>
+              {countries.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {errors?.country && <span className="text-red-500 text-xs mt-1">{errors.country}</span>}
+          </div>
 
-          <select
-            name="province"
-            value={formData.province}
-            onChange={handleChange}
-            required
-            className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-          >
-            <option value="">Select Province/State</option>
-            {regions.map((r) => (
-              <option key={r.name} value={r.shortCode || r.name}>
-                {r.name}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col">
+            <select
+              name="province"
+              value={formData.province}
+              onChange={handleChange}
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                errors?.province ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              }`}
+            >
+              <option value="">Select Province/State</option>
+              {regions.map((r) => (
+                <option key={r.name} value={r.shortCode || r.name}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+            {errors?.province && <span className="text-red-500 text-xs mt-1">{errors.province}</span>}
+          </div>
 
           <div className="col-span-1 sm:col-span-2 text-center mt-4">
             <button
@@ -178,7 +233,9 @@ export default function RegisterCompanyPage() {
         </form>
 
         {status && (
-          <pre className="mt-4 text-sm text-center text-gray-700 whitespace-pre-wrap">{status}</pre>
+          <pre className="mt-4 text-sm text-left bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">
+            {status}
+          </pre>
         )}
       </div>
     </div>

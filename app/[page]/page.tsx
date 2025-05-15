@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 // Optional: move this to env
-const BUILDER_API_KEY = 'f5207819654341769eb944c6d04b9ee7';
+const BUILDER_API_KEY = process.env.BUILDER_IO_API_KEY;
 
 export async function generateMetadata({
   params,
