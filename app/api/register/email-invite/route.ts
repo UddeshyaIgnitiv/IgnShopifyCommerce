@@ -7,29 +7,28 @@ export async function POST(req: Request) {
     const body = await req.json();
     const { customerId } = body;
 
-    //console.log("customerId data", customerId);
+    // ✅ Validate input
+    const errors: { field: string; message: string }[] = [];
 
-    // Validate input
     if (!customerId) {
-      return NextResponse.json(
-        { error: 'Missing required field: customerId' },
-        { status: 400 }
-      );
+      errors.push({ field: 'customerId', message: 'Customer ID is required.' });
     }
 
-    const variables = { customerId };
-    const inviteRes = await shopifyFetch(SEND_INVITE_MUTATION, variables);
+    if (errors.length > 0) {
+      return NextResponse.json({ error: errors }, { status: 400 });
+    }
 
-    //console.log("inviteRes", inviteRes);
+    const inviteRes = await shopifyFetch(SEND_INVITE_MUTATION, { customerId });
 
-    const errors = inviteRes?.customerSendAccountInviteEmail?.userErrors;
+    const userErrors = inviteRes?.customerSendAccountInviteEmail?.userErrors ?? [];
     const customer = inviteRes?.customerSendAccountInviteEmail?.customer;
 
-    //console.log("errors", errors);
-    //console.log("customer", customer);
-
-    if (errors && errors.length > 0) {
-      return NextResponse.json({ error: errors }, { status: 400 });
+    if (userErrors.length > 0) {
+      const formattedErrors = userErrors.map((e: any) => ({
+        field: e.field?.[0] || 'customerId',
+        message: e.message,
+      }));
+      return NextResponse.json({ error: formattedErrors }, { status: 400 });
     }
 
     return NextResponse.json({
@@ -41,7 +40,12 @@ export async function POST(req: Request) {
     console.error('Error sending invite email:', error);
     return NextResponse.json(
       {
-        error: error instanceof Error ? error.message : 'Unexpected error',
+        error: [
+          {
+            field: 'server',
+            message: error instanceof Error ? error.message : 'Unexpected server error.',
+          },
+        ],
       },
       { status: 500 }
     );
