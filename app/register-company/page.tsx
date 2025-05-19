@@ -1,6 +1,7 @@
 'use client';
 
-import { useState } from 'react';
+import { getAllCountries, getRegionsByCountryCode } from 'lib/utils/countryRegion';
+import { useEffect, useState } from 'react';
 
 export default function RegisterCompanyPage() {
   const [formData, setFormData] = useState({
@@ -15,69 +16,114 @@ export default function RegisterCompanyPage() {
     city: '',
     province: '',
     zip: '',
-    country: ''
+    country: '',
   });
 
   const [status, setStatus] = useState('');
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [regions, setRegions] = useState<{ name: string; shortCode?: string }[]>([]);
+  const [countries, setCountries] = useState<{ name: string; code: string }[]>([]);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+  useEffect(() => {
+    setCountries(getAllCountries());
+  }, []);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => ({ ...prev, [name]: '' }));
+
+    if (name === 'country') {
+      const countryRegions = getRegionsByCountryCode(value);
+      setRegions(countryRegions);
+      setFormData((prev) => ({ ...prev, province: '' }));
+    }
+  };
+
+  const validateFields = () => {
+    const requiredFields = [
+      'name',
+      'externalId',
+      'email',
+      'firstName',
+      'lastName',
+      'phone',
+      'locationName',
+      'address1',
+      'city',
+      'province',
+      'zip',
+      'country',
+    ];
+
+    const newErrors: Record<string, string> = {};
+    requiredFields.forEach((field) => {
+      if (!formData[field as keyof typeof formData]?.trim()) {
+        newErrors[field] = 'This field is required.';
+      }
+    });
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setStatus('Submitting...');
+    setStatus('');
+    if (!validateFields()) return;
+
+    let companyId = null;
+    let customerId = null;
 
     try {
+      const { phone, ...companyData } = formData;
+      setStatus('🚀 Validating company creation...');
+
+      // Step 1: Try to create the company
       const res = await fetch('/api/register/company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(companyData),
       });
 
       const result = await res.json();
-      const companyData = result?.company;
+      const company = result?.company;
 
-      if (!res.ok || !companyData) {
-        const message = result?.message || 'Unknown error during company creation.';
-        setStatus(`❌ Company creation failed: ${message}`);
+      if (!res.ok || !company) {
+        const msg = result?.error?.[0]?.message || result?.message || 'Unknown error during company creation.';
+        setStatus((prev) => `${prev}\n❌ Company creation failed: ${msg}`);
         return;
-      } else {
-        setStatus(`✅ Company "${companyData.name}" created!`);
       }
 
-      const companyId = companyData.id;
-      //console.log("companyId", companyId);
+      companyId = company.id;
+      setStatus((prev) => `${prev}\n✅ Company "${company.name}" created!`);
 
+      // Step 2: Try to create the customer and assign them to the company
       const contactRes = await fetch('/api/register/customer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, companyId }),
+        body: JSON.stringify({ ...formData, companyId: company.id }),
       });
 
-      //console.log("contactRes", contactRes);
-
       const contactResult = await contactRes.json();
+      const customer = contactResult?.contact?.customer;
+      const contactErrors = contactResult?.error || customer?.userErrors;
 
-      //console.log("contactResult", contactResult);
-      const customerData = contactResult?.contact?.customer;
+      if (!contactRes.ok || !customer || (Array.isArray(contactErrors) && contactErrors.length > 0)) {
+        const msg = Array.isArray(contactErrors)
+          ? contactErrors[0]?.message
+          : contactErrors || 'Unknown error during contact creation.';
+        setStatus((prev) => `${prev}\n❌ Customer creation failed: ${msg}`);
 
-      //console.log("customerData", customerData);
-
-      const customerErrors = contactResult?.error || customerData?.userErrors;
-
-      if (!contactRes.ok || !customerData || (customerErrors && customerErrors.length > 0)) {
-        const message =
-          (Array.isArray(customerErrors) ? customerErrors[0]?.message : customerErrors) ||
-          'Unknown error during customer creation.';
-        setStatus(`❌ Contact/customer creation failed: ${message}`);
+        // Rollback company creation if customer creation fails
+        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });  // Rollback company
         return;
-      } else {
-        setStatus((prev) => `${prev}\n✅ Contact "${customerData.firstName}" created!`);
       }
 
-      const customerId = customerData.id;
+      customerId = customer.id;
+      setStatus((prev) => `${prev}\n✅ Customer "${customer.firstName}" created and assigned to company!`);
 
+      // Step 3: Send an email invite to the customer
       const inviteRes = await fetch('/api/register/email-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -87,23 +133,22 @@ export default function RegisterCompanyPage() {
       const inviteResult = await inviteRes.json();
       const inviteErrors = inviteResult?.error || inviteResult?.data?.customerSendAccountInviteEmail?.userErrors;
 
-      if (!inviteRes.ok || inviteErrors?.length > 0) {
-        const message =
-          (Array.isArray(inviteErrors) ? inviteErrors[0]?.message : inviteErrors) ||
-          'Unknown error while sending invite.';
-        setStatus((prev) => `${prev}\n❌ Invite failed: ${message}`);
+      if (!inviteRes.ok || (Array.isArray(inviteErrors) && inviteErrors.length > 0)) {
+        const msg = Array.isArray(inviteErrors)
+          ? inviteErrors[0]?.message
+          : inviteErrors || 'Unknown error while sending invite.';
+        setStatus((prev) => `${prev}\n❌ Invite failed: ${msg}`);
+
+        // Rollback customer and company creation if invite sending fails
+        await fetch(`/api/delete/customer/${customerId}`, { method: 'DELETE' });  // Rollback customer
+        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });  // Rollback company
         return;
-      } else {
-        setStatus((prev) => `${prev}\n✅ Invite sent successfully!`);
       }
 
+      setStatus((prev) => `${prev}\n✅ Invite sent successfully!`);
     } catch (error: unknown) {
       console.error('Client-side error:', error);
-      if (error instanceof Error) {
-        setStatus(`❌ Error: ${error.message}`);
-      } else {
-        setStatus('❌ An unexpected error occurred');
-      }
+      setStatus((prev) => `${prev}\n❌ Unexpected error: ${(error as Error).message || 'Something went wrong'}`);
     }
   };
 
@@ -122,21 +167,60 @@ export default function RegisterCompanyPage() {
             { name: 'locationName', placeholder: 'Location Name' },
             { name: 'address1', placeholder: 'Address Line 1' },
             { name: 'city', placeholder: 'City' },
-            { name: 'province', placeholder: 'Province' },
             { name: 'zip', placeholder: 'Postal/ZIP Code' },
-            { name: 'country', placeholder: 'Country' },
           ].map(({ name, placeholder, type = 'text' }) => (
-            <input
-              key={name}
-              type={type}
-              name={name}
-              placeholder={placeholder}
-              value={(formData as any)[name]}
-              onChange={handleChange}
-              required
-              className="border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
+            <div key={name} className="flex flex-col">
+              <input
+                type={type}
+                name={name}
+                placeholder={placeholder}
+                value={formData[name as keyof typeof formData]}
+                onChange={handleChange}
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                  errors?.[name] ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                }`}
+              />
+              {errors?.[name] && <span className="text-red-500 text-xs mt-1">{errors[name]}</span>}
+            </div>
           ))}
+
+          <div className="flex flex-col">
+            <select
+              name="country"
+              value={formData.country}
+              onChange={handleChange}
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                errors?.country ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              }`}
+            >
+              <option value="">Select Country</option>
+              {countries.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            {errors?.country && <span className="text-red-500 text-xs mt-1">{errors.country}</span>}
+          </div>
+
+          <div className="flex flex-col">
+            <select
+              name="province"
+              value={formData.province}
+              onChange={handleChange}
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                errors?.province ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              }`}
+            >
+              <option value="">Select Province/State</option>
+              {regions.map((r) => (
+                <option key={r.name} value={r.shortCode || r.name}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+            {errors?.province && <span className="text-red-500 text-xs mt-1">{errors.province}</span>}
+          </div>
 
           <div className="col-span-1 sm:col-span-2 text-center mt-4">
             <button
@@ -149,7 +233,9 @@ export default function RegisterCompanyPage() {
         </form>
 
         {status && (
-          <pre className="mt-4 text-sm text-center text-gray-700 whitespace-pre-wrap">{status}</pre>
+          <pre className="mt-4 text-sm text-left bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">
+            {status}
+          </pre>
         )}
       </div>
     </div>

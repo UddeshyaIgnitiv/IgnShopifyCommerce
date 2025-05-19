@@ -23,12 +23,18 @@ importers:
       clsx:
         specifier: ^2.1.1
         version: 2.1.1
+      country-region-data:
+        specifier: ^3.1.0
+        version: 3.1.0
       geist:
         specifier: ^1.3.1
         version: 1.3.1(next@15.3.0-canary.13(react-dom@19.0.0(react@19.0.0))(react@19.0.0))
       graphql-request:
         specifier: ^7.1.2
         version: 7.1.2(graphql@16.11.0)
+      libphonenumber-js:
+        specifier: ^1.12.8
+        version: 1.12.8
       multipassify:
         specifier: ^1.1.0
         version: 1.1.0
@@ -643,6 +649,9 @@ packages:
     resolution: {integrity: sha512-xb3ZL6+L8b9JLLCx3ZdoZy4+2ECphCMo2PwqgP1tlfVq6M6YReyzBJtvWWtbDSpNr9hn96pkCiZqUcFEc+54Qg==}
     engines: {node: '>=8'}
 
+  country-region-data@3.1.0:
+    resolution: {integrity: sha512-Xy5HoXk2byCS45+88ErCor/a0q6r22ur/Os69p71kfmescu3od4B1lpe7dQdAa0T9HYqqKX04QsrnZ5FmIWh9g==}
+
   crypto@0.0.3:
     resolution: {integrity: sha512-Q6Ka98WcvWXXg+9cnqd3jHpTSIOaH6/q0m/bESMfQo/0uFxy6e/7EqVS4JdaWx9qLdqV56tDufy2b12dj7BHJg==}
     deprecated: This package is no longer supported. It's now a built-in Node module. If you've depended on crypto, you should switch to the one that's built-in.
@@ -814,6 +823,9 @@ packages:
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
+
+  libphonenumber-js@1.12.8:
+    resolution: {integrity: sha512-f1KakiQJa9tdc7w1phC2ST+DyxWimy9c3g3yeF+84QtEanJr2K77wAmBPP22riU05xldniHsvXuflnLZ4oysqA==}
 
   lightningcss-darwin-arm64@1.29.2:
     resolution: {integrity: sha512-cK/eMabSViKn/PG8U/a7aCorpeKLMlK0bQeNHmdb7qUnBkNPnL+oV5DjJUo0kqWsJUapZsM4jCfYItbqBDvlcA==}
@@ -1839,6 +1851,8 @@ snapshots:
       path-type: 4.0.0
       yaml: 1.10.2
 
+  country-region-data@3.1.0: {}
+
   crypto@0.0.3: {}
 
   cssesc@3.0.0: {}
@@ -1986,6 +2000,8 @@ snapshots:
   keyv@4.5.4:
     dependencies:
       json-buffer: 3.0.1
+
+  libphonenumber-js@1.12.8: {}
 
   lightningcss-darwin-arm64@1.29.2:
     optional: true
