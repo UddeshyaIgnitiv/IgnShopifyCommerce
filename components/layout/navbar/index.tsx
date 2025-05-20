@@ -14,7 +14,7 @@ export async function Navbar() {
 
   return (
     <nav className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
-      
+
       {/* --- First Row: Logo + Search + Login/Register + Cart --- */}
       <div className="flex flex-col md:flex-row items-center justify-between px-4 py-3 lg:px-8 gap-y-3 md:gap-y-0">
 
@@ -58,12 +58,12 @@ export async function Navbar() {
               ))}
             </ul>
           )}
-          {/* <Link
-            href="/login"
+          <Link
+            href="/api/auth/login"
             className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200"
           >
             Login
-          </Link> */}
+          </Link>
           <CartModal />
         </div>
       </div>
