@@ -408,11 +408,18 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
   cacheTag(TAGS.products);
   cacheLife('days');
 
+  const customerAccessToken = (await cookies()).get('shopify_access_token')?.value!;
+
+  const headers: HeadersInit = customerAccessToken
+    ? { 'Shopify-Customer-Access-Token': customerAccessToken }
+    : {};
+
   const res = await shopifyFetch<ShopifyProductOperation>({
     query: getProductQuery,
     variables: {
       handle
-    }
+    },
+    headers
   });
 
   return reshapeProduct(res.body.data.product, false);
