@@ -42,7 +42,7 @@ export async function GET(req: NextRequest) {
 
         const customerAccessToken = data.access_token;
 
-        const res = NextResponse.redirect('https://ign-shopify-commerce.vercel.app/account');
+        const res = NextResponse.redirect('https://ign-shopify-commerce.vercel.app/search/all');
 
         res.cookies.set({
             name: 'shopify_access_token',

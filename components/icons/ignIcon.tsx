@@ -5,10 +5,10 @@ import Image from 'next/image';
 export default function IgnIcon({ className }: { className?: string }) {
     return (
         <Image
-            src="/images/ignitiv.svg"
+            src="/images/targetsupply.svg"
             alt="Ignitiv Logo"
-            width={50}
-            height={50}
+            width={80}
+            height={80}
             className={className}
         />
     );
