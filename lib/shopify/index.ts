@@ -408,7 +408,7 @@ export async function getProduct(handle: string): Promise<Product | undefined> {
   cacheTag(TAGS.products);
   cacheLife('days');
 
-  const customerAccessToken = (await cookies()).get('shopify_access_token')?.value!;
+  const customerAccessToken = (await cookies()).get('shopify_access_token')?.value;
 
   const headers: HeadersInit = customerAccessToken
     ? { 'Shopify-Customer-Access-Token': customerAccessToken }
