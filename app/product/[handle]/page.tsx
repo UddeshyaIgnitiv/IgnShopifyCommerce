@@ -11,6 +11,7 @@ import { getProduct, getProductRecommendations } from 'lib/shopify';
 import { Image } from 'lib/shopify/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
+import ProductContentClient from 'components/product/ProductContentClient';
 
 export async function generateMetadata(props: {
   params: Promise<{ handle: string }>;
@@ -36,21 +37,22 @@ export async function generateMetadata(props: {
     },
     openGraph: url
       ? {
-          images: [
-            {
-              url,
-              width,
-              height,
-              alt
-            }
-          ]
-        }
+        images: [
+          {
+            url,
+            width,
+            height,
+            alt
+          }
+        ]
+      }
       : null
   };
 }
 
 export default async function ProductPage(props: { params: Promise<{ handle: string }> }) {
   const params = await props.params;
+  const { handle } = await params;
   const product = await getProduct(params.handle);
 
   if (!product) return notFound();
@@ -82,7 +84,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
       />
       <div className="mx-auto max-w-(--breakpoint-2xl) px-4">
         <div className="flex flex-col rounded-lg border border-neutral-200 bg-white p-8 md:p-12 lg:flex-row lg:gap-8 dark:border-neutral-800 dark:bg-black">
-          <div className="h-full w-full basis-full lg:basis-4/6">
+          {/* <div className="h-full w-full basis-full lg:basis-4/6">
             <Suspense
               fallback={
                 <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden" />
@@ -95,6 +97,10 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
                 }))}
               />
             </Suspense>
+          </div> */}
+
+          <div className="h-full w-full basis-full lg:basis-4/6">
+            <ProductContentClient initialProduct={product} handle={handle} />
           </div>
 
           <div className="basis-full lg:basis-2/6">

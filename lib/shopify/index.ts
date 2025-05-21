@@ -403,16 +403,21 @@ export async function getPages(): Promise<Page[]> {
   return removeEdgesAndNodes(res.body.data.pages);
 }
 
-export async function getProduct(handle: string): Promise<Product | undefined> {
+export async function getProduct(handle: string, customerAccessToken?: string): Promise<Product | undefined> {
   'use cache';
   cacheTag(TAGS.products);
   cacheLife('days');
+
+  const headers: HeadersInit = customerAccessToken
+    ? { 'Shopify-Customer-Access-Token': customerAccessToken }
+    : {};
 
   const res = await shopifyFetch<ShopifyProductOperation>({
     query: getProductQuery,
     variables: {
       handle
-    }
+    },
+    headers,
   });
 
   return reshapeProduct(res.body.data.product, false);
