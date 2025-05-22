@@ -1,6 +1,6 @@
 // utils/shopify.ts
 const SHOPIFY_ADMIN_API_URL = `https://ignitiv-demo-store.myshopify.com/admin/api/2025-04/graphql.json`;
-const SHOPIFY_ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_API_CREATE_COMPANY_ACCESS_TOKEN!;
+const SHOPIFY_ADMIN_TOKEN = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN!;
 
 export async function shopifyFetch(query: string, variables: any) {
   const response = await fetch(SHOPIFY_ADMIN_API_URL, {
