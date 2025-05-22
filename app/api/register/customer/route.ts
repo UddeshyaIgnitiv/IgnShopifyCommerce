@@ -1,7 +1,8 @@
 import {
+  ASSIGN_ROLE_TO_CUSTOMER_MUTATION,
   COMPANY_ASSIGN_MAIN_CONTACT_MUTATION,
   COMPANY_CONTACT_CREATE_MUTATION,
-  UPDATE_CUSTOMER_TAGS_MUTATION,
+  UPDATE_CUSTOMER_TAGS_MUTATION
 } from 'lib/shopify/mutations/companyCreateMainContactAndAssign';
 import { GET_COMPANY_QUERY } from 'lib/shopify/queries/getCompany';
 import { shopifyFetch } from 'lib/shopify_service';
@@ -25,6 +26,7 @@ export async function POST(req: Request) {
       country,
       companyId,
       assignAsMainContact = true,
+      role = 'buyer'
     } = body;
 
     // ✅ Step 1: Validate fields individually
@@ -109,6 +111,19 @@ export async function POST(req: Request) {
         }));
         return NextResponse.json({ error: formattedAssignErrors }, { status: 400 });
       }
+    }
+
+    console.log("contact?.customer?.id", contact?.customer?.id)
+
+     // ✅ Step 6: Assign customer role (e.g., 'buyer')
+    const roleRes = await shopifyFetch(ASSIGN_ROLE_TO_CUSTOMER_MUTATION, {
+      customerId: contact?.customer?.id,
+      role: role, // Pass role from request body, default to 'buyer'
+    });
+
+    const roleErrors = roleRes?.customerUpdate?.userErrors ?? [];
+    if (roleErrors.length > 0) {
+      return NextResponse.json({ error: roleErrors }, { status: 400 });
     }
 
     // ✅ Step 6: Add customer tag

@@ -17,6 +17,7 @@ export default function RegisterCompanyPage() {
     province: '',
     zip: '',
     country: '',
+    role: 'buyer',
   });
 
   const [status, setStatus] = useState('');
@@ -54,6 +55,7 @@ export default function RegisterCompanyPage() {
       'province',
       'zip',
       'country',
+      'role',
     ];
 
     const newErrors: Record<string, string> = {};
@@ -79,7 +81,7 @@ export default function RegisterCompanyPage() {
       const { phone, ...companyData } = formData;
       setStatus('🚀 Validating company creation...');
 
-      // Step 1: Try to create the company
+      // Step 1: Create company
       const res = await fetch('/api/register/company', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -98,7 +100,7 @@ export default function RegisterCompanyPage() {
       companyId = company.id;
       setStatus((prev) => `${prev}\n✅ Company "${company.name}" created!`);
 
-      // Step 2: Try to create the customer and assign them to the company
+      // Step 2: Create customer and assign role
       const contactRes = await fetch('/api/register/customer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -115,15 +117,15 @@ export default function RegisterCompanyPage() {
           : contactErrors || 'Unknown error during contact creation.';
         setStatus((prev) => `${prev}\n❌ Customer creation failed: ${msg}`);
 
-        // Rollback company creation if customer creation fails
-        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });  // Rollback company
+        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });
         return;
       }
 
       customerId = customer.id;
       setStatus((prev) => `${prev}\n✅ Customer "${customer.firstName}" created and assigned to company!`);
+      setStatus((prev) => `${prev}\n✅ Role "${formData.role}" assigned to the customer!`);
 
-      // Step 3: Send an email invite to the customer
+      // Step 3: Send email invite
       const inviteRes = await fetch('/api/register/email-invite', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -139,9 +141,8 @@ export default function RegisterCompanyPage() {
           : inviteErrors || 'Unknown error while sending invite.';
         setStatus((prev) => `${prev}\n❌ Invite failed: ${msg}`);
 
-        // Rollback customer and company creation if invite sending fails
-        await fetch(`/api/delete/customer/${customerId}`, { method: 'DELETE' });  // Rollback customer
-        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });  // Rollback company
+        await fetch(`/api/delete/customer/${customerId}`, { method: 'DELETE' });
+        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });
         return;
       }
 
@@ -157,7 +158,7 @@ export default function RegisterCompanyPage() {
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Register Your Company</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[
+          {[ 
             { name: 'firstName', placeholder: 'First Name' },
             { name: 'lastName', placeholder: 'Last Name' },
             { name: 'email', placeholder: 'Email', type: 'email' },
@@ -184,6 +185,24 @@ export default function RegisterCompanyPage() {
             </div>
           ))}
 
+          {/* Role Dropdown */}
+          <div className="flex flex-col">
+            <select
+              name="role"
+              value={formData.role}
+              onChange={handleChange}
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                errors?.role ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              }`}
+            >
+              <option value="buyer">Buyer</option>
+              <option value="approver">Approver</option>
+              <option value="admin">Admin</option>
+            </select>
+            {errors?.role && <span className="text-red-500 text-xs mt-1">{errors.role}</span>}
+          </div>
+
+          {/* Country Dropdown */}
           <div className="flex flex-col">
             <select
               name="country"
@@ -203,6 +222,7 @@ export default function RegisterCompanyPage() {
             {errors?.country && <span className="text-red-500 text-xs mt-1">{errors.country}</span>}
           </div>
 
+          {/* Province/State Dropdown */}
           <div className="flex flex-col">
             <select
               name="province"
@@ -222,21 +242,25 @@ export default function RegisterCompanyPage() {
             {errors?.province && <span className="text-red-500 text-xs mt-1">{errors.province}</span>}
           </div>
 
-          <div className="col-span-1 sm:col-span-2 text-center mt-4">
+          {/* Submit Button */}
+          <div className="col-span-1 sm:col-span-2 text-center mt-6">
             <button
               type="submit"
-              className="bg-blue-600 text-white py-2 px-6 rounded hover:bg-blue-700 transition"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full sm:w-auto font-semibold hover:bg-blue-700 transition duration-200"
             >
               Register Company
             </button>
           </div>
         </form>
 
-        {status && (
-          <pre className="mt-4 text-sm text-left bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">
-            {status}
-          </pre>
-        )}
+          {status && (
+            <pre className="mt-4 text-sm text-left bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">
+              {status}
+            </pre>
+          )}
+        {/* <div className="mt-4 text-center">
+          <pre>{status}</pre>
+        </div> */}
       </div>
     </div>
   );

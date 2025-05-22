@@ -24,6 +24,7 @@ import Footer from 'components/layout/footer';
 // app/page.tsx
 import BuilderWrapper from 'components/BuilderWrapper';
 import CustomerProfileWrapper from 'components/customer-profile-wrapper';
+import RoleBasedUI from 'components/RoleBasedUI';
 
 export default async function HomePage() {
   const builderRes = await fetch(
@@ -40,7 +41,16 @@ export default async function HomePage() {
       <Carousel />
       <ThreeItemGrid />
       <CustomerProfileWrapper />
+      <div>
+        <h1>Order Review</h1>
+        <p>Review your cart before submitting.</p>
+
+        {/* Passing customerId as a prop to RoleBasedUI */}
+        <RoleBasedUI />
+      </div>
+      
       <Footer />
+
     </>
   );
   
