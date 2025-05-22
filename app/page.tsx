@@ -23,6 +23,7 @@ import Footer from 'components/layout/footer';
 
 // app/page.tsx
 import BuilderWrapper from 'components/BuilderWrapper';
+import CustomerProfileWrapper from 'components/customer-profile-wrapper';
 
 export default async function HomePage() {
   const builderRes = await fetch(
@@ -38,6 +39,7 @@ export default async function HomePage() {
       <BuilderWrapper content={content} />
       <Carousel />
       <ThreeItemGrid />
+      <CustomerProfileWrapper />
       <Footer />
     </>
   );
