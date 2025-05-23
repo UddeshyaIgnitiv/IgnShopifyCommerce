@@ -6,7 +6,7 @@ import { shopifyFetch } from 'lib/shopify_service';
 import { NextRequest, NextResponse } from 'next/server';
 
 const SHOPIFY_CUSTOMER_API = `https://shopify.com/${process.env.SHOPIFY_SHOPID}/account/customer/api/unstable/graphql.json`;
-
+console.log("SHOPIFY_CUSTOMER_API", SHOPIFY_CUSTOMER_API);
 /**
  * Fetches customer role using the Shopify Customer Account API
  */
@@ -17,7 +17,7 @@ export async function GET(req: NextRequest) {
 
     console.log('[ROLE API] shopify_access_token:', customerAccessToken);
 
-    if (!customerAccessToken) {
+    if (!customerAccessToken || !customerAccessToken.startsWith('shcat_')) {
       console.warn('[ROLE API] Missing shopify_access_token cookie');
       return NextResponse.json({ error: 'Missing or invalid Authorization header' }, { status: 401 });
     }
@@ -27,29 +27,34 @@ export async function GET(req: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${customerAccessToken}`, // Pass the token directly to Shopify in the Authorization header
+        'Authorization': customerAccessToken, 
       },
       body: JSON.stringify({ query: GET_CUSTOMER_ROLE }),
     });
 
     const customerData = await customerRes.json();
     const customerId = customerData?.data?.customer?.id;
-    const email = customerData?.data?.customer?.email;
+    const email = customerData?.data?.customer?.emailAddress?.emailAddress;
     console.log('customerData', customerData);
     console.log('customerId', customerId);
     console.log('email', email);
 
-    if (!customerRes) {
-      return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+    if (!customerRes.ok || customerData.errors || !customerId) {
+      console.error('[ROLE API] Shopify Customer API Error:', customerData.errors);
+      return NextResponse.json(
+        { error: 'Failed to fetch customer from Shopify', details: customerData.errors },
+        { status: 403 }
+      );
     }
 
 
     // Step 3: Fetch metafields using Admin API (with customer ID)
     const adminRes = await shopifyFetch(GET_CUSTOMER_ROLE_ADMIN, { id: customerId });
 
+    console.log("adminRes", adminRes);
+
     // ✅ Step 3: Extract metafield "role"
-    const adminData = await adminRes.json();
-    const metafields = adminData?.data?.customer?.metafields?.edges || [];
+    const metafields = adminRes?.customer?.metafields?.edges || [];
 
     console.log('[ROLE API] Metafields:', metafields);
 
@@ -64,7 +69,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Role not found for the customer' }, { status: 404 });
     }
 
-    return NextResponse.json({ customerId, email, role });
+    let cusRole: string;
+    try {
+      cusRole = JSON.parse(role); // Convert JSON string (e.g., '"approver"') to string (e.g., 'approver')
+    } catch (e) {
+      console.error('[ROLE API] Invalid JSON in metafield:', role);
+      return NextResponse.json({ error: 'Invalid JSON in role metafield' }, { status: 500 });
+    }
+
+    console.log("cusRole", cusRole);
+
+    return NextResponse.json({ customerId, email, role: cusRole });
   } catch (error) {
     console.error('[ROLE API] Unexpected Error:', error);
     return NextResponse.json({ error: 'Server error fetching customer role' }, { status: 500 });

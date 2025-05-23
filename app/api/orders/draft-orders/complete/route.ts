@@ -1,22 +1,9 @@
 // app/api/orders/draft-orders/complete/route.ts
+import COMPLETE_DRAFT_ORDER from 'lib/shopify/mutations/orders/completeDraftOrder';
 import { shopifyFetch } from 'lib/shopify_service';
 import { NextRequest, NextResponse } from 'next/server';
 
-const DRAFT_ORDER_COMPLETE_MUTATION = `
-  mutation draftOrderComplete($id: ID!) {
-    draftOrderComplete(id: $id) {
-      order {
-        id
-        name
-        statusUrl
-      }
-      userErrors {
-        field
-        message
-      }
-    }
-  }
-`;
+
 
 export async function POST(req: NextRequest) {
   try {
@@ -26,7 +13,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Draft Order ID is required' }, { status: 400 });
     }
 
-    const data = await shopifyFetch(DRAFT_ORDER_COMPLETE_MUTATION, { id: draftOrderId });
+    const data = await shopifyFetch(COMPLETE_DRAFT_ORDER, { id: draftOrderId });
     const errors = data?.draftOrderComplete?.userErrors;
 
     if (errors?.length) {

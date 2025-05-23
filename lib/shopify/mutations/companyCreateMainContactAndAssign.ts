@@ -45,7 +45,7 @@ export const ASSIGN_ROLE_TO_CUSTOMER_MUTATION = `
         {
           namespace: "b2b",
           key: "role",
-          type: "single_line_text_field",
+          type: "json",
           value: $role
         }
       ]

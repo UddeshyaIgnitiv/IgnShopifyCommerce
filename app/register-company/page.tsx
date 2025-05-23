@@ -17,7 +17,7 @@ export default function RegisterCompanyPage() {
     province: '',
     zip: '',
     country: '',
-    // role: 'buyer',
+    role: 'buyer',
   });
 
   const [status, setStatus] = useState('');
@@ -55,6 +55,7 @@ export default function RegisterCompanyPage() {
       'province',
       'zip',
       'country',
+      'role'
     ];
 
     const newErrors: Record<string, string> = {};
@@ -122,7 +123,7 @@ export default function RegisterCompanyPage() {
 
       customerId = customer.id;
       setStatus((prev) => `${prev}\n✅ Customer "${customer.firstName}" created and assigned to company!`);
-      // setStatus((prev) => `${prev}\n✅ Role "${formData.role}" assigned to the customer!`);
+      setStatus((prev) => `${prev}\n✅ Role "${formData.role}" assigned to the customer!`);
 
       // Step 3: Send email invite
       const inviteRes = await fetch('/api/register/email-invite', {
@@ -184,7 +185,7 @@ export default function RegisterCompanyPage() {
           ))}
 
           {/* Role Dropdown */}
-          {/* <div className="flex flex-col">
+          <div className="flex flex-col">
             <select
               name="role"
               // value={formData.role}
@@ -197,7 +198,7 @@ export default function RegisterCompanyPage() {
               <option value="admin">Admin</option>
             </select>
             {errors?.role && <span className="text-red-500 text-xs mt-1">{errors.role}</span>}
-          </div> */}
+          </div>
 
           {/* Country Dropdown */}
           <div className="flex flex-col">

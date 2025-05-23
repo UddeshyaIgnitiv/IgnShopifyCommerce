@@ -118,7 +118,7 @@ export async function POST(req: Request) {
      // ✅ Step 6: Assign customer role (e.g., 'buyer')
     const roleRes = await shopifyFetch(ASSIGN_ROLE_TO_CUSTOMER_MUTATION, {
       customerId: contact?.customer?.id,
-      role: role, // Pass role from request body, default to 'buyer'
+      role: JSON.stringify(role), // Pass role from request body, default to 'buyer'
     });
 
     const roleErrors = roleRes?.customerUpdate?.userErrors ?? [];
