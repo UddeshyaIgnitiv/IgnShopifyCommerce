@@ -47,9 +47,7 @@ importers:
       next:
         specifier: 15.3.0-canary.13
         version: 15.3.0-canary.13(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      ngrok:
-        specifier: 5.0.0-beta.2
-        version: 5.0.0-beta.2
+      
       react:
         specifier: 19.0.0
         version: 19.0.0
@@ -1011,11 +1009,6 @@ packages:
         optional: true
       sass:
         optional: true
-
-  ngrok@5.0.0-beta.2:
-    resolution: {integrity: sha512-UzsyGiJ4yTTQLCQD11k1DQaMwq2/SsztBg2b34zAqcyjS25qjDpogMKPaCKHwe/APRTHeel3iDXcVctk5CNaCQ==}
-    engines: {node: '>=14.2'}
-    hasBin: true
 
   node-abi@3.75.0:
     resolution: {integrity: sha512-OhYaY5sDsIka7H7AtijtI9jwGYLyl29eQn/W623DiN/MIv5sUqc4g7BIDThX+gb7di9f6xK02nkp8sdfFWZLTg==}
@@ -2231,17 +2224,6 @@ snapshots:
       - '@babel/core'
       - babel-plugin-macros
 
-  ngrok@5.0.0-beta.2:
-    dependencies:
-      extract-zip: 2.0.1
-      got: 11.8.6
-      lodash.clonedeep: 4.5.0
-      uuid: 8.3.2
-      yaml: 2.7.1
-    optionalDependencies:
-      hpagent: 0.1.2
-    transitivePeerDependencies:
-      - supports-color
 
   node-abi@3.75.0:
     dependencies:

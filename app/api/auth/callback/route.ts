@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const client_secret = process.env.CLIENT_SECRET!;
     const redirect_uri = 'https://ign-shopify-commerce.vercel.app/account'; // must match original
 
-    const tokenEndpoint = 'https://shopify.com/authentication/75087675606/oauth/token';
+    const tokenEndpoint = `https://shopify.com/authentication/${process.env.SHOPIFY_SHOPID}/oauth/token`;
 
     const body = new URLSearchParams({
         grant_type: 'authorization_code',

@@ -16,7 +16,7 @@ export async function GET() {
         nonce,
     });
 
-    const url = `https://shopify.com/authentication/75087675606/oauth/authorize?${queryParams.toString()}`;
+    const url = `https://shopify.com/authentication/${process.env.SHOPIFY_SHOPID}/oauth/authorize?${queryParams.toString()}`;
 
     return NextResponse.redirect(url);
 }
