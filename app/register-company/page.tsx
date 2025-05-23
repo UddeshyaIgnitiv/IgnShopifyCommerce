@@ -17,7 +17,7 @@ export default function RegisterCompanyPage() {
     province: '',
     zip: '',
     country: '',
-    role: 'buyer',
+    // role: 'buyer',
   });
 
   const [status, setStatus] = useState('');
@@ -55,7 +55,6 @@ export default function RegisterCompanyPage() {
       'province',
       'zip',
       'country',
-      'role',
     ];
 
     const newErrors: Record<string, string> = {};
@@ -123,7 +122,7 @@ export default function RegisterCompanyPage() {
 
       customerId = customer.id;
       setStatus((prev) => `${prev}\n✅ Customer "${customer.firstName}" created and assigned to company!`);
-      setStatus((prev) => `${prev}\n✅ Role "${formData.role}" assigned to the customer!`);
+      // setStatus((prev) => `${prev}\n✅ Role "${formData.role}" assigned to the customer!`);
 
       // Step 3: Send email invite
       const inviteRes = await fetch('/api/register/email-invite', {
@@ -158,7 +157,7 @@ export default function RegisterCompanyPage() {
       <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl">
         <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Register Your Company</h2>
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {[ 
+          {[
             { name: 'firstName', placeholder: 'First Name' },
             { name: 'lastName', placeholder: 'Last Name' },
             { name: 'email', placeholder: 'Email', type: 'email' },
@@ -177,30 +176,28 @@ export default function RegisterCompanyPage() {
                 placeholder={placeholder}
                 value={formData[name as keyof typeof formData]}
                 onChange={handleChange}
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                  errors?.[name] ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                }`}
+                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${errors?.[name] ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                  }`}
               />
               {errors?.[name] && <span className="text-red-500 text-xs mt-1">{errors[name]}</span>}
             </div>
           ))}
 
           {/* Role Dropdown */}
-          <div className="flex flex-col">
+          {/* <div className="flex flex-col">
             <select
               name="role"
-              value={formData.role}
+              // value={formData.role}
               onChange={handleChange}
-              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                errors?.role ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-              }`}
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${errors?.role ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                }`}
             >
               <option value="buyer">Buyer</option>
               <option value="approver">Approver</option>
               <option value="admin">Admin</option>
             </select>
             {errors?.role && <span className="text-red-500 text-xs mt-1">{errors.role}</span>}
-          </div>
+          </div> */}
 
           {/* Country Dropdown */}
           <div className="flex flex-col">
@@ -208,9 +205,8 @@ export default function RegisterCompanyPage() {
               name="country"
               value={formData.country}
               onChange={handleChange}
-              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                errors?.country ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-              }`}
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${errors?.country ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                }`}
             >
               <option value="">Select Country</option>
               {countries.map((c) => (
@@ -228,9 +224,8 @@ export default function RegisterCompanyPage() {
               name="province"
               value={formData.province}
               onChange={handleChange}
-              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                errors?.province ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-              }`}
+              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${errors?.province ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                }`}
             >
               <option value="">Select Province/State</option>
               {regions.map((r) => (
@@ -253,11 +248,11 @@ export default function RegisterCompanyPage() {
           </div>
         </form>
 
-          {status && (
-            <pre className="mt-4 text-sm text-left bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">
-              {status}
-            </pre>
-          )}
+        {status && (
+          <pre className="mt-4 text-sm text-left bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">
+            {status}
+          </pre>
+        )}
         {/* <div className="mt-4 text-center">
           <pre>{status}</pre>
         </div> */}
