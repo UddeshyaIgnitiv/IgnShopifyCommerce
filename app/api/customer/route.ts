@@ -11,7 +11,7 @@ export async function POST(request: NextRequest) {
   const match = cookieHeader.match(/shopify_access_token=([^;]*)/);
   const token = match?.[1];
 
-  console.log("token", token);
+  //console.log("token", token);
 
   if (!token) {
     return NextResponse.json({ error: 'No customer access token found.' }, { status: 401 });
@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
 
     const result = await response.json();
 
-    console.log("result", result);
+    //console.log("result", result);
 
     if (result.errors) {
       return NextResponse.json({ error: result.errors }, { status: 500 });

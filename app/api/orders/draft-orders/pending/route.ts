@@ -10,10 +10,10 @@ export async function GET(req: NextRequest) {
 
     const data = await shopifyFetch(GET_PENDING_DRAFT_ORDERS, variables);
 
-    console.log("data", data);
+    //console.log("data", data);
     const orders = data?.draftOrders?.edges?.map((edge: any) => edge.node) || [];
 
-    console.log("orders", orders);
+    //console.log("orders", orders);
 
     return NextResponse.json({
       draftOrders: orders,
