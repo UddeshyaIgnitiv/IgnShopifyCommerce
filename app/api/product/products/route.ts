@@ -27,10 +27,10 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('query')?.trim();
 
-  console.log('[API] Received query:', query);
+  //console.log('[API] Received query:', query);
 
   if (!query) {
-    console.log('[API] No query provided, returning 400');
+    //console.log('[API] No query provided, returning 400');
     return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
   }
 
@@ -68,7 +68,7 @@ export async function GET(req: Request) {
       }),
     });
 
-    console.log('[API] Shopify response status:', response.status);
+    //console.log('[API] Shopify response status:', response.status);
 
     const data: ShopifyGraphQLResponse = await response.json();
 
@@ -90,12 +90,12 @@ export async function GET(req: Request) {
           title: `${edge.node.title} - ${variant.node.title}`,
           variantId: variant.node.id,
         };
-        console.log('[API] Adding product:', product);
+        //console.log('[API] Adding product:', product);
         products.push(product);
       });
     });
 
-    console.log('[API] Returning products:', products.length);
+    //console.log('[API] Returning products:', products.length);
 
     return NextResponse.json({ products });
   } catch (error) {

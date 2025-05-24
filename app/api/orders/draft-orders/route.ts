@@ -7,13 +7,13 @@ import { NextRequest, NextResponse } from 'next/server';
 
 export async function POST(req: NextRequest) {
   try {
-    console.log('▶️ Incoming request to create draft order...');
+    //console.log('▶️ Incoming request to create draft order...');
 
     const { customerId, lineItems } = await req.json();
-    console.log('📥 Received input:', { customerId, lineItems });
+    //console.log('📥 Received input:', { customerId, lineItems });
 
     if (!customerId || !lineItems) {
-      console.warn('⚠️ Missing customerId or lineItems in request');
+      //console.warn('⚠️ Missing customerId or lineItems in request');
       return NextResponse.json({ error: 'Missing customerId or lineItems' }, { status: 400 });
     }
 
@@ -25,10 +25,10 @@ export async function POST(req: NextRequest) {
         tags: ['awaiting_approval'],
       },
     };
-    console.log('📦 Variables for CREATE_DRAFT_ORDER:', variables);
+    //console.log('📦 Variables for CREATE_DRAFT_ORDER:', variables);
 
     const data = await shopifyFetch(CREATE_DRAFT_ORDER, variables);
-    console.log('✅ Draft order creation response:', data);
+    //console.log('✅ Draft order creation response:', data);
 
     const draftOrder = data?.draftOrderCreate?.draftOrder;
     const errors = data?.draftOrderCreate?.userErrors;
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: errors }, { status: 400 });
     }
 
-    console.log('🆔 Draft order created with ID:', draftOrder?.id);
+    //console.log('🆔 Draft order created with ID:', draftOrder?.id);
 
     const metafieldValue = JSON.stringify({
       draft_order: {
@@ -49,7 +49,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
-    console.log('📝 Prepared metafield JSON value:', metafieldValue);
+    //console.log('📝 Prepared metafield JSON value:', metafieldValue);
 
     const metafieldVariables = {
       input: {
@@ -65,10 +65,10 @@ export async function POST(req: NextRequest) {
       },
     };
 
-    console.log('📤 Sending metafield update to Shopify:', metafieldVariables);
+    //console.log('📤 Sending metafield update to Shopify:', metafieldVariables);
 
     const metafieldResult = await shopifyFetch(UPDATE_CUSTOMER_METAFIELD, metafieldVariables);
-    console.log('✅ Metafield update response:', metafieldResult);
+    //console.log('✅ Metafield update response:', metafieldResult);
 
     return NextResponse.json({
       message: '✅ Draft order created and metafield saved.',

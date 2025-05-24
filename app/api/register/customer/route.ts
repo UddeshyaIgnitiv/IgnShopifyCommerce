@@ -113,7 +113,7 @@ export async function POST(req: Request) {
       }
     }
 
-    console.log("contact?.customer?.id", contact?.customer?.id)
+    //console.log("contact?.customer?.id", contact?.customer?.id)
 
      // ✅ Step 6: Assign customer role (e.g., 'buyer')
     const roleRes = await shopifyFetch(ASSIGN_ROLE_TO_CUSTOMER_MUTATION, {
