@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
 
     if (!customerAccessToken || !customerAccessToken.startsWith('shcat_')) {
       //console.warn('[ROLE API] Missing shopify_access_token cookie');
-      return NextResponse.json({ error: 'Missing or invalid Authorization header' }, { status: 401 });
+      return NextResponse.json({ error: 'Missing or invalid Authorization header. Please log in again.' }, { status: 401 });
     }
 
     // ✅ Step 2: Call Shopify API using token from cookie

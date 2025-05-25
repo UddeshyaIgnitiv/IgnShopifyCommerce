@@ -4,18 +4,21 @@ import { ProductOption } from 'app/types/product';
 import { debounce } from 'lib/utils/debounce';
 import { useState } from 'react';
 
-// Utility to extract numeric Shopify ID
 const extractShopifyId = (gid: string) => gid.split('/').pop() || gid;
 
 interface ProductSearchProps {
   onSelectAction: (product: ProductOption) => void;
 }
 
+interface SelectedProduct extends ProductOption {
+  quantity: number;
+}
+
 export default function ProductSearch({ onSelectAction }: ProductSearchProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [products, setProducts] = useState<ProductOption[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedProducts, setSelectedProducts] = useState<ProductOption[]>([]);
+  const [selectedProducts, setSelectedProducts] = useState<SelectedProduct[]>([]);
 
   const fetchProducts = debounce(async (query: string) => {
     if (!query) {
@@ -45,9 +48,35 @@ export default function ProductSearch({ onSelectAction }: ProductSearchProps) {
 
   const handleSelect = (product: ProductOption) => {
     onSelectAction(product);
-    if (!selectedProducts.find(p => p.variantId === product.variantId)) {
-      setSelectedProducts(prev => [...prev, product]);
-    }
+    setSelectedProducts((prev) => {
+      const existing = prev.find(p => p.variantId === product.variantId);
+      if (existing) {
+        return prev.map(p =>
+          p.variantId === product.variantId
+            ? { ...p, quantity: p.quantity + 1 }
+            : p
+        );
+      }
+      return [...prev, { ...product, quantity: 1 }];
+    });
+  };
+
+  const handleIncrease = (variantId: string) => {
+    setSelectedProducts(prev =>
+      prev.map(p =>
+        p.variantId === variantId ? { ...p, quantity: p.quantity + 1 } : p
+      )
+    );
+  };
+
+  const handleDecrease = (variantId: string) => {
+    setSelectedProducts(prev =>
+      prev
+        .map(p =>
+          p.variantId === variantId ? { ...p, quantity: p.quantity - 1 } : p
+        )
+        .filter(p => p.quantity > 0)
+    );
   };
 
   const handleRemove = (variantId: string) => {
@@ -73,9 +102,16 @@ export default function ProductSearch({ onSelectAction }: ProductSearchProps) {
           <li
             key={product.variantId}
             onClick={() => handleSelect(product)}
-            className="cursor-pointer p-3 hover:bg-blue-100 border-b last:border-b-0"
+            className="cursor-pointer p-3 hover:bg-blue-100 border-b last:border-b-0 flex items-center gap-3"
           >
-            {product.title}
+            {product.imageSrc && (
+              <img
+                src={product.imageSrc}
+                alt={product.imageAlt || product.title}
+                className="w-10 h-10 object-cover rounded"
+              />
+            )}
+            <span>{product.title}</span>
           </li>
         ))}
         {!loading && products.length === 0 && searchTerm.length > 0 && (
@@ -89,16 +125,43 @@ export default function ProductSearch({ onSelectAction }: ProductSearchProps) {
           <table className="w-full table-auto border border-gray-300 rounded-md overflow-hidden">
             <thead className="bg-gray-100">
               <tr>
-                <th className="p-3 text-left">Title</th>
+                <th className="p-3 text-left">Product</th>
                 <th className="p-3 text-left">Variant ID</th>
+                <th className="p-3 text-left">Quantity</th>
                 <th className="p-3 text-left">Action</th>
               </tr>
             </thead>
             <tbody>
               {selectedProducts.map((item) => (
                 <tr key={item.variantId} className="border-t">
-                  <td className="p-3">{item.title}</td>
+                  <td className="p-3 flex items-center gap-3">
+                    {item.imageSrc && (
+                      <img
+                        src={item.imageSrc}
+                        alt={item.imageAlt || item.title}
+                        className="w-10 h-10 object-cover rounded"
+                      />
+                    )}
+                    <span>{item.title}</span>
+                  </td>
                   <td className="p-3">{extractShopifyId(item.variantId)}</td>
+                  <td className="p-3 flex items-center gap-2">
+                    <button
+                      onClick={() => handleDecrease(item.variantId)}
+                      aria-label="Decrease quantity"
+                      className="w-6 h-6 flex items-center justify-center rounded-full border border-gray-400 text-gray-700 hover:bg-gray-200 transition text-base leading-none"
+                    >
+                      −
+                    </button>
+                    <span className="min-w-[20px] text-center">{item.quantity}</span>
+                    <button
+                      onClick={() => handleIncrease(item.variantId)}
+                      aria-label="Increase quantity"
+                      className="w-6 h-6 flex items-center justify-center rounded-full border border-gray-400 text-gray-700 hover:bg-gray-200 transition text-base leading-none"
+                    >
+                      +
+                    </button>
+                  </td>
                   <td className="p-3">
                     <button
                       onClick={() => handleRemove(item.variantId)}

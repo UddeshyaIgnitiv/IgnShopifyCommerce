@@ -1,7 +1,6 @@
 // app/api/orders/draft-orders/route.ts
 
 import CREATE_DRAFT_ORDER from 'lib/shopify/mutations/orders/createDraftOrder';
-import UPDATE_CUSTOMER_METAFIELD from 'lib/shopify/mutations/orders/updateCustomerDraftOrder';
 import { shopifyFetch } from 'lib/shopify_service';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -67,7 +66,7 @@ export async function POST(req: NextRequest) {
 
     //console.log('📤 Sending metafield update to Shopify:', metafieldVariables);
 
-    const metafieldResult = await shopifyFetch(UPDATE_CUSTOMER_METAFIELD, metafieldVariables);
+    //const metafieldResult = await shopifyFetch(UPDATE_CUSTOMER_METAFIELD, metafieldVariables);
     //console.log('✅ Metafield update response:', metafieldResult);
 
     return NextResponse.json({
