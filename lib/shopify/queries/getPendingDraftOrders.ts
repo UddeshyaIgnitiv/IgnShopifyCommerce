@@ -8,16 +8,26 @@ const GET_PENDING_DRAFT_ORDERS = gql`
           id
           name
           createdAt
-          note2
+          status  # ✅ Added this field to fetch the draft order status
           tags
           customer {
-            displayName
+            id
+            firstName
+            lastName
+            email
           }
           lineItems(first: 10) {
             edges {
               node {
                 title
                 quantity
+                variant {
+                  id
+                  image {
+                    url
+                    altText
+                  }
+                }
               }
             }
           }

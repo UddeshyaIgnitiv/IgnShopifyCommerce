@@ -5,6 +5,10 @@ const CREATE_DRAFT_ORDER = `
         id
         name
         tags
+        customer {
+          id
+          displayName
+        }
         lineItems(first: 10) {
           edges {
             node {

@@ -1,10 +1,37 @@
-const COMPLETE_DRAFT_ORDER = `
+import { gql } from 'graphql-request';
+
+const COMPLETE_DRAFT_ORDER = gql`
   mutation draftOrderComplete($id: ID!) {
     draftOrderComplete(id: $id) {
-      order {
+      draftOrder {
         id
         name
-        statusUrl
+        status
+        lineItems(first: 10) {
+          edges {
+            node {
+              id
+              title
+              quantity
+              variant {
+                id
+                title
+                price
+                image {
+                  src
+                  altText
+                }
+              }
+            }
+          }
+        }
+        customer {
+          id
+          displayName
+          email
+        }
+        createdAt
+        updatedAt
       }
       userErrors {
         field

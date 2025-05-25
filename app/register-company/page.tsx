@@ -16,8 +16,7 @@ export default function RegisterCompanyPage() {
     city: '',
     province: '',
     zip: '',
-    country: '',
-    role: 'buyer',
+    country: ''
   });
 
   const [status, setStatus] = useState('');
@@ -54,8 +53,7 @@ export default function RegisterCompanyPage() {
       'city',
       'province',
       'zip',
-      'country',
-      'role'
+      'country'
     ];
 
     const newErrors: Record<string, string> = {};
@@ -123,7 +121,7 @@ export default function RegisterCompanyPage() {
 
       customerId = customer.id;
       setStatus((prev) => `${prev}\n✅ Customer "${customer.firstName}" created and assigned to company!`);
-      setStatus((prev) => `${prev}\n✅ Role "${formData.role}" assigned to the customer!`);
+      setStatus((prev) => `${prev}\n✅ Default role Admin assigned to the customer!`);
 
       // Step 3: Send email invite
       const inviteRes = await fetch('/api/register/email-invite', {
@@ -183,22 +181,6 @@ export default function RegisterCompanyPage() {
               {errors?.[name] && <span className="text-red-500 text-xs mt-1">{errors[name]}</span>}
             </div>
           ))}
-
-          {/* Role Dropdown */}
-          <div className="flex flex-col">
-            <select
-              name="role"
-              value={formData.role}
-              onChange={handleChange}
-              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${errors?.role ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                }`}
-            >
-              <option value="buyer">Buyer</option>
-              <option value="approver">Approver</option>
-              <option value="admin">Admin</option>
-            </select>
-            {errors?.role && <span className="text-red-500 text-xs mt-1">{errors.role}</span>}
-          </div>
 
           {/* Country Dropdown */}
           <div className="flex flex-col">

@@ -3,6 +3,8 @@
 export interface ProductOption {
   title: string;
   variantId: string;
+  imageSrc?: string;
+  imageAlt?: string;
 }
 
 export interface Product {

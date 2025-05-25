@@ -8,13 +8,21 @@ interface ShopifyGraphQLResponse {
         node: {
           id: string;
           title: string;
+          images: {
+            edges: Array<{
+              node: {
+                originalSrc: string;
+                altText?: string;
+              };
+            }>;
+          };
           variants: {
             edges: Array<{
               node: {
                 id: string;
                 title: string;
               };
-            }>; 
+            }>;
           };
         };
       }>;
@@ -27,10 +35,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const query = searchParams.get('query')?.trim();
 
-  //console.log('[API] Received query:', query);
-
   if (!query) {
-    //console.log('[API] No query provided, returning 400');
     return NextResponse.json({ error: 'Query parameter is required' }, { status: 400 });
   }
 
@@ -49,6 +54,14 @@ export async function GET(req: Request) {
                 node {
                   id
                   title
+                  images(first: 1) {
+                    edges {
+                      node {
+                        originalSrc
+                        altText
+                      }
+                    }
+                  }
                   variants(first: 5) {
                     edges {
                       node {
@@ -68,8 +81,6 @@ export async function GET(req: Request) {
       }),
     });
 
-    //console.log('[API] Shopify response status:', response.status);
-
     const data: ShopifyGraphQLResponse = await response.json();
 
     if (data.errors) {
@@ -85,17 +96,20 @@ export async function GET(req: Request) {
     const products: ProductOption[] = [];
 
     data.data.products.edges.forEach((edge) => {
+      const imageNode = edge.node.images?.edges?.[0]?.node;
+      const imageSrc = imageNode?.originalSrc || '';
+      const imageAlt = imageNode?.altText || edge.node.title;
+
       edge.node.variants.edges.forEach((variant) => {
-        const product = {
+        const product: ProductOption = {
           title: `${edge.node.title} - ${variant.node.title}`,
           variantId: variant.node.id,
+          imageSrc,
+          imageAlt,
         };
-        //console.log('[API] Adding product:', product);
         products.push(product);
       });
     });
-
-    //console.log('[API] Returning products:', products.length);
 
     return NextResponse.json({ products });
   } catch (error) {

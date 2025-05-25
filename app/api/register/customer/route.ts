@@ -26,8 +26,8 @@ export async function POST(req: Request) {
       country,
       companyId,
       assignAsMainContact = true,
-      role = 'buyer'
     } = body;
+    const role = 'admin';
 
     // ✅ Step 1: Validate fields individually
     const errors: { field: string; message: string }[] = [];

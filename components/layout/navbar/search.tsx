@@ -125,7 +125,7 @@ export default function Search() {
               key={id}
               role="option"
               tabIndex={0}
-              className="cursor-pointer px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-700 focus:bg-blue-500 focus:text-white flex items-center gap-3"
+              className="cursor-pointer px-4 py-2 text-sm hover:bg-gray-100 hover:text-blue-700 focus:bg-blue-500 focus:text-white border-b last:border-b-0 flex items-center gap-3"
               onClick={() => window.location.href = url}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
