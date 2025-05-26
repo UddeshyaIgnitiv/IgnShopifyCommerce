@@ -5,6 +5,7 @@ import { NextResponse } from 'next/server';
 export async function GET() {
     const cookieStore = cookies();
     const emailRaw = (await cookieStore).get('user_email')?.value;
+    const companyLocationId = (await cookieStore).get('companyLocationId')?.value;
     const email = emailRaw ? decodeURIComponent(emailRaw) : null;
 
     if (!email) {
@@ -21,12 +22,9 @@ export async function GET() {
 
         const res = NextResponse.json(customer);
 
-        // Set companyLocationId cookie if found
-        if (firstLocationId) {
-            res.cookies.set({
-                name: 'companyLocationId',
-                value: firstLocationId,
-                httpOnly: true,
+        // Set companyLocationId if not already set
+        if (firstLocationId && !companyLocationId) {
+            res.cookies.set('companyLocationId', firstLocationId, {
                 secure: true,
                 path: '/',
                 sameSite: 'lax',

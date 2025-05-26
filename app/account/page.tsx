@@ -36,6 +36,8 @@ export default function AccountPage() {
 
                     setLocations(locs);
 
+                    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+
                     const cookieLocId = Cookies.get('companyLocationId');
                     if (cookieLocId) {
                         setSelectedLocationId(cookieLocId);
@@ -44,8 +46,10 @@ export default function AccountPage() {
                         if (firstLocId) {
                             setSelectedLocationId(firstLocId);
                             Cookies.set('companyLocationId', firstLocId, {
-                                secure: true,
+                                secure: isSecure,
                                 sameSite: 'Lax',
+                                path: '/',
+                                expires: 7,
                             });
                         } else {
                             // ❗ If no locations found at all
@@ -75,13 +79,20 @@ export default function AccountPage() {
 
     const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newId = e.target.value;
+        console.log("handleLocationChange hit --> ", newId)
         setSelectedLocationId(newId);
+        const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
         Cookies.set('companyLocationId', newId, {
-            secure: process.env.NODE_ENV === 'production', // only secure in prod
-            sameSite: 'Lax',         // make cookie accessible across routes
+            secure: isSecure, // only secure in prod
+            sameSite: 'Lax',
+            path: '/',        // make cookie accessible across routes
             expires: 7,             // expires in 7 days
         });
+        const companyLocationIdView = Cookies.get('companyLocationId');
+        console.log("companyLocationIdView  --> ", companyLocationIdView)
     };
+
+    console.log('All cookies:', Cookies.get());
 
     if (loading) return <main className="p-8">Loading...</main>;
 
