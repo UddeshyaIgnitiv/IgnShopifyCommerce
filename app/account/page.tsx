@@ -20,8 +20,10 @@ export default function AccountPage() {
         async function fetchCustomer() {
             try {
                 const res = await fetch('/api/customer');
+                console.log("This is response for getCustomerByMail ---> ", res)
                 if (res.status === 200) {
                     const data = await res.json();
+                    console.log("res recieved")
 
                     setCustomer(data);
 
@@ -47,15 +49,16 @@ export default function AccountPage() {
                             });
                         } else {
                             // ❗ If no locations found at all
-                            router.replace('/register');
+                            router.replace('/register-company');
                         }
                     }
                 } else {
-                    router.replace('/register');
+                    console.log("res fake")
+                    router.replace('/register-company');
                 }
             } catch (err) {
                 console.error('Error fetching customer:', err);
-                router.replace('/register');
+                router.replace('/register-company');
             } finally {
                 setLoading(false);
             }
@@ -63,7 +66,7 @@ export default function AccountPage() {
 
         const token = Cookies.get('shopify_access_token');
         if (!token) {
-            router.replace('/register');
+            router.replace('/register-company');
             return;
         }
 
