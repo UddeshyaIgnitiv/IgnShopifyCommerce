@@ -144,9 +144,23 @@ export type ShopifyCartOperation = {
   };
 };
 
-export type ShopifyCreateCartOperation = {
-  data: { cartCreate: { cart: ShopifyCart } };
-};
+// export type ShopifyCreateCartOperation = {
+//   data: { cartCreate: { cart: ShopifyCart } };
+// };
+
+export interface ShopifyCreateCartOperation {
+  variables: {
+    lineItems?: any[]; // or CartLineInput[] if you have a type for it
+    companyLocationId?: string;
+    customerAccessToken?: string;
+  };
+  data: {
+    cartCreate: {
+      cart: ShopifyCart;
+    };
+  };
+}
+
 
 export type ShopifyAddToCartOperation = {
   data: {
@@ -268,5 +282,78 @@ export type ShopifyProductsOperation = {
     query?: string;
     reverse?: boolean;
     sortKey?: string;
+  };
+};
+
+export type Customer = {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  displayName: string;
+  phone: string;
+  note: string;
+  verifiedEmail: boolean;
+  validEmailAddress: boolean;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+  numberOfOrders: number;
+  amountSpent: {
+    amount: string;
+    currencyCode: string;
+  };
+  defaultAddress: Address | null;
+  addresses: Address[];
+  image: {
+    src: string;
+  } | null;
+  canDelete: boolean;
+  orders: Connection<{
+    confirmed: boolean;
+    confirmationNumber: string;
+    displayAddress: {
+      formatted: string;
+      name: string;
+    };
+  }>;
+  companyContactProfiles: {
+    title: string;
+    id: string;
+    isMainContact: boolean;
+    company: {
+      locations: Connection<{
+        id: string;
+        name: string;
+        catalogsCount: {
+          count: number;
+        };
+        catalogs: Connection<{
+          title: string;
+          priceList: {
+            name: string;
+          };
+        }>;
+      }>;
+    };
+  }[];
+};
+
+type Address = {
+  address1: string;
+  address2: string;
+  city: string;
+  province: string;
+  zip: string;
+  country: string;
+  formattedArea?: string;
+};
+
+export type ShopifyGetCustomerByEmailOperation = {
+  data: {
+    customers: Connection<Customer>;
+  };
+  variables: {
+    query: string;
   };
 };

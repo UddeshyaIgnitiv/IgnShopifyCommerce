@@ -11,16 +11,40 @@ export const addToCartMutation = /* GraphQL */ `
   ${cartFragment}
 `;
 
+// export const createCartMutation = /* GraphQL */ `
+//   mutation createCart($lineItems: [CartLineInput!]) {
+//     cartCreate(input: { lines: $lineItems }) {
+//       cart {
+//         ...cart
+//       }
+//     }
+//   }
+//   ${cartFragment}
+// `;
+
 export const createCartMutation = /* GraphQL */ `
-  mutation createCart($lineItems: [CartLineInput!]) {
-    cartCreate(input: { lines: $lineItems }) {
+  mutation createCart($lineItems: [CartLineInput!], $companyLocationId: ID, $customerAccessToken: String) {
+    cartCreate(
+      input: {
+        lines: $lineItems
+        buyerIdentity: {
+          customerAccessToken: $customerAccessToken
+          companyLocationId: $companyLocationId
+        }
+      }
+    ) {
       cart {
         ...cart
+      }
+      userErrors {
+        field
+        message
       }
     }
   }
   ${cartFragment}
 `;
+
 
 export const editCartItemsMutation = /* GraphQL */ `
   mutation editCartItems($cartId: ID!, $lines: [CartLineUpdateInput!]!) {

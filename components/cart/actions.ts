@@ -100,7 +100,24 @@ export async function redirectToCheckout() {
   redirect(cart!.checkoutUrl);
 }
 
+// export async function createCartAndSetCookie() {
+//   let cart = await createCart();
+//   (await cookies()).set('cartId', cart.id!);
+// }
+
+// Helper: Fetch customer by email
+
 export async function createCartAndSetCookie() {
-  let cart = await createCart();
-  (await cookies()).set('cartId', cart.id!);
+  const cookieStore = cookies();
+  const customerAccessToken = (await cookieStore).get('customerAccessToken')?.value;
+  const companyLocationId = (await cookieStore).get('companyLocationId')?.value;
+
+  const cart = await createCart({
+    customerAccessToken,
+    companyLocationId
+  });
+
+  (await cookieStore).set('cartId', cart.id!);
+  console.log("New Cart set, companyLocationId ---> ", companyLocationId);
 }
+

@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import MobileMenu from './mobile-menu';
 import Search from './search';
+import CartModalWrapper from 'components/cart/cartModalWrapper';
 
 const { SITE_NAME } = process.env;
 
@@ -27,11 +28,11 @@ export async function Navbar() {
 
         {/* Center: Search with rounded border */}
         <div className="flex justify-center w-full">
-        <div className="w-full md:w-1/2">
+          <div className="w-full md:w-1/2">
             <Suspense>
               <Search />
             </Suspense>
-        </div>
+          </div>
         </div>
 
         {/* Right: Register/Login + Cart */}
@@ -64,7 +65,7 @@ export async function Navbar() {
           >
             Login
           </Link>
-          <CartModal />
+          <CartModalWrapper />
         </div>
       </div>
 
@@ -72,22 +73,22 @@ export async function Navbar() {
       <div className="flex items-center justify-center px-4 pb-3 lg:px-8">
         {/* Desktop Nav Menu */}
         {menu.length > 0 && (
-        <ul className="hidden md:flex items-center space-x-6 text-sm">
-          {menu
-            .filter(item => item.title !== 'Profile')
-            .map((item: Menu) => (
-              <li key={item.title} className="whitespace-nowrap">
-                <Link href={item.path} prefetch className="text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 font-semibold underline-offset-4 hover:underline transition-colors duration-200">
-                  {item.title}
-                </Link>
-              </li>
-            ))}
-          <li className="whitespace-nowrap">
-            <Link href="/account/profile" prefetch className="text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 font-semibold underline-offset-4 hover:underline transition-colors duration-200">
-              Profile
-            </Link>
-          </li>
-        </ul>
+          <ul className="hidden md:flex items-center space-x-6 text-sm">
+            {menu
+              .filter(item => item.title !== 'Profile')
+              .map((item: Menu) => (
+                <li key={item.title} className="whitespace-nowrap">
+                  <Link href={item.path} prefetch className="text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+            <li className="whitespace-nowrap">
+              <Link href="/account/profile" prefetch className="text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+                Profile
+              </Link>
+            </li>
+          </ul>
         )}
 
 

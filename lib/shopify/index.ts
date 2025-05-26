@@ -47,6 +47,7 @@ import {
   ShopifyCollectionProductsOperation,
   ShopifyCollectionsOperation,
   ShopifyCreateCartOperation,
+  ShopifyGetCustomerByEmailOperation,
   ShopifyMenuOperation,
   ShopifyPageOperation,
   ShopifyPagesOperation,
@@ -57,6 +58,7 @@ import {
   ShopifyRemoveFromCartOperation,
   ShopifyUpdateCartOperation
 } from './types';
+import { getCustomerByEmailQuery } from './queries/getCustomerByEmail';
 
 const domain = process.env.SHOPIFY_STORE_DOMAIN
   ? ensureStartsWith(process.env.SHOPIFY_STORE_DOMAIN, 'https://')
@@ -213,13 +215,42 @@ const reshapeProducts = (products: ShopifyProduct[]) => {
   return reshapedProducts;
 };
 
-export async function createCart(): Promise<Cart> {
+// export async function createCart(): Promise<Cart> {
+//   const res = await shopifyFetch<ShopifyCreateCartOperation>({
+//     query: createCartMutation
+//   });
+
+//   return reshapeCart(res.body.data.cartCreate.cart);
+// }
+
+export async function createCart({
+  customerAccessToken,
+  companyLocationId
+}: {
+  customerAccessToken?: string;
+  companyLocationId?: string;
+}): Promise<Cart> {
+  const variables: ShopifyCreateCartOperation['variables'] = {
+    lineItems: []
+  };
+
+  if (customerAccessToken) {
+    variables.customerAccessToken = customerAccessToken;
+  }
+
+  if (companyLocationId) {
+    variables.companyLocationId = companyLocationId;
+  }
+
   const res = await shopifyFetch<ShopifyCreateCartOperation>({
-    query: createCartMutation
+    query: createCartMutation,
+    variables
   });
 
   return reshapeCart(res.body.data.cartCreate.cart);
 }
+
+
 
 export async function addToCart(
   lines: { merchandiseId: string; quantity: number }[]
@@ -281,6 +312,25 @@ export async function getCart(): Promise<Cart | undefined> {
   }
 
   return reshapeCart(res.body.data.cart);
+}
+
+export async function getCustomerByEmail(email: string) {
+  const queryString = `email:${email}`;
+
+  const res = await shopifyFetch<ShopifyGetCustomerByEmailOperation>({
+    query: getCustomerByEmailQuery,
+    variables: { query: queryString },
+  });
+
+  const customerEdges = res.body?.data?.customers?.edges;
+
+  if (!customerEdges?.length) {
+    return undefined;
+  }
+
+  const customer = customerEdges?.[0]?.node;
+
+  return customer;
 }
 
 export async function getCollection(
