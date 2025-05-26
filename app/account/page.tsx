@@ -65,7 +65,6 @@ export default function AccountPage() {
         }
 
         const token = Cookies.get('shopify_access_token');
-        console.log("access token --> ", token);
         if (!token) {
             router.replace('/register-company');
             return;
@@ -77,7 +76,11 @@ export default function AccountPage() {
     const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newId = e.target.value;
         setSelectedLocationId(newId);
-        Cookies.set('companyLocationId', newId, { secure: true, sameSite: 'Lax' });
+        Cookies.set('companyLocationId', newId, {
+            secure: process.env.NODE_ENV === 'production', // only secure in prod
+            sameSite: 'Lax',         // make cookie accessible across routes
+            expires: 7,             // expires in 7 days
+        });
     };
 
     if (loading) return <main className="p-8">Loading...</main>;

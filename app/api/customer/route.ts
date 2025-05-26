@@ -3,7 +3,8 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-    const emailRaw = (await cookies()).get('user_email')?.value;
+    const cookieStore = cookies();
+    const emailRaw = (await cookieStore).get('user_email')?.value;
     const email = emailRaw ? decodeURIComponent(emailRaw) : null;
 
     if (!email) {
