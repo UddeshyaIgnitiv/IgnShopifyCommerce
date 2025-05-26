@@ -44,7 +44,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Token exchange failed', details: data }, { status: 500 });
     }
 
-    console.log('Access Token:', data);
+    //console.log('Access Token:', data);
 
     const accessToken = data.access_token;
     const idToken = data.id_token;
@@ -54,7 +54,7 @@ export async function GET(req: NextRequest) {
       try {
         const decoded = jwtDecode<IdTokenPayload>(idToken);
         email = decoded.email || '';
-        console.log('Decoded Email:', email);
+        //console.log('Decoded Email:', email);
       } catch (decodeErr) {
         console.error('Failed to decode id_token:', decodeErr);
       }
