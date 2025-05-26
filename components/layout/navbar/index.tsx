@@ -1,4 +1,5 @@
-import CartModal from 'components/cart/modal';
+import LocationDropdown from 'app/account/page';
+import CartModalWrapper from 'components/cart/cartModalWrapper';
 import LogoSquare from 'components/logo-square';
 import { getMenu } from 'lib/shopify';
 import { Menu } from 'lib/shopify/types';
@@ -6,7 +7,6 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import MobileMenu from './mobile-menu';
 import Search from './search';
-import CartModalWrapper from 'components/cart/cartModalWrapper';
 
 const { SITE_NAME } = process.env;
 
@@ -37,6 +37,8 @@ export async function Navbar() {
 
         {/* Right: Register/Login + Cart */}
         <div className="flex md:flex-1 justify-end items-center space-x-6">
+
+          <LocationDropdown />
           <Link
             href="/register-company"
             className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200"
@@ -74,6 +76,11 @@ export async function Navbar() {
         {/* Desktop Nav Menu */}
         {menu.length > 0 && (
           <ul className="hidden md:flex items-center space-x-6 text-sm">
+            <li className="whitespace-nowrap">
+              <Link href="/products" prefetch className="text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+                Products List
+              </Link>
+            </li>
             {menu
               .filter(item => item.title !== 'Profile')
               .map((item: Menu) => (
@@ -85,7 +92,7 @@ export async function Navbar() {
               ))}
             <li className="whitespace-nowrap">
               <Link href="/account/profile" prefetch className="text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 font-semibold underline-offset-4 hover:underline transition-colors duration-200">
-                Profile
+                Draft order
               </Link>
             </li>
           </ul>

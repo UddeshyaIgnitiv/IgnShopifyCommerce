@@ -1,132 +1,111 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 interface Location {
-    id: string;
-    name: string;
+  id: string;
+  name: string;
 }
 
-export default function AccountPage() {
-    const router = useRouter();
-    const [customer, setCustomer] = useState<any>(null);
-    const [locations, setLocations] = useState<Location[]>([]);
-    const [selectedLocationId, setSelectedLocationId] = useState<string>('');
-    const [loading, setLoading] = useState(true);
+export default function LocationDropdown() {
+  const router = useRouter();
+  const [customer, setCustomer] = useState<any>(null);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [selectedLocationId, setSelectedLocationId] = useState<string>('');
+  const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        async function fetchCustomer() {
-            try {
-                const res = await fetch('/api/customer');
-                console.log("This is response for getCustomerByMail ---> ", res)
-                if (res.status === 200) {
-                    const data = await res.json();
-                    console.log("res recieved")
+  useEffect(() => {
+    async function fetchLocations() {
+      try {
+        const res = await fetch('/api/customer');
+        if (res.status === 200) {
+          const data = await res.json();
+          setCustomer(data);
 
-                    setCustomer(data);
+          const edges = data?.companyContactProfiles?.[0]?.company?.locations?.edges ?? [];
 
-                    const locs: Location[] = data?.companyContactProfiles?.[0]?.company?.locations?.edges?.map(
-                        (edge: any) => ({
-                            id: edge?.node?.id,
-                            name: edge?.node?.name,
-                        })
-                    ) || [];
+          const locs: Location[] = edges.map((edge: any) => ({
+            id: edge.node.id,
+            name: edge.node.name,
+          }));
 
-                    setLocations(locs);
+          setLocations(locs);
 
-                    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+          const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+          const cookieLocId = Cookies.get('companyLocationId');
 
-                    const cookieLocId = Cookies.get('companyLocationId');
-                    if (cookieLocId) {
-                        setSelectedLocationId(cookieLocId);
-                    } else {
-                        const firstLocId = locs[0]?.id;
-                        if (firstLocId) {
-                            setSelectedLocationId(firstLocId);
-                            Cookies.set('companyLocationId', firstLocId, {
-                                secure: isSecure,
-                                sameSite: 'Lax',
-                                path: '/',
-                                expires: 7,
-                            });
-                        } else {
-                            // ❗ If no locations found at all
-                            router.replace('/register-company');
-                        }
-                    }
-                } else {
-                    console.log("res fake")
-                    router.replace('/register-company');
-                }
-            } catch (err) {
-                console.error('Error fetching customer:', err);
-                router.replace('/register-company');
-            } finally {
-                setLoading(false);
+          if (cookieLocId) {
+            setSelectedLocationId(cookieLocId);
+          } else {
+            const firstLocId = locs[0]?.id;
+            if (firstLocId) {
+              setSelectedLocationId(firstLocId);
+              Cookies.set('companyLocationId', firstLocId, {
+                secure: isSecure,
+                sameSite: 'Lax',
+                path: '/',
+                expires: 7,
+              });
+            } else {
+              router.replace('/register-company');
             }
+          }
+        } else {
+          router.replace('/register-company');
         }
+      } catch (err) {
+        console.error('Error fetching customer:', err);
+        router.replace('/register-company');
+      } finally {
+        setLoading(false);
+      }
+    }
 
-        const token = Cookies.get('shopify_access_token');
-        if (!token) {
-            router.replace('/register-company');
-            return;
-        }
+    const token = Cookies.get('shopify_access_token');
+    if (!token) {
+      router.replace('/register-company');
+      return;
+    }
 
-        fetchCustomer();
-    }, [router]);
+    fetchLocations();
+  }, [router]);
 
-    const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const newId = e.target.value;
-        console.log("handleLocationChange hit --> ", newId)
-        setSelectedLocationId(newId);
-        const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
-        Cookies.set('companyLocationId', newId, {
-            secure: isSecure, // only secure in prod
-            sameSite: 'Lax',
-            path: '/',        // make cookie accessible across routes
-            expires: 7,             // expires in 7 days
-        });
-        const companyLocationIdView = Cookies.get('companyLocationId');
-        console.log("companyLocationIdView  --> ", companyLocationIdView)
-    };
+  const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newId = e.target.value;
+    setSelectedLocationId(newId);
 
-    console.log('All cookies:', Cookies.get());
+    const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    Cookies.set('companyLocationId', newId, {
+      secure: isSecure,
+      sameSite: 'Lax',
+      path: '/',
+      expires: 7,
+    });
 
-    if (loading) return <main className="p-8">Loading...</main>;
+    router.refresh(); // Refresh the page to reflect the selected location
+  };
 
-    return (
-        <main className="p-8">
-            <h1 className="text-xl font-semibold mb-4">Welcome to your account dashboard</h1>
+  if (loading) return <div className="p-4 text-gray-600">Loading locations...</div>;
 
-            {customer && (
-                <>
-                    <p><strong>Name:</strong> {customer.displayName}</p>
-                    <p><strong>Email:</strong> {customer.email}</p>
-                    <p><strong>Orders:</strong> {customer.numberOfOrders}</p>
-
-                    {locations.length > 0 && (
-                        <div className="mt-6">
-                            <label htmlFor="location" className="block mb-2 text-lg font-medium">
-                                Select a company location:
-                            </label>
-                            <select
-                                id="location"
-                                value={selectedLocationId}
-                                onChange={handleLocationChange}
-                                className="p-2 border border-gray-300 rounded"
-                            >
-                                {locations.map((loc) => (
-                                    <option key={loc.id} value={loc.id}>
-                                        {loc.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
-                    )}
-                </>
-            )}
-        </main>
-    );
+  return (
+    <div className="flex flex-col">
+      <label htmlFor="location" className="text-sm font-medium text-gray-700 mb-1">
+        Select a company location:
+      </label>
+      <select
+        id="location"
+        value={selectedLocationId}
+        onChange={handleLocationChange}
+        className="p-2 border border-gray-300 rounded text-sm"
+      >
+        {locations.map((loc) => (
+          <option key={loc.id} value={loc.id}>
+            {loc.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
 }
