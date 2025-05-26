@@ -75,7 +75,7 @@ export async function GET(req: NextRequest) {
     if (email) {
       res.cookies.set({
         name: 'user_email',
-        value: decodeURIComponent(email),
+        value: email,
         httpOnly: true, // Set to true if you don't want it accessible in JS
         secure: true,
         path: '/',
