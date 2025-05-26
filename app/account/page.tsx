@@ -67,7 +67,6 @@ export default function AccountPage() {
         const token = Cookies.get('shopify_access_token');
         console.log("access token --> ", token);
         if (!token) {
-            console.log("Error #1")
             router.replace('/register-company');
             return;
         }

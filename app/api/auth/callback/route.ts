@@ -65,7 +65,7 @@ export async function GET(req: NextRequest) {
         res.cookies.set({
             name: 'shopify_access_token',
             value: accessToken,
-            httpOnly: true,
+            // httpOnly: true,
             secure: true,
             path: '/',
             sameSite: 'lax',
