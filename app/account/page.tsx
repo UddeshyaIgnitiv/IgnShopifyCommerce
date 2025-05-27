@@ -87,7 +87,13 @@ export default function LocationDropdown() {
     router.refresh(); // Refresh the page to reflect the selected location
   };
 
-  if (loading) return <div className="p-4 text-gray-600">Loading locations...</div>;
+    if (loading && locations.length > 0) {
+        return <div className="p-4 text-gray-600">Loading locations...</div>;
+    }
+
+    if (!selectedLocationId || locations.length === 0) {
+        return null; // Do not render dropdown at all
+    }
 
   return (
     <div className="flex flex-col">
