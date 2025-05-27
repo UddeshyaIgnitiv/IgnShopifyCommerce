@@ -3,11 +3,13 @@
 import { TAGS } from 'lib/constants';
 import {
   addToCart,
+  cartBuyerIdentityUpdate,
   createCart,
   getCart,
   removeFromCart,
   updateCart
 } from 'lib/shopify';
+import { CartBuyerIdentityInput } from 'lib/shopify/types';
 import { revalidateTag } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
@@ -95,10 +97,56 @@ export async function updateItemQuantity(
   }
 }
 
+// export async function redirectToCheckout() {
+//   let cart = await getCart();
+//   redirect(cart!.checkoutUrl);
+// }
+
 export async function redirectToCheckout() {
-  let cart = await getCart();
-  redirect(cart!.checkoutUrl);
+
+  const cookieStore = cookies();
+
+  // 1. load current cart
+  const cart = await getCart();
+  if (!cart) {
+    throw new Error('No active cart found');
+  }
+
+  // 1.a. ensure we actually have a cart ID
+  if (!cart.id) {
+    throw new Error('Cart is missing its ID — cannot update buyerIdentity');
+  }
+
+  // 2. pull buyerIdentity values from cookies
+  const customerAccessToken = (await cookieStore).get('shopify_access_token')?.value;
+  const companyLocationId = (await cookieStore).get('companyLocationId')?.value;
+  const customerEmailRaw = (await cookieStore).get('user_email')?.value;
+  const customerEmail = customerEmailRaw ? decodeURIComponent(customerEmailRaw) : null;
+
+  // 3. only call the mutation if you actually have something to set
+  let updatedCart = cart;
+  if (customerAccessToken || companyLocationId) {
+    console.log("buyerIdentity gen entered");
+    const buyerIdentity: CartBuyerIdentityInput = {};
+    if (customerAccessToken) buyerIdentity.customerAccessToken = customerAccessToken;
+    if (companyLocationId) buyerIdentity.companyLocationId = companyLocationId;
+    if (customerEmail) buyerIdentity.email = customerEmail;
+
+    console.log("This is buyerIdentity ---> ", buyerIdentity);
+
+    updatedCart = await cartBuyerIdentityUpdate({
+      cartId: cart.id,
+      buyerIdentity,
+    });
+  }
+
+  console.log("Updated Cart ---> ", updatedCart);
+  console.log("Checkout URL ---> ", updatedCart.checkoutUrl);
+
+  // 4. redirect
+  redirect(updatedCart.checkoutUrl);
 }
+
 
 // export async function createCartAndSetCookie() {
 //   let cart = await createCart();
@@ -109,7 +157,7 @@ export async function redirectToCheckout() {
 
 export async function createCartAndSetCookie() {
   const cookieStore = cookies();
-  const customerAccessToken = (await cookieStore).get('customerAccessToken')?.value;
+  const customerAccessToken = (await cookieStore).get('shopify_access_token')?.value;
   const companyLocationId = (await cookieStore).get('companyLocationId')?.value;
 
   const cart = await createCart({

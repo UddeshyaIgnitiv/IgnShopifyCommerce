@@ -98,6 +98,15 @@ export type SEO = {
 export type ShopifyCart = {
   id: string | undefined;
   checkoutUrl: string;
+  buyerIdentity: {
+    email?: string;
+    purchasingCompany: {
+      location: {
+        name?: string;
+        id?: string;
+      }
+    }
+  }
   cost: {
     subtotalAmount: Money;
     totalAmount: Money;
@@ -161,6 +170,27 @@ export interface ShopifyCreateCartOperation {
   };
 }
 
+export interface CartBuyerIdentityInput {
+  email?: string;
+  companyLocationId?: string;
+  customerAccessToken?: string;
+}
+
+export interface ShopifyCartBuyerIdentityUpdateOperation {
+  variables: {
+    cartId: string;
+    buyerIdentity: CartBuyerIdentityInput;
+  };
+  data: {
+    cartBuyerIdentityUpdate: {
+      cart: ShopifyCart;
+      userErrors: Array<{
+        field?: string[];
+        message: string;
+      }>;
+    };
+  };
+}
 
 export type ShopifyAddToCartOperation = {
   data: {

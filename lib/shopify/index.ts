@@ -15,6 +15,7 @@ import { cookies, headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import {
   addToCartMutation,
+  cartBuyerIdentityUpdateMutation,
   createCartMutation,
   editCartItemsMutation,
   removeFromCartMutation
@@ -34,6 +35,7 @@ import {
 } from './queries/product';
 import {
   Cart,
+  CartBuyerIdentityInput,
   Collection,
   Connection,
   Image,
@@ -42,6 +44,7 @@ import {
   Product,
   ShopifyAddToCartOperation,
   ShopifyCart,
+  ShopifyCartBuyerIdentityUpdateOperation,
   ShopifyCartOperation,
   ShopifyCollection,
   ShopifyCollectionOperation,
@@ -303,7 +306,32 @@ export async function createCart({
   return reshapeCart(res.body.data.cartCreate.cart);
 }
 
+export async function cartBuyerIdentityUpdate({
+  cartId,
+  buyerIdentity
+}: {
+  cartId: string;
+  buyerIdentity: CartBuyerIdentityInput;
+}): Promise<Cart> {
+  const variables: ShopifyCartBuyerIdentityUpdateOperation['variables'] = {
+    cartId,
+    buyerIdentity
+  };
 
+  const res = await shopifyFetch<ShopifyCartBuyerIdentityUpdateOperation>({
+    query: cartBuyerIdentityUpdateMutation,
+    variables
+  });
+
+  const { cart, userErrors } = res.body.data.cartBuyerIdentityUpdate;
+
+  if (userErrors.length) {
+    // You can handle errors however you prefer; here we just throw the first one.
+    throw new Error(userErrors?.[0]?.message);
+  }
+
+  return reshapeCart(cart);
+}
 
 export async function addToCart(
   lines: { merchandiseId: string; quantity: number }[]
