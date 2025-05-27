@@ -103,10 +103,11 @@ export default function AccountPage() {
 
             {customer && (
                 <>
+                    <p><strong>Company:</strong> {companyName}</p>
                     <p><strong>Name:</strong> {customer.displayName}</p>
                     <p><strong>Email:</strong> {customer.email}</p>
                     <p><strong>Orders:</strong> {customer.numberOfOrders}</p>
-                    <p><strong>Company Associated:</strong> {companyName}</p>
+                    
 
                     {locations.length > 0 && (
                         <div className="mt-6">
