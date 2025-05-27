@@ -14,6 +14,7 @@ export async function GET() {
         response_type: 'code',
         state,
         nonce,
+        prompt: 'login',
     });
 
     const url = `https://shopify.com/authentication/${process.env.SHOPIFY_SHOPID}/oauth/authorize?${queryParams.toString()}`;

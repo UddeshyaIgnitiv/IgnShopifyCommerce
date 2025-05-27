@@ -6,11 +6,16 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import MobileMenu from './mobile-menu';
 import Search from './search';
+import { cookies } from 'next/headers';
 
 const { SITE_NAME } = process.env;
 
 export async function Navbar() {
   const menu = await getMenu('next-js-frontend-header-menu');
+
+  const cookieStore = cookies();
+  const idToken = (await cookieStore).get('shopify_id_token')?.value;
+  console.log("idToken --> ", idToken);
 
   return (
     <nav className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
@@ -36,14 +41,26 @@ export async function Navbar() {
 
         {/* Right: Register/Login + Cart */}
         <div className="flex md:flex-1 justify-end items-center space-x-6">
-          <Link
-            href="/register-company"
-            className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200"
-          >
-            Register
-          </Link>
 
-          {menu.length > 0 && (
+          {
+            idToken === undefined ? (
+              <Link
+                href="/register-company"
+                className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200 whitespace-nowrap"
+              >
+                Register/Login
+              </Link>
+            ) : (
+              <Link
+                href="/account"
+                className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200 whitespace-nowrap"
+              >
+                My Account
+              </Link>
+            )
+          }
+
+          {/* {menu.length > 0 && (
             <ul className="hidden md:flex items-center space-x-6 text-sm">
               {menu.filter(item => item.title === 'Profile').map((item: Menu) => (
                 <li key={item.title} className="whitespace-nowrap">
@@ -57,13 +74,13 @@ export async function Navbar() {
                 </li>
               ))}
             </ul>
-          )}
-          <Link
+          )} */}
+          {/* <Link
             href="/api/auth/login"
             className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200"
           >
             Login
-          </Link>
+          </Link> */}
           <CartModal />
         </div>
       </div>

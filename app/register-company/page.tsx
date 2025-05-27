@@ -1,6 +1,7 @@
 'use client';
 
 import { getAllCountries, getRegionsByCountryCode } from 'lib/utils/countryRegion';
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
 export default function RegisterCompanyPage() {
@@ -230,6 +231,16 @@ export default function RegisterCompanyPage() {
             </button>
           </div>
         </form>
+
+        <div className="col-span-1 sm:col-span-2 text-center mt-6">
+          <h5>ALready a Customer?</h5>
+          <Link
+            href="/api/auth/login"
+            className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200"
+          >
+            Login
+          </Link>
+        </div>
 
         {status && (
           <pre className="mt-4 text-sm text-left bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">

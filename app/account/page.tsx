@@ -1,6 +1,8 @@
 'use client';
 
+import { LogoutButton } from 'components/account/LogoutButton';
 import Cookies from 'js-cookie';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -107,7 +109,7 @@ export default function AccountPage() {
                     <p><strong>Name:</strong> {customer.displayName}</p>
                     <p><strong>Email:</strong> {customer.email}</p>
                     <p><strong>Orders:</strong> {customer.numberOfOrders}</p>
-                    
+
 
                     {locations.length > 0 && (
                         <div className="mt-6">
@@ -128,6 +130,15 @@ export default function AccountPage() {
                             </select>
                         </div>
                     )}
+
+                    <br /><br /><br />
+                    {/* <Link
+                        href="/api/auth/logout"
+                        className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200"
+                    >
+                        Logout
+                    </Link> */}
+                    <LogoutButton />
                 </>
             )}
         </main>
