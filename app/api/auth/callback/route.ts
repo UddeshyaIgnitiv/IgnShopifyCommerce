@@ -72,6 +72,16 @@ export async function GET(req: NextRequest) {
             maxAge: data.expires_in,
         });
 
+        res.cookies.set({
+            name: 'shopify_id_token',
+            value: idToken,
+            // httpOnly: true,
+            secure: true,
+            path: '/',
+            sameSite: 'lax',
+            maxAge: data.expires_in,
+        });
+
         if (email) {
             res.cookies.set({
                 name: 'user_email',
