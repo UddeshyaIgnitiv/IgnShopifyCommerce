@@ -22,6 +22,8 @@ export const getCustomerByEmailQuery = `
             id
             isMainContact
             company {
+              id
+              name
               locations(first: 10) {
                 edges {
                   node {

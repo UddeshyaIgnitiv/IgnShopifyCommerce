@@ -16,6 +16,7 @@ export default function AccountPage() {
     const [selectedLocationId, setSelectedLocationId] = useState<string>('');
     const [loading, setLoading] = useState(true);
 
+    const companyName = customer?.companyContactProfiles?.[0]?.company?.name || null;
     useEffect(() => {
         async function fetchCustomer() {
             try {
@@ -105,6 +106,7 @@ export default function AccountPage() {
                     <p><strong>Name:</strong> {customer.displayName}</p>
                     <p><strong>Email:</strong> {customer.email}</p>
                     <p><strong>Orders:</strong> {customer.numberOfOrders}</p>
+                    <p><strong>Company Associated:</strong> {companyName}</p>
 
                     {locations.length > 0 && (
                         <div className="mt-6">
