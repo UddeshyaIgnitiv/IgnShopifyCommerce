@@ -126,22 +126,16 @@ export async function redirectToCheckout() {
   // 3. only call the mutation if you actually have something to set
   let updatedCart = cart;
   if (customerAccessToken || companyLocationId) {
-    console.log("buyerIdentity gen entered");
     const buyerIdentity: CartBuyerIdentityInput = {};
     if (customerAccessToken) buyerIdentity.customerAccessToken = customerAccessToken;
     if (companyLocationId) buyerIdentity.companyLocationId = companyLocationId;
     if (customerEmail) buyerIdentity.email = customerEmail;
-
-    console.log("This is buyerIdentity ---> ", buyerIdentity);
 
     updatedCart = await cartBuyerIdentityUpdate({
       cartId: cart.id,
       buyerIdentity,
     });
   }
-
-  console.log("Updated Cart ---> ", updatedCart);
-  console.log("Checkout URL ---> ", updatedCart.checkoutUrl);
 
   // 4. redirect
   redirect(updatedCart.checkoutUrl);

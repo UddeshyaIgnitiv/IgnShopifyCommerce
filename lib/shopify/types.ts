@@ -80,6 +80,7 @@ export type ProductOption = {
 };
 
 export type ProductVariant = {
+  contextualPricing: any;
   id: string;
   title: string;
   availableForSale: boolean;
@@ -369,6 +370,105 @@ export type Customer = {
   }[];
 };
 
+export type ShopifyAdminProduct = {
+      id: string;
+      handle: string;
+      title: string;
+      description: string;
+      descriptionHtml: string;
+      productType: string;
+      vendor: string;
+      status: string;
+      tags: string[];
+      publishedAt: string;
+      createdAt: string;
+      updatedAt: string;
+      totalInventory: number;
+      isGiftCard: boolean;
+      hasOnlyDefaultVariant: boolean;
+      seo: {
+        title: string;
+        description: string;
+      };
+      featuredMedia: {
+        alt: string;
+        preview: {
+          image: {
+            url: string;
+            altText: string;
+          };
+        };
+      };
+      media: {
+        edges: Array<{
+          node: {
+            mediaContentType: string;
+            alt: string;
+            preview: {
+              image: {
+                url: string;
+                altText: string;
+              };
+            };
+          };
+        }>;
+      };
+      options: Array<{
+        id: string;
+        name: string;
+        values: string[];
+      }>;
+      metafields: {
+        edges: Array<{
+          node: {
+            namespace: string;
+            key: string;
+            value: string;
+            type: string;
+            description: string;
+          };
+        }>;
+      };
+      variants: {
+        map(arg0: (variant: { price: { amount: any; }; }) => number): number[];
+        edges: Array<{
+          node: {
+            id: string;
+            title: string;
+            sku: string;
+            barcode: string;
+            availableForSale: boolean;
+            price: string;
+            compareAtPrice: string;
+            contextualPricing: {
+              price: {
+                amount: string;
+                currencyCode: string;
+              };
+            };
+            selectedOptions: Array<{
+              name: string;
+              value: string;
+            }>;
+            image: {
+              url: string;
+              altText: string;
+            };
+            inventoryItem: {
+              id: string;
+              measurement: {
+                weight: {
+                  value: number;
+                  unit: string;
+                };
+              };
+            };
+          };
+        }>;
+      };
+    
+}
+
 type Address = {
   address1: string;
   address2: string;
@@ -387,3 +487,27 @@ export type ShopifyGetCustomerByEmailOperation = {
     query: string;
   };
 };
+
+export type ShopifyAdminProductOperation = {
+  variables: {
+    id: string;
+    companyLocationId: string;
+  };
+  data: {
+    product: ShopifyAdminProduct; // <-- FIXED here: product is a single ShopifyAdminProduct object
+  };
+}
+export type ShopifyAdminProductsOperation = {
+  variables: {
+    companyLocationId: string;
+  };
+  data: {
+    products: {
+      edges: Array<{
+        node: ShopifyAdminProduct;
+      }>;
+    };
+  };
+}
+
+

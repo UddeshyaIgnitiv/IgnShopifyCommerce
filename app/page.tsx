@@ -11,16 +11,6 @@ import BuilderWrapper from 'components/BuilderWrapper';
 
 export default async function HomePage() {
 
-  // const router = useRouter();
-  let idToken;
-
-  // useEffect(() => {
-  //   idToken = Cookies.get('shopify_id_token');
-  //   if (!idToken) {
-  //     router.push("/register-company");
-  //   }
-  // }, []);
-
   const builderRes = await fetch(
     `https://cdn.builder.io/api/v2/content/page?apiKey=${process.env.BUILDER_IO_API_KEY}&url=/`
   );

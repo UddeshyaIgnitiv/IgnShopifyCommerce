@@ -6,10 +6,11 @@ import {
 } from 'lib/constants';
 import { isShopifyError } from 'lib/type-guards';
 import { ensureStartsWith } from 'lib/utils';
+import { transformAdminProductToShopifyProduct } from 'lib/utils/transformAdminProduct';
 import {
-  revalidateTag,
+  unstable_cacheLife as cacheLife,
   unstable_cacheTag as cacheTag,
-  unstable_cacheLife as cacheLife
+  revalidateTag
 } from 'next/cache';
 import { cookies, headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
@@ -26,6 +27,11 @@ import {
   getCollectionQuery,
   getCollectionsQuery
 } from './queries/collection';
+import {
+  getAdminProductQuery,
+  getAdminProductsQuery
+} from './queries/getAdminProducts';
+import { getCustomerByEmailQuery } from './queries/getCustomerByEmail';
 import { getMenuQuery } from './queries/menu';
 import { getPageQuery, getPagesQuery } from './queries/page';
 import {
@@ -43,6 +49,8 @@ import {
   Page,
   Product,
   ShopifyAddToCartOperation,
+  ShopifyAdminProductOperation,
+  ShopifyAdminProductsOperation,
   ShopifyCart,
   ShopifyCartBuyerIdentityUpdateOperation,
   ShopifyCartOperation,
@@ -62,7 +70,7 @@ import {
   ShopifyRemoveFromCartOperation,
   ShopifyUpdateCartOperation
 } from './types';
-import { getCustomerByEmailQuery } from './queries/getCustomerByEmail';
+
 
 const domain = process.env.SHOPIFY_STORE_DOMAIN
   ? ensureStartsWith(process.env.SHOPIFY_STORE_DOMAIN, 'https://')
@@ -414,6 +422,40 @@ export async function getCustomerByEmail(email: string) {
   return customer;
 }
 
+export async function getAdminProduct({
+  id,
+  companyLocationId
+}: {
+  id: string;
+  companyLocationId: string;
+}) {
+  const res = await shopifyAdminFetch<ShopifyAdminProductOperation>({
+    query: getAdminProductQuery,
+    variables: { id, companyLocationId }
+  });
+
+  return res.body?.data?.product;
+}
+  
+export async function getAdminProducts({
+  companyLocationId
+}: {
+  companyLocationId: string;
+}) {
+  const res = await shopifyAdminFetch<ShopifyAdminProductsOperation>({
+    query: getAdminProductsQuery,
+    variables: { companyLocationId }
+  });
+
+  const edges = res.body?.data?.products?.edges;
+
+  if (!edges?.length) {
+    return [];
+  }
+
+  return edges.map(edge => edge.node);
+}
+
 export async function getCollection(
   handle: string
 ): Promise<Collection | undefined> {
@@ -434,15 +476,82 @@ export async function getCollection(
 export async function getCollectionProducts({
   collection,
   reverse,
-  sortKey
+  sortKey,
+  useAdminAPI = false,
+  companyLocationId
 }: {
   collection: string;
   reverse?: boolean;
   sortKey?: string;
+  useAdminAPI?: boolean;
+  companyLocationId?: string;
 }): Promise<Product[]> {
   'use cache';
   cacheTag(TAGS.collections, TAGS.products);
   cacheLife('days');
+
+  if (useAdminAPI) {
+    if (!companyLocationId) {
+      console.log('Admin API selected but missing companyLocationId.');
+      return [];
+    }
+
+    // 1. Fetch admin products (with contextual prices)
+    const adminProducts = await getAdminProducts({ companyLocationId });
+
+    // 2. Fetch storefront products from collection (using Storefront API)
+    const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
+      query: getCollectionProductsQuery,
+      variables: {
+        handle: collection,
+        reverse,
+        sortKey: sortKey === 'CREATED_AT' ? 'CREATED' : sortKey
+      }
+    });
+
+    if (!res.body.data.collection) {
+      console.log(`[getCollectionProducts] No collection found for \`${collection}\``);
+      return [];
+    }
+
+    const storefrontProducts = reshapeProducts(
+      removeEdgesAndNodes(res.body.data.collection.products)
+    );
+
+    // 3. Merge prices from admin products into storefront products
+    for (const adminProduct of adminProducts) {
+      const matchingProduct = storefrontProducts.find(p => p.id === adminProduct.id);
+      if (matchingProduct) {
+        const prices = Array.isArray(adminProduct?.variants?.edges)
+            ? adminProduct.variants.edges.map(edge => Number(edge.node.contextualPricing?.price?.amount))
+            : [];
+      
+        matchingProduct.priceRange = {
+          maxVariantPrice: {
+            ...matchingProduct.priceRange.maxVariantPrice,
+            amount: Math.max(...prices).toString()
+          },
+          minVariantPrice: {
+            ...matchingProduct.priceRange.minVariantPrice,
+            amount: Math.min(...prices).toString()
+          }
+        };
+
+        //console.log(`[getCollectionProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
+
+        for (const edge of adminProduct.variants.edges) {
+          const adminVariant = edge.node;
+          const variant = matchingProduct.variants.find(v => v.id === adminVariant.id);
+          if (variant) {
+            variant.price = adminVariant.contextualPricing?.price;
+          } else {
+            console.warn(`[getCollectionProducts] No matching storefront variant found for admin variant ID: ${adminVariant.id}`);
+          }
+        }
+      }
+    }
+    return storefrontProducts;
+  }
 
   const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
     query: getCollectionProductsQuery,
@@ -534,11 +643,55 @@ export async function getPages(): Promise<Page[]> {
   return removeEdgesAndNodes(res.body.data.pages);
 }
 
-export async function getProduct(handle: string, customerAccessToken?: string): Promise<Product | undefined> {
+// export async function getProduct(handle: string, customerAccessToken?: string): Promise<Product | undefined> {
+//   'use cache';
+//   cacheTag(TAGS.products);
+//   cacheLife('days');
+
+//   const headers: HeadersInit = customerAccessToken
+//     ? { 'Shopify-Customer-Access-Token': customerAccessToken }
+//     : {};
+
+//   const res = await shopifyFetch<ShopifyProductOperation>({
+//     query: getProductQuery,
+//     variables: {
+//       handle
+//     },
+//     headers,
+//   });
+
+//   return reshapeProduct(res.body.data.product, false);
+// }
+
+export async function getProduct(
+  handle: string,
+  customerAccessToken?: string,
+  useAdminAPI: boolean = false,
+  companyLocationId?: string,
+  productId?: string // <-- Required when using Admin API
+): Promise<Product | undefined> {
   'use cache';
   cacheTag(TAGS.products);
   cacheLife('days');
 
+  if (useAdminAPI) {
+    if (!companyLocationId || !productId) {
+      console.log('Admin API selected but missing companyLocationId or productId.');
+      return undefined;
+    }
+    // Use Admin API to fetch a specific product by ID for a company location
+    const adminProduct = await getAdminProduct({
+      id: productId,
+      companyLocationId
+    });
+
+    if (!adminProduct) return undefined;
+
+    const storefrontProduct = transformAdminProductToShopifyProduct(adminProduct);
+  return reshapeProduct(storefrontProduct, false);
+  }
+
+  // Default to Storefront API
   const headers: HeadersInit = customerAccessToken
     ? { 'Shopify-Customer-Access-Token': customerAccessToken }
     : {};
@@ -551,8 +704,9 @@ export async function getProduct(handle: string, customerAccessToken?: string): 
     headers,
   });
 
-  return reshapeProduct(res.body.data.product, false);
+  return reshapeProduct(res.body?.data?.product, false);
 }
+
 
 export async function getProductRecommendations(
   productId: string
@@ -574,16 +728,34 @@ export async function getProductRecommendations(
 export async function getProducts({
   query,
   reverse,
-  sortKey
+  sortKey,
+  useAdminAPI = false,
+  companyLocationId
 }: {
   query?: string;
   reverse?: boolean;
   sortKey?: string;
+  useAdminAPI?: boolean;
+  companyLocationId?: string;
 }): Promise<Product[]> {
   'use cache';
   cacheTag(TAGS.products);
   cacheLife('days');
 
+  if (useAdminAPI) {
+    if (!companyLocationId) {
+      console.log('Admin API selected but missing companyLocationId.');
+      return [];
+    }
+
+    const adminProducts = await getAdminProducts({ companyLocationId });
+
+    const storefrontProducts = adminProducts.map(transformAdminProductToShopifyProduct);
+
+    return reshapeProducts(storefrontProducts);
+  }
+
+   // Default to Storefront API
   const res = await shopifyFetch<ShopifyProductsOperation>({
     query: getProductsQuery,
     variables: {

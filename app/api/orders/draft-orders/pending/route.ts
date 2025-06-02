@@ -13,8 +13,6 @@ export async function GET(req: NextRequest) {
     // Fetch draft orders from Shopify
     const data = await shopifyFetch(GET_PENDING_DRAFT_ORDERS, variables);
 
-    //console.log("📝 Raw draft order data:", JSON.stringify(data, null, 2));
-
     // Process the draft orders
     const orders =
       data?.draftOrders?.edges?.map((edge: any) => {
@@ -33,32 +31,18 @@ export async function GET(req: NextRequest) {
               }
             : null,
           lineItems: edge.node.lineItems.edges.map((itemEdge: any) => {
-            //console.log("🔍 Raw line item node:", itemEdge.node.variant); 
             const lineItem = {
               title: itemEdge.node.title,
               quantity: itemEdge.node.quantity,
               imageUrl: itemEdge.node.variant?.image?.originalSrc || null,
             };
 
-            // Log each line item
-            //console.log("📦 Line item:", lineItem);
             return lineItem;
           }),
         };
 
-        // Optional: Log entire order summary if needed
-        // console.log("🧾 Draft Order:", {
-        //   id: order.id,
-        //   name: order.name,
-        //   status:order.status,
-        //   customer: order.customer,
-        //   lineItemsCount: order.lineItems.length,
-        // });
-
         return order;
       }) || [];
-
-    console.log("✅ Processed Draft Orders:", orders.length);
 
     return NextResponse.json({
       draftOrders: orders,

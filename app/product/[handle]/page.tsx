@@ -1,23 +1,35 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { GridTileImage } from 'components/grid/tile';
 import Footer from 'components/layout/footer';
-import { Gallery } from 'components/product/gallery';
 import { ProductProvider } from 'components/product/product-context';
 import { ProductDescription } from 'components/product/product-description';
+import ProductContentClient from 'components/product/ProductContentClient';
 import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
 import { getProduct, getProductRecommendations } from 'lib/shopify';
-import { Image } from 'lib/shopify/types';
+
+import { Money } from 'lib/shopify/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import ProductContentClient from 'components/product/ProductContentClient';
+
+
 
 export async function generateMetadata(props: {
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const params = await props.params;
-  const product = await getProduct(params.handle);
+  const companyLocationId = (await cookies()).get('companyLocationId')?.value;
+
+  if (!companyLocationId) return notFound();
+
+  // Get the product via Storefront API to get the Admin ID
+  const storefrontProduct = await getProduct(params.handle); // Storefront version
+
+   if (!storefrontProduct?.id) return notFound();
+
+  const product = await getProduct(params.handle, undefined, true, companyLocationId, storefrontProduct.id);
 
   if (!product) return notFound();
 
@@ -53,7 +65,45 @@ export async function generateMetadata(props: {
 export default async function ProductPage(props: { params: Promise<{ handle: string }> }) {
   const params = await props.params;
   const { handle } = await params;
-  const product = await getProduct(params.handle);
+  const companyLocationId = (await cookies()).get('companyLocationId')?.value;
+
+  if (!companyLocationId) return notFound();
+
+  // Get the product via Storefront API to get the Admin ID
+
+  const product = await getProduct(params.handle); // Storefront version
+  
+   if (!product?.id) return notFound();
+
+  const adminProduct = await getProduct(params.handle, undefined, true, companyLocationId, product.id);
+
+  const prices = adminProduct?.variants?.map(variant => Number(variant?.price?.amount)) as number[];
+
+  product.priceRange = {
+    maxVariantPrice: {
+      ...product.priceRange.maxVariantPrice,
+      amount: Math.max(...prices)?.toString(),
+    } as Money,
+    minVariantPrice: {
+      ...product.priceRange.minVariantPrice,
+      amount: Math.min(...prices)?.toString(),
+    } as Money
+  };
+ 
+  if (adminProduct?.variants && product?.variants) {
+
+	  for (const adminProdVariant of adminProduct?.variants) {
+
+		const matchingVariant = product.variants.find(
+      variant => variant.id === adminProdVariant.id
+    );
+    if (matchingVariant) {
+      matchingVariant.price = adminProdVariant?.contextualPricing?.price;
+    }
+
+	  }
+
+	}
 
   if (!product) return notFound();
 
