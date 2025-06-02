@@ -13,7 +13,10 @@ export function transformAdminProductToShopifyProduct(
   const currencyCode =
     variants[0]?.contextualPricing?.price?.currencyCode ?? 'USD';
 
-  const prices = variants.map(v => parseFloat(v.price || '0'));
+  //const prices = variants.map(v => parseFloat(v.price || '0'));
+  const prices = variants.map(v =>
+    parseFloat(v.contextualPricing?.price?.amount ?? '0')
+  );
 
   return {
     id: adminProduct.id,
@@ -53,9 +56,16 @@ export function transformAdminProductToShopifyProduct(
         },
       })),
     },
-    featuredImage: {
+    featuredImage: adminProduct.featuredMedia?.preview?.image
+    ? {
       url: adminProduct.featuredMedia.preview.image.url,
-      altText: adminProduct.featuredMedia.preview.image.altText,
+      altText: adminProduct.featuredMedia.preview.image.altText ?? '',
+      width: 800,
+      height: 800,
+    } 
+    : {
+      url: '/placeholder.png',
+      altText: 'No image available',
       width: 800,
       height: 800,
     },
