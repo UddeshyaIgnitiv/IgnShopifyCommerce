@@ -41,8 +41,14 @@ export function transformAdminProductToShopifyProduct(
           availableForSale: variant.availableForSale,
           selectedOptions: variant.selectedOptions,
           price: {
-            amount: variant.contextualPricing.price.amount,
-            currencyCode: variant.contextualPricing.price.currencyCode,
+            amount: variant.contextualPricing?.price?.amount ?? '0.00',
+            currencyCode: variant.contextualPricing?.price?.currencyCode ?? 'USD',
+          },
+          contextualPricing: {
+            price: {
+              amount: variant.contextualPricing?.price?.amount ?? '0.00',
+              currencyCode: variant.contextualPricing?.price?.currencyCode ?? 'USD',
+            }
           },
         },
       })),

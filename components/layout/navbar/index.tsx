@@ -2,11 +2,11 @@ import CartModal from 'components/cart/modal';
 import LogoSquare from 'components/logo-square';
 import { getMenu } from 'lib/shopify';
 import { Menu } from 'lib/shopify/types';
+import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import MobileMenu from './mobile-menu';
 import Search from './search';
-import { cookies } from 'next/headers';
 
 const { SITE_NAME } = process.env;
 
@@ -15,7 +15,6 @@ export async function Navbar() {
 
   const cookieStore = cookies();
   const idToken = (await cookieStore).get('shopify_id_token')?.value;
-  console.log("idToken --> ", idToken);
 
   return (
     <nav className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">

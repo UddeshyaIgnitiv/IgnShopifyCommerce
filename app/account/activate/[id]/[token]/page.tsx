@@ -18,7 +18,6 @@ export default async function ActivatePage({
     });
 
     const result = await res.json();
-    //console.log("result", result);
 
     if (!res.ok) {
       throw new Error(result?.error || 'Activation failed');

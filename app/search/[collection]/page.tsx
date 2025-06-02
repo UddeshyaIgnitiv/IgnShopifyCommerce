@@ -1,5 +1,6 @@
 import { getCollection, getCollectionProducts } from 'lib/shopify';
 import { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import Grid from 'components/grid';
@@ -11,7 +12,6 @@ export async function generateMetadata(props: {
 }): Promise<Metadata> {
   const params = await props.params;
   const collection = await getCollection(params.collection);
-
   if (!collection) return notFound();
 
   return {
@@ -27,9 +27,20 @@ export default async function CategoryPage(props: {
 }) {
   const searchParams = await props.searchParams;
   const params = await props.params;
+
   const { sort } = searchParams as { [key: string]: string };
-  const { sortKey, reverse } = sorting.find((item) => item.slug === sort) || defaultSort;
-  const products = await getCollectionProducts({ collection: params.collection, sortKey, reverse });
+  const { sortKey, reverse } =
+    sorting.find((item) => item.slug === sort) || defaultSort;
+
+  const companyLocationId = (await cookies()).get('companyLocationId')?.value;
+
+  const products = await getCollectionProducts({
+    collection: params.collection,
+    sortKey,
+    reverse,
+    useAdminAPI: !!companyLocationId,
+    companyLocationId
+  });
 
   return (
     <section>

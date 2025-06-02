@@ -76,16 +76,7 @@ export default function RoleBasedUI() {
         if (!res.ok) throw new Error('Failed to fetch pending draft orders');
 
         const data = await res.json();
-        //console.log('📦 Draft Orders:', data);
-
-        // if (data?.draftOrders) {
-        //   data.draftOrders.forEach((order: DraftOrder) => {
-        //     order.lineItems.forEach((item, idx) => {
-        //       console.log(`🖼️ Order ${order.id}, Item ${idx}:`, item.title, item.imageUrl);
-        //     });
-        //   });
-        // }
-
+        
         setDraftOrders(data?.draftOrders || []);
       } catch (err) {
         console.error('❌ Error fetching draft orders:', err);

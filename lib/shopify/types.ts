@@ -430,6 +430,7 @@ export type ShopifyAdminProduct = {
         }>;
       };
       variants: {
+        map(arg0: (variant: { price: { amount: any; }; }) => number): number[];
         edges: Array<{
           node: {
             id: string;

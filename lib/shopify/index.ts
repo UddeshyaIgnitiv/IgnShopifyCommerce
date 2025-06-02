@@ -476,15 +476,82 @@ export async function getCollection(
 export async function getCollectionProducts({
   collection,
   reverse,
-  sortKey
+  sortKey,
+  useAdminAPI = false,
+  companyLocationId
 }: {
   collection: string;
   reverse?: boolean;
   sortKey?: string;
+  useAdminAPI?: boolean;
+  companyLocationId?: string;
 }): Promise<Product[]> {
   'use cache';
   cacheTag(TAGS.collections, TAGS.products);
   cacheLife('days');
+
+  if (useAdminAPI) {
+    if (!companyLocationId) {
+      console.log('Admin API selected but missing companyLocationId.');
+      return [];
+    }
+
+    // 1. Fetch admin products (with contextual prices)
+    const adminProducts = await getAdminProducts({ companyLocationId });
+
+    // 2. Fetch storefront products from collection (using Storefront API)
+    const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
+      query: getCollectionProductsQuery,
+      variables: {
+        handle: collection,
+        reverse,
+        sortKey: sortKey === 'CREATED_AT' ? 'CREATED' : sortKey
+      }
+    });
+
+    if (!res.body.data.collection) {
+      console.log(`[getCollectionProducts] No collection found for \`${collection}\``);
+      return [];
+    }
+
+    const storefrontProducts = reshapeProducts(
+      removeEdgesAndNodes(res.body.data.collection.products)
+    );
+
+    // 3. Merge prices from admin products into storefront products
+    for (const adminProduct of adminProducts) {
+      const matchingProduct = storefrontProducts.find(p => p.id === adminProduct.id);
+      if (matchingProduct) {
+        const prices = Array.isArray(adminProduct?.variants?.edges)
+            ? adminProduct.variants.edges.map(edge => Number(edge.node.contextualPricing?.price?.amount))
+            : [];
+      
+        matchingProduct.priceRange = {
+          maxVariantPrice: {
+            ...matchingProduct.priceRange.maxVariantPrice,
+            amount: Math.max(...prices).toString()
+          },
+          minVariantPrice: {
+            ...matchingProduct.priceRange.minVariantPrice,
+            amount: Math.min(...prices).toString()
+          }
+        };
+
+        //console.log(`[getCollectionProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
+
+        for (const edge of adminProduct.variants.edges) {
+          const adminVariant = edge.node;
+          const variant = matchingProduct.variants.find(v => v.id === adminVariant.id);
+          if (variant) {
+            variant.price = adminVariant.contextualPricing?.price;
+          } else {
+            console.warn(`[getCollectionProducts] No matching storefront variant found for admin variant ID: ${adminVariant.id}`);
+          }
+        }
+      }
+    }
+    return storefrontProducts;
+  }
 
   const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
     query: getCollectionProductsQuery,
@@ -607,23 +674,20 @@ export async function getProduct(
   cacheTag(TAGS.products);
   cacheLife('days');
 
-  ///console.log("companyLocationId", companyLocationId);
-  //console.log("productId", productId);
-
-  if (useAdminAPI && companyLocationId && productId) {
-    console.log('Admin API selected but missing companyLocationId or productId.');
+  if (useAdminAPI) {
+    if (!companyLocationId || !productId) {
+      console.log('Admin API selected but missing companyLocationId or productId.');
+      return undefined;
+    }
     // Use Admin API to fetch a specific product by ID for a company location
     const adminProduct = await getAdminProduct({
       id: productId,
       companyLocationId
     });
 
-    //console.log("adminProduct", adminProduct);
     if (!adminProduct) return undefined;
 
-  const storefrontProduct = transformAdminProductToShopifyProduct(adminProduct);
-
-  //console.log("storefrontProduct", storefrontProduct);
+    const storefrontProduct = transformAdminProductToShopifyProduct(adminProduct);
   return reshapeProduct(storefrontProduct, false);
   }
 

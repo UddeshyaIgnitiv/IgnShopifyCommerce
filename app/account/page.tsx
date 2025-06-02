@@ -2,7 +2,6 @@
 
 import { LogoutButton } from 'components/account/LogoutButton';
 import Cookies from 'js-cookie';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -23,10 +22,8 @@ export default function AccountPage() {
         async function fetchCustomer() {
             try {
                 const res = await fetch('/api/customer');
-                console.log("This is response for getCustomerByMail ---> ", res)
                 if (res.status === 200) {
                     const data = await res.json();
-                    console.log("res recieved")
 
                     setCustomer(data);
 
@@ -82,7 +79,6 @@ export default function AccountPage() {
 
     const handleLocationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         const newId = e.target.value;
-        console.log("handleLocationChange hit --> ", newId)
         setSelectedLocationId(newId);
         const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
         Cookies.set('companyLocationId', newId, {
@@ -92,10 +88,7 @@ export default function AccountPage() {
             expires: 7,             // expires in 7 days
         });
         const companyLocationIdView = Cookies.get('companyLocationId');
-        console.log("companyLocationIdView  --> ", companyLocationIdView)
     };
-
-    console.log('All cookies:', Cookies.get());
 
     if (loading) return <main className="p-8">Loading...</main>;
 
