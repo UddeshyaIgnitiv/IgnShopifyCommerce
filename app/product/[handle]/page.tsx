@@ -1,24 +1,46 @@
 import type { Metadata } from 'next';
+import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
 import { GridTileImage } from 'components/grid/tile';
 import Footer from 'components/layout/footer';
-import { Gallery } from 'components/product/gallery';
 import { ProductProvider } from 'components/product/product-context';
 import { ProductDescription } from 'components/product/product-description';
+import ProductContentClient from 'components/product/ProductContentClient';
 import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
 import { getProduct, getProductRecommendations } from 'lib/shopify';
-import { Image } from 'lib/shopify/types';
+
+import { Money } from 'lib/shopify/types';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import ProductContentClient from 'components/product/ProductContentClient';
+
+
 
 export async function generateMetadata(props: {
   params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
   const params = await props.params;
-  const product = await getProduct(params.handle);
+  //const { handle } = await params;
+  //const product = await getProduct(params.handle);
+  //const product = await getProduct(params.handle);
+  const companyLocationId = (await cookies()).get('companyLocationId')?.value;
+  const id = "gid://shopify/Product/8932575936726";
 
+  if (!companyLocationId) return notFound();
+
+  //const adminProduct = await getAdminProduct({ id, companyLocationId });
+  //const matchedProduct = adminProduct.find((p) => p.handle === handle);
+
+  //if (!matchedProduct) return notFound();
+
+  // Get the product via Storefront API to get the Admin ID
+  const storefrontProduct = await getProduct(params.handle); // Storefront version
+
+   if (!storefrontProduct?.id) return notFound();
+
+  const product = await getProduct(params.handle, undefined, true, companyLocationId, storefrontProduct.id);
+
+  console.log("Single Product", product);
   if (!product) return notFound();
 
   const { url, width, height, altText: alt } = product.featuredImage || {};
@@ -53,8 +75,87 @@ export async function generateMetadata(props: {
 export default async function ProductPage(props: { params: Promise<{ handle: string }> }) {
   const params = await props.params;
   const { handle } = await params;
-  const product = await getProduct(params.handle);
+  //const product = await getProduct(params.handle);
+  const companyLocationId = (await cookies()).get('companyLocationId')?.value;
+  const id = "gid://shopify/Product/8932575936726";
 
+  if (!companyLocationId) return notFound();
+
+  //const adminProducts = await getAdminProducts({ companyLocationId });
+  
+  // const matchedProduct = adminProducts.find((p) => p.handle === handle);
+  //  if (!matchedProduct) return notFound();
+
+  // Get the product via Storefront API to get the Admin ID
+  // const storefrontProduct = await getProduct(params.handle); // Storefront version
+
+  //  if (!storefrontProduct?.id) return notFound();
+  
+
+  // const storefrontProduct = await getProduct(params.handle);
+
+  // console.log("storefrontProduct", storefrontProduct);
+
+  // const priceStorefront = storefrontProduct?.variants[0]?.price.amount;
+  // console.log("priceStorefront", priceStorefront);
+
+  // const product = await getProduct(params.handle, undefined, true, companyLocationId, id);
+  // const priceAdmin = product?.variants[0]?.price.amount;
+  // console.log("priceAdmin", priceAdmin);
+
+  // Get the product via Storefront API to get the Admin ID
+
+  const product = await getProduct(params.handle); // Storefront version
+  
+
+   if (!product?.id) return notFound();
+
+  const adminProduct = await getProduct(params.handle, undefined, true, companyLocationId, product.id);
+
+  const prices = adminProduct?.variants?.map(variant => Number(variant?.price?.amount)) as number[];
+
+  console.log("adminProduct", adminProduct);
+  console.log("normalProduct", product);
+  product.priceRange = {
+    maxVariantPrice: {
+      ...product.priceRange.maxVariantPrice,
+      amount: Math.max(...prices)?.toString(),
+    } as Money,
+    minVariantPrice: {
+      ...product.priceRange.minVariantPrice,
+      amount: Math.min(...prices)?.toString(),
+    } as Money
+  };
+ 
+
+  if (adminProduct?.variants && product?.variants) {
+
+	  for (const adminProdVariant of adminProduct?.variants) {
+
+		const matchingVariant = product.variants.find(
+      variant => variant.id === adminProdVariant.id
+    );
+    if (matchingVariant) {
+      matchingVariant.price = adminProdVariant?.contextualPricing?.price;
+    }
+
+	  }
+
+	}
+
+  console.log("Prices", prices);
+ 
+  console.log("Single Product", product);
+
+  if (!product) return notFound();
+ 
+
+  
+
+  console.log("companyLocationId", companyLocationId);
+  //console.log("adminProductsadminProducts", adminProducts);
+  //console.log("matchedProduct", matchedProduct);
+  console.log("productproduct", product);
   if (!product) return notFound();
 
   const productJsonLd = {
