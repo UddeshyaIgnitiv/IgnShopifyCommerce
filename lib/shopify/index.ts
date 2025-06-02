@@ -748,25 +748,68 @@ export async function getProducts({
       return [];
     }
 
+    // 1. Fetch admin products (with contextual pricing)
     const adminProducts = await getAdminProducts({ companyLocationId });
 
-    const storefrontProducts = adminProducts.map(transformAdminProductToShopifyProduct);
+    // 2. Fetch storefront products using Storefront API (for general shape, title, SEO, etc.)
+    const storefrontRes = await shopifyFetch<ShopifyProductsOperation>({
+      query: getProductsQuery,
+      variables: { query, reverse, sortKey }
+    });
 
-    return reshapeProducts(storefrontProducts);
+    const storefrontProducts = reshapeProducts(removeEdgesAndNodes(storefrontRes.body.data.products));
+
+    // 3. Transform admin product → storefront format (contextualized)
+    const adminStorefrontProducts = adminProducts.map(transformAdminProductToShopifyProduct);
+
+    // 4. Merge contextual pricing into the matched storefront products
+    for (const adminProduct of adminStorefrontProducts) {
+      const matchingProduct = storefrontProducts.find(p => p.id === adminProduct.id);
+
+      if (matchingProduct) {
+        const flattenedVariants = removeEdgesAndNodes(adminProduct.variants);
+
+        const prices = flattenedVariants.map(variant =>
+          Number(variant?.price?.amount ?? 0)
+        );
+
+        if (prices.length > 0) {
+          matchingProduct.priceRange = {
+            maxVariantPrice: {
+              ...matchingProduct.priceRange.maxVariantPrice,
+              amount: Math.max(...prices).toString()
+            },
+            minVariantPrice: {
+              ...matchingProduct.priceRange.minVariantPrice,
+              amount: Math.min(...prices).toString()
+            }
+          };
+        }
+
+        console.log(`[getProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
+
+
+        for (const variant of flattenedVariants) {
+          const matchingVariant = matchingProduct.variants.find(v => v.id === variant.id);
+          if (matchingVariant) {
+            matchingVariant.price = variant.price;
+          }
+        }
+      }
+    }
+
+    return storefrontProducts;
   }
 
-   // Default to Storefront API
+  // Fallback: Storefront API only
   const res = await shopifyFetch<ShopifyProductsOperation>({
     query: getProductsQuery,
-    variables: {
-      query,
-      reverse,
-      sortKey
-    }
+    variables: { query, reverse, sortKey }
   });
 
   return reshapeProducts(removeEdgesAndNodes(res.body.data.products));
 }
+
 
 // This is called from `app/api/revalidate.ts` so providers can control revalidation logic.
 export async function revalidate(req: NextRequest): Promise<NextResponse> {
