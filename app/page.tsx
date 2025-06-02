@@ -1,7 +1,13 @@
-import BuilderWrapper from 'components/BuilderWrapper';
 import { Carousel } from 'components/carousel';
 import { ThreeItemGrid } from 'components/grid/three-items';
 import Footer from 'components/layout/footer';
+
+// app/page.tsx
+import BuilderWrapper from 'components/BuilderWrapper';
+// import Cookies from 'js-cookie';
+// import { useEffect } from 'react';
+
+// import { useRouter } from 'next/navigation';
 
 export default async function HomePage() {
 
