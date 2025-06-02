@@ -89,11 +89,6 @@ export async function Navbar() {
         {/* Desktop Nav Menu */}
         {menu.length > 0 && (
           <ul className="hidden md:flex items-center space-x-6 text-sm">
-            <li className="whitespace-nowrap">
-              <Link href="/products" prefetch className="text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 font-semibold underline-offset-4 hover:underline transition-colors duration-200">
-                Products List
-              </Link>
-            </li>
             {menu
               .filter(item => item.title !== 'Profile')
               .map((item: Menu) => (
