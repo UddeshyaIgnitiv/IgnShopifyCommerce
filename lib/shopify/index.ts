@@ -537,7 +537,7 @@ export async function getCollectionProducts({
           }
         };
 
-        //console.log(`[getCollectionProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
+        console.log(`[getCollectionProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
 
         for (const edge of adminProduct.variants.edges) {
           const adminVariant = edge.node;
