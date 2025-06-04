@@ -43,7 +43,7 @@ export async function Navbar() {
         <div className="flex md:flex-1 justify-end items-center space-x-6">
           {idToken === undefined ? (
             <Link
-              href="/register-company"
+              href="/login"
               className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200 whitespace-nowrap"
             >
               Register/Login
