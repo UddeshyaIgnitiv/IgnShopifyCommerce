@@ -3,7 +3,6 @@
 
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
-import React from 'react';
 
 export function LogoutButton() {
     const router = useRouter();
@@ -41,7 +40,7 @@ export function LogoutButton() {
     return (
         <button
             onClick={handleLogout}
-            className="text-sm font-semibold text-neutral-600 hover:text-blue-600 transition"
+            className="text-sm font-semibold text-neutral-600 hover:text-blue-600 transition cursor-pointer"
         >
             Logout
         </button>
