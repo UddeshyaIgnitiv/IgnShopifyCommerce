@@ -22,16 +22,17 @@ export default function LoginPage() {
         </div>
 
         {/* Login Button */}
-        <div className="mb-6">
-          <Link
-            href="/api/auth/login"
-            role="button"
-            aria-label="Login to your account"
-            className="w-full block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition"
+        <div className="flex justify-center">
+            <Link
+                href="/api/auth/login"
+                role="button"
+                aria-label="Login to your account"
+                className="w-1/2 text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition"
             >
-            Log In
-          </Link>
+                Log In
+            </Link>
         </div>
+
 
         {/* Stylish Divider */}
         <div className="flex items-center my-6">
