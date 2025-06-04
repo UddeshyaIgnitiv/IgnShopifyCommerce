@@ -1,69 +1,55 @@
 'use client'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+
+import IgnIcon from 'components/icons/ignIcon'
+import Link from 'next/link'
 
 export default function LoginPage() {
-    const [email, setEmail] = useState('')
-    const [otp, setOtp] = useState('')
-    const [step, setStep] = useState<'email' | 'otp'>('email')
-    const [error, setError] = useState('')
-    const router = useRouter()
+  return (
+    <main className="flex flex-col items-center bg-gradient-to-br from-gray-100 to-white px-4 py-20">
+      <div className="w-full max-w-md bg-white rounded-xl shadow-xl p-8 sm:p-10">
+        
+        {/* Logo above headline */}
+        <div className="flex justify-center mb-6">
+          <IgnIcon className="h-[72px] w-[180px]" />
+        </div>
 
-    const sendOtp = async () => {
-        const res = await fetch('/api/auth/start-login', {
-            method: 'POST',
-            body: JSON.stringify({ email }),
-        })
-        const data = await res.json()
-        if (res.ok) {
-            setStep('otp')
-        } else {
-            setError(data.message)
-        }
-    }
+        {/* Headline */}
+        <div className="mb-6 text-center">
+          <h2 className="text-2xl font-semibold text-gray-800">Welcome Back</h2>
+          <p className="text-base text-gray-500 mt-1">
+            <strong>Already a customer?</strong> Log in to your account.
+          </p>
+        </div>
 
-    const verifyOtp = async () => {
-        const res = await fetch('/api/auth/verify-otp', {
-            method: 'POST',
-            body: JSON.stringify({ email, otp }),
-        })
-        const data = await res.json()
-        if (res.ok) {
-            // Save token in cookie
-            document.cookie = `shopify_customer_token=${data.accessToken}; path=/`
-            router.push('/account')
-        } else {
-            setError(data.message)
-        }
-    }
+        {/* Login Button */}
+        <div className="mb-6">
+          <Link
+            href="/api/auth/login"
+            role="button"
+            aria-label="Login to your account"
+            className="w-full block text-center bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-md transition"
+            >
+            Log In
+          </Link>
+        </div>
 
-    return (
-        <main className="p-8 max-w-md mx-auto">
-            <h1 className="text-2xl mb-4">Login</h1>
-            {step === 'email' ? (
-                <>
-                    <input
-                        type="email"
-                        className="border p-2 w-full mb-4"
-                        placeholder="Enter email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                    />
-                    <button onClick={sendOtp} className="bg-black text-white px-4 py-2">Send OTP</button>
-                </>
-            ) : (
-                <>
-                    <input
-                        type="text"
-                        className="border p-2 w-full mb-4"
-                        placeholder="Enter OTP"
-                        value={otp}
-                        onChange={(e) => setOtp(e.target.value)}
-                    />
-                    <button onClick={verifyOtp} className="bg-black text-white px-4 py-2">Verify OTP</button>
-                </>
-            )}
-            {error && <p className="text-red-600 mt-2">{error}</p>}
-        </main>
-    )
+        {/* Stylish Divider */}
+        <div className="flex items-center my-6">
+            <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+            <span className="mx-4 text-gray-500 text-base font-medium">New business customer?</span>
+            <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+        </div>
+
+        {/* Register CTA */}
+        <div className="text-center text-sm text-gray-500">
+          <Link
+            href="/register-company"
+            className="text-blue-600 font-medium hover:underline"
+          >
+            Create an account
+          </Link>
+        </div>
+      </div>
+    </main>
+  )
 }

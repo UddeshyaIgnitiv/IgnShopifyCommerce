@@ -1,5 +1,6 @@
 'use client';
 
+import IgnIcon from 'components/icons/ignIcon';
 import { getAllCountries, getRegionsByCountryCode } from 'lib/utils/countryRegion';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
@@ -153,10 +154,25 @@ export default function RegisterCompanyPage() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 px-4">
-      <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-4xl">
-        <h2 className="text-2xl font-bold text-center mb-6 text-gray-800">Register Your Company</h2>
+    <main className="flex flex-col items-center bg-gradient-to-br from-gray-100 to-white px-4 py-20">
+      <div className="w-full max-w-3xl bg-white rounded-xl shadow-xl p-8 sm:p-10">
+        
+        {/* Logo */}
+        <div className="flex justify-center mb-6">
+          <IgnIcon className="h-[72px] w-[180px]" />
+        </div>
+
+        {/* Headline */}
+        <div className="text-center mb-8">
+          <h2 className="text-2xl font-semibold text-gray-800">Register Your Company</h2>
+          <p className="text-base text-gray-500 mt-1">
+            Register your business to access exclusive pricing and services.
+          </p>
+        </div>
+
+        {/* Form */}
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* Input fields */}
           {[
             { name: 'firstName', placeholder: 'First Name' },
             { name: 'lastName', placeholder: 'Last Name' },
@@ -169,88 +185,92 @@ export default function RegisterCompanyPage() {
             { name: 'city', placeholder: 'City' },
             { name: 'zip', placeholder: 'Postal/ZIP Code' },
           ].map(({ name, placeholder, type = 'text' }) => (
-            <div key={name} className="flex flex-col">
+            <div key={name}>
               <input
                 type={type}
                 name={name}
                 placeholder={placeholder}
                 value={formData[name as keyof typeof formData]}
                 onChange={handleChange}
-                className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${errors?.[name] ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                  }`}
+                className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                  errors?.[name] ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                }`}
               />
-              {errors?.[name] && <span className="text-red-500 text-xs mt-1">{errors[name]}</span>}
+              {errors?.[name] && <span className="text-red-500 text-xs">{errors[name]}</span>}
             </div>
           ))}
 
-          {/* Country Dropdown */}
-          <div className="flex flex-col">
+          {/* Country */}
+          <div>
             <select
               name="country"
               value={formData.country}
               onChange={handleChange}
-              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${errors?.country ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                }`}
+              className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                errors?.country ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              }`}
             >
               <option value="">Select Country</option>
               {countries.map((c) => (
-                <option key={c.code} value={c.code}>
-                  {c.name}
-                </option>
+                <option key={c.code} value={c.code}>{c.name}</option>
               ))}
             </select>
-            {errors?.country && <span className="text-red-500 text-xs mt-1">{errors.country}</span>}
+            {errors?.country && <span className="text-red-500 text-xs">{errors.country}</span>}
           </div>
 
-          {/* Province/State Dropdown */}
-          <div className="flex flex-col">
+          {/* Province */}
+          <div>
             <select
               name="province"
               value={formData.province}
               onChange={handleChange}
-              className={`border rounded px-3 py-2 focus:outline-none focus:ring-2 ${errors?.province ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
-                }`}
+              className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
+                errors?.province ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+              }`}
             >
               <option value="">Select Province/State</option>
               {regions.map((r) => (
-                <option key={r.name} value={r.shortCode || r.name}>
-                  {r.name}
-                </option>
+                <option key={r.name} value={r.shortCode || r.name}>{r.name}</option>
               ))}
             </select>
-            {errors?.province && <span className="text-red-500 text-xs mt-1">{errors.province}</span>}
+            {errors?.province && <span className="text-red-500 text-xs">{errors.province}</span>}
           </div>
 
-          {/* Submit Button */}
-          <div className="col-span-1 sm:col-span-2 text-center mt-6">
+          {/* Submit */}
+          <div className="col-span-1 sm:col-span-2 mt-6 text-center">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full sm:w-auto font-semibold hover:bg-blue-700 transition duration-200"
+              className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full sm:w-auto font-semibold hover:bg-blue-700 transition"
             >
               Register Company
             </button>
           </div>
         </form>
 
-        <div className="col-span-1 sm:col-span-2 text-center mt-6">
-          <h5>ALready a Customer?</h5>
+        {/* Divider */}
+        <div className="flex items-center my-8">
+          <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+          <span className="mx-4 text-gray-500 text-sm font-medium">Already a customer?</span>
+          <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
+        </div>
+
+        {/* Login CTA */}
+        <div className="text-center">
           <Link
-            href="/api/auth/login"
-            className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200"
+            href="/login"
+            className="text-blue-600 font-medium hover:underline transition"
           >
-            Login
+            Log in to your account
           </Link>
         </div>
 
+        {/* Status output */}
         {status && (
-          <pre className="mt-4 text-sm text-left bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">
+          <pre className="mt-6 text-sm bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">
             {status}
           </pre>
         )}
-        {/* <div className="mt-4 text-center">
-          <pre>{status}</pre>
-        </div> */}
       </div>
-    </div>
+    </main>
   );
 }
