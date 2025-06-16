@@ -1,7 +1,6 @@
 'use client';
 
 import { Gallery } from 'components/product/gallery';
-import { ProductDescription } from 'components/product/product-description';
 import type { Product } from 'lib/shopify/types';
 import { useState } from 'react';
 import RefreshProduct from './RefreshProduct';
@@ -28,7 +27,7 @@ export default function ProductContentClient({
                     altText: img.altText,
                 }))}
             />
-            <ProductDescription product={product} />
+            {/* <ProductDescription product={product} /> */}
         </>
     )
 }

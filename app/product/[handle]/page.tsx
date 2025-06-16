@@ -2,34 +2,32 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
+import Link from 'next/link';
+import { Suspense } from 'react';
+
 import { GridTileImage } from 'components/grid/tile';
 import Footer from 'components/layout/footer';
 import { ProductProvider } from 'components/product/product-context';
 import { ProductDescription } from 'components/product/product-description';
 import ProductContentClient from 'components/product/ProductContentClient';
+
 import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
 import { getProduct, getProductRecommendations } from 'lib/shopify';
-
 import { Money } from 'lib/shopify/types';
-import Link from 'next/link';
-import { Suspense } from 'react';
 
-
-
-export async function generateMetadata(props: {
-  params: Promise<{ handle: string }>;
+export async function generateMetadata({
+  params,
+}: {
+  params: { handle: string };
 }): Promise<Metadata> {
-  const params = await props.params;
   const companyLocationId = (await cookies()).get('companyLocationId')?.value;
 
-  if (!companyLocationId) return notFound();
+  const storefrontProduct = await getProduct(params.handle);
+  if (!storefrontProduct?.id) return notFound();
 
-  // Get the product via Storefront API to get the Admin ID
-  const storefrontProduct = await getProduct(params.handle); // Storefront version
-
-   if (!storefrontProduct?.id) return notFound();
-
-  const product = await getProduct(params.handle, undefined, true, companyLocationId, storefrontProduct.id);
+  const product = companyLocationId
+    ? await getProduct(params.handle, undefined, true, companyLocationId, storefrontProduct.id)
+    : storefrontProduct;
 
   if (!product) return notFound();
 
@@ -44,75 +42,63 @@ export async function generateMetadata(props: {
       follow: indexable,
       googleBot: {
         index: indexable,
-        follow: indexable
-      }
+        follow: indexable,
+      },
     },
     openGraph: url
       ? {
-        images: [
-          {
-            url,
-            width,
-            height,
-            alt
-          }
-        ]
-      }
-      : null
+          images: [{ url, width, height, alt }],
+        }
+      : null,
   };
 }
 
-export default async function ProductPage(props: { params: Promise<{ handle: string }> }) {
-  const params = await props.params;
-  const { handle } = await params;
+export default async function ProductPage({
+  params,
+}: {
+  params: { handle: string };
+}) {
+  const { handle } = params;
   const companyLocationId = (await cookies()).get('companyLocationId')?.value;
 
-  if (!companyLocationId) return notFound();
+  const storefrontProduct = await getProduct(handle);
+  if (!storefrontProduct?.id) return notFound();
 
-  // Get the product via Storefront API to get the Admin ID
+  const adminProduct = companyLocationId
+    ? await getProduct(handle, undefined, true, companyLocationId, storefrontProduct.id)
+    : null;
 
-  const product = await getProduct(params.handle); // Storefront version
-  
-   if (!product?.id) return notFound();
+  const product = { ...storefrontProduct };
 
-  const adminProduct = await getProduct(params.handle, undefined, true, companyLocationId, product.id);
-
-  const prices = adminProduct?.variants?.map(variant => Number(variant?.price?.amount)) as number[];
-
-  product.priceRange = {
-    maxVariantPrice: {
-      ...product.priceRange.maxVariantPrice,
-      amount: Math.max(...prices)?.toString(),
-    } as Money,
-    minVariantPrice: {
-      ...product.priceRange.minVariantPrice,
-      amount: Math.min(...prices)?.toString(),
-    } as Money
-  };
- 
-  if (adminProduct?.variants && product?.variants) {
-
-	  for (const adminProdVariant of adminProduct?.variants) {
-
-		const matchingVariant = product.variants.find(
-      variant => variant.id === adminProdVariant.id
-    );
-    if (matchingVariant) {
-      matchingVariant.price = adminProdVariant?.contextualPricing?.price;
+  if (adminProduct?.variants?.length) {
+    const prices = adminProduct.variants.map((v) => Number(v?.price?.amount));
+    if (prices?.length) {
+      product.priceRange = {
+        maxVariantPrice: {
+          ...product.priceRange.maxVariantPrice,
+          amount: Math.max(...prices).toString(),
+        } as Money,
+        minVariantPrice: {
+          ...product.priceRange.minVariantPrice,
+          amount: Math.min(...prices).toString(),
+        } as Money,
+      };
     }
 
-	  }
-
-	}
-
-  if (!product) return notFound();
+    for (const adminVariant of adminProduct.variants) {
+      const match = product.variants.find((v) => v.id === adminVariant.id);
+      if (match) {
+        match.price = adminVariant?.contextualPricing?.price;
+      }
+    }
+  }
 
   const productJsonLd = {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.title,
     description: product.description,
-    image: product.featuredImage.url,
+    image: product.featuredImage?.url,
     offers: {
       '@type': 'AggregateOffer',
       availability: product.availableForSale
@@ -120,35 +106,18 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
         : 'https://schema.org/OutOfStock',
       priceCurrency: product.priceRange.minVariantPrice.currencyCode,
       highPrice: product.priceRange.maxVariantPrice.amount,
-      lowPrice: product.priceRange.minVariantPrice.amount
-    }
+      lowPrice: product.priceRange.minVariantPrice.amount,
+    },
   };
 
   return (
     <ProductProvider variants={product.variants}>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd)
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productJsonLd) }}
       />
       <div className="mx-auto max-w-(--breakpoint-2xl) px-4">
         <div className="flex flex-col rounded-lg border border-neutral-200 bg-white p-8 md:p-12 lg:flex-row lg:gap-8 dark:border-neutral-800 dark:bg-black">
-          {/* <div className="h-full w-full basis-full lg:basis-4/6">
-            <Suspense
-              fallback={
-                <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden" />
-              }
-            >
-              <Gallery
-                images={product.images.slice(0, 5).map((image: Image) => ({
-                  src: image.url,
-                  altText: image.altText
-                }))}
-              />
-            </Suspense>
-          </div> */}
-
           <div className="h-full w-full basis-full lg:basis-4/6">
             <ProductContentClient initialProduct={product} handle={handle} />
           </div>
@@ -159,6 +128,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
             </Suspense>
           </div>
         </div>
+
         <RelatedProducts id={product.id} />
       </div>
       <Footer />
@@ -190,7 +160,7 @@ async function RelatedProducts({ id }: { id: string }) {
                 label={{
                   title: product.title,
                   amount: product.priceRange.maxVariantPrice.amount,
-                  currencyCode: product.priceRange.maxVariantPrice.currencyCode
+                  currencyCode: product.priceRange.maxVariantPrice.currencyCode,
                 }}
                 src={product.featuredImage?.url}
                 fill
