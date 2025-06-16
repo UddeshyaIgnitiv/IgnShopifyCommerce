@@ -58,7 +58,7 @@ const productFragment = /* GraphQL */ `
         }
       }
     }
-    variants(first: 5) {
+    variants(first: 50) {
       edges {
         node {
           id

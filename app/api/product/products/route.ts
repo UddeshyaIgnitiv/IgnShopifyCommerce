@@ -49,7 +49,7 @@ export async function GET(req: Request) {
       body: JSON.stringify({
         query: `
           query($searchQuery: String!) {
-            products(first: 5, query: $searchQuery) {
+            products(first: 100, query: $searchQuery) {
               edges {
                 node {
                   id
@@ -62,7 +62,7 @@ export async function GET(req: Request) {
                       }
                     }
                   }
-                  variants(first: 5) {
+                  variants(first: 50) {
                     edges {
                       node {
                         id

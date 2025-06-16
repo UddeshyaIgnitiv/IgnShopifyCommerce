@@ -537,7 +537,7 @@ export async function getCollectionProducts({
           }
         };
 
-        console.log(`[getCollectionProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
+        //console.log(`[getCollectionProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
 
         for (const edge of adminProduct.variants.edges) {
           const adminVariant = edge.node;
@@ -786,7 +786,7 @@ export async function getProducts({
           };
         }
 
-        console.log(`[getProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
+        //console.log(`[getProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
 
 
         for (const variant of flattenedVariants) {

@@ -4,7 +4,7 @@ export const getAdminProductQuery = /* GraphQL */ `
   query getProduct($id: ID!, $companyLocationId: ID!) {
     product(id: $id) {
       ...product
-      variants(first: 5) {
+      variants(first: 50) {
         edges {
           node {
             contextualPricing(context: { companyLocationId: $companyLocationId }) {
@@ -27,7 +27,7 @@ export const getAdminProductsQuery = /* GraphQL */ `
       edges {
         node {
           ...product
-          variants(first: 5) {
+          variants(first: 50) {
             edges {
               node {
                 contextualPricing(context: { companyLocationId: $companyLocationId }) {
