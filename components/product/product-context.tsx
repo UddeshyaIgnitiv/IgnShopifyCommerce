@@ -1,7 +1,14 @@
 'use client';
 
+import type { ProductVariant } from 'lib/shopify/types';
 import { useRouter, useSearchParams } from 'next/navigation';
-import React, { createContext, useContext, useMemo, useOptimistic } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from 'react';
 
 type ProductState = {
   [key: string]: string;
@@ -13,11 +20,20 @@ type ProductContextType = {
   state: ProductState;
   updateOption: (name: string, value: string) => ProductState;
   updateImage: (index: string) => ProductState;
+  selectedVariant?: ProductVariant;
+  setSelectedVariant: React.Dispatch<React.SetStateAction<ProductVariant | undefined>>;
+  isLoading: boolean; // required now
 };
 
 const ProductContext = createContext<ProductContextType | undefined>(undefined);
 
-export function ProductProvider({ children }: { children: React.ReactNode }) {
+export function ProductProvider({
+  children,
+  variants
+}: {
+  children: React.ReactNode;
+  variants: ProductVariant[];
+}) {
   const searchParams = useSearchParams();
 
   const getInitialState = () => {
@@ -28,33 +44,50 @@ export function ProductProvider({ children }: { children: React.ReactNode }) {
     return params;
   };
 
-  const [state, setOptimisticState] = useOptimistic(
-    getInitialState(),
-    (prevState: ProductState, update: ProductState) => ({
-      ...prevState,
-      ...update
-    })
-  );
+  const [state, setState] = useState<ProductState>(getInitialState());
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedVariant, setSelectedVariant] = useState<ProductVariant | undefined>();
+
+  useEffect(() => {
+    if (!variants?.length) return;
+
+    // Find variant matching current state
+    const foundVariant = variants.find((variant) =>
+      variant.selectedOptions.every(
+        (opt) => state[opt.name.toLowerCase()] === opt.value
+      )
+    );
+
+    if (foundVariant?.id !== selectedVariant?.id) {
+      setSelectedVariant(foundVariant);
+    }
+
+    // Once we do first match, loading is done
+    setIsLoading(false);
+  }, [state, variants, selectedVariant]);
 
   const updateOption = (name: string, value: string) => {
-    const newState = { [name]: value };
-    setOptimisticState(newState);
-    return { ...state, ...newState };
+    const newState = { ...state, [name]: value };
+    setState(newState);
+    return newState;
   };
 
   const updateImage = (index: string) => {
-    const newState = { image: index };
-    setOptimisticState(newState);
-    return { ...state, ...newState };
+    const newState = { ...state, image: index };
+    setState(newState);
+    return newState;
   };
 
   const value = useMemo(
     () => ({
       state,
       updateOption,
-      updateImage
+      updateImage,
+      selectedVariant,
+      setSelectedVariant,
+      isLoading
     }),
-    [state]
+    [state, selectedVariant, isLoading]
   );
 
   return <ProductContext.Provider value={value}>{children}</ProductContext.Provider>;
