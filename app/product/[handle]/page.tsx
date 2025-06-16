@@ -2,32 +2,34 @@ import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
 
-import Link from 'next/link';
-import { Suspense } from 'react';
-
 import { GridTileImage } from 'components/grid/tile';
 import Footer from 'components/layout/footer';
 import { ProductProvider } from 'components/product/product-context';
 import { ProductDescription } from 'components/product/product-description';
 import ProductContentClient from 'components/product/ProductContentClient';
-
 import { HIDDEN_PRODUCT_TAG } from 'lib/constants';
 import { getProduct, getProductRecommendations } from 'lib/shopify';
-import { Money } from 'lib/shopify/types';
 
-export async function generateMetadata({
-  params,
-}: {
-  params: { handle: string };
+import { Money } from 'lib/shopify/types';
+import Link from 'next/link';
+import { Suspense } from 'react';
+
+
+
+export async function generateMetadata(props: {
+  params: Promise<{ handle: string }>;
 }): Promise<Metadata> {
+  const params = await props.params;
   const companyLocationId = (await cookies()).get('companyLocationId')?.value;
 
-  const storefrontProduct = await getProduct(params.handle);
-  if (!storefrontProduct?.id) return notFound();
+  if (!companyLocationId) return notFound();
 
-  const product = companyLocationId
-    ? await getProduct(params.handle, undefined, true, companyLocationId, storefrontProduct.id)
-    : storefrontProduct;
+  // Get the product via Storefront API to get the Admin ID
+  const storefrontProduct = await getProduct(params.handle); // Storefront version
+
+   if (!storefrontProduct?.id) return notFound();
+
+  const product = await getProduct(params.handle, undefined, true, companyLocationId, storefrontProduct.id);
 
   if (!product) return notFound();
 
