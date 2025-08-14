@@ -16,7 +16,7 @@ export async function GET(req: NextRequest) {
 
     const client_id = process.env.CLIENT_ID!;
     const client_secret = process.env.CLIENT_SECRET!;
-    const redirect_uri = 'https://ign-shopify-commerce.vercel.app/account';
+    const redirect_uri = `${process.env.NEXT_PUBLIC_SITE_URL}/account`;
 
     const tokenEndpoint = `https://shopify.com/authentication/${process.env.SHOPIFY_SHOPID}/oauth/token`;
 
@@ -60,7 +60,7 @@ export async function GET(req: NextRequest) {
             }
         }
 
-        const res = NextResponse.redirect('https://ign-shopify-commerce.vercel.app/account');
+        const res = NextResponse.redirect(`${process.env.NEXT_PUBLIC_SITE_URL}/account`);
 
         res.cookies.set({
             name: 'shopify_access_token',

@@ -10,7 +10,7 @@ export async function GET() {
         client_id,
         locale: 'en',
         scope: 'openid email customer-account-api:full',
-        redirect_uri: 'https://ign-shopify-commerce.vercel.app/api/auth/callback',
+        redirect_uri: `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/callback`,
         response_type: 'code',
         state,
         nonce,

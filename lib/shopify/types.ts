@@ -371,26 +371,38 @@ export type Customer = {
 };
 
 export type ShopifyAdminProduct = {
-      id: string;
-      handle: string;
-      title: string;
-      description: string;
-      descriptionHtml: string;
-      productType: string;
-      vendor: string;
-      status: string;
-      tags: string[];
-      publishedAt: string;
-      createdAt: string;
-      updatedAt: string;
-      totalInventory: number;
-      isGiftCard: boolean;
-      hasOnlyDefaultVariant: boolean;
-      seo: {
-        title: string;
-        description: string;
+  id: string;
+  handle: string;
+  title: string;
+  description: string;
+  descriptionHtml: string;
+  productType: string;
+  vendor: string;
+  status: string;
+  tags: string[];
+  publishedAt: string;
+  createdAt: string;
+  updatedAt: string;
+  totalInventory: number;
+  isGiftCard: boolean;
+  hasOnlyDefaultVariant: boolean;
+  seo: {
+    title: string;
+    description: string;
+  };
+  featuredMedia: {
+    alt: string;
+    preview: {
+      image: {
+        url: string;
+        altText: string;
       };
-      featuredMedia: {
+    };
+  };
+  media: {
+    edges: Array<{
+      node: {
+        mediaContentType: string;
         alt: string;
         preview: {
           image: {
@@ -399,74 +411,62 @@ export type ShopifyAdminProduct = {
           };
         };
       };
-      media: {
-        edges: Array<{
-          node: {
-            mediaContentType: string;
-            alt: string;
-            preview: {
-              image: {
-                url: string;
-                altText: string;
-              };
-            };
-          };
-        }>;
+    }>;
+  };
+  options: Array<{
+    id: string;
+    name: string;
+    values: string[];
+  }>;
+  metafields: {
+    edges: Array<{
+      node: {
+        namespace: string;
+        key: string;
+        value: string;
+        type: string;
+        description: string;
       };
-      options: Array<{
+    }>;
+  };
+  variants: {
+    map(arg0: (variant: { price: { amount: any; }; }) => number): number[];
+    edges: Array<{
+      node: {
         id: string;
-        name: string;
-        values: string[];
-      }>;
-      metafields: {
-        edges: Array<{
-          node: {
-            namespace: string;
-            key: string;
-            value: string;
-            type: string;
-            description: string;
+        title: string;
+        sku: string;
+        barcode: string;
+        availableForSale: boolean;
+        price: string;
+        compareAtPrice: string;
+        contextualPricing: {
+          price: {
+            amount: string;
+            currencyCode: string;
           };
+        };
+        selectedOptions: Array<{
+          name: string;
+          value: string;
         }>;
-      };
-      variants: {
-        map(arg0: (variant: { price: { amount: any; }; }) => number): number[];
-        edges: Array<{
-          node: {
-            id: string;
-            title: string;
-            sku: string;
-            barcode: string;
-            availableForSale: boolean;
-            price: string;
-            compareAtPrice: string;
-            contextualPricing: {
-              price: {
-                amount: string;
-                currencyCode: string;
-              };
-            };
-            selectedOptions: Array<{
-              name: string;
-              value: string;
-            }>;
-            image: {
-              url: string;
-              altText: string;
-            };
-            inventoryItem: {
-              id: string;
-              measurement: {
-                weight: {
-                  value: number;
-                  unit: string;
-                };
-              };
+        image: {
+          url: string;
+          altText: string;
+        };
+        inventoryItem: {
+          id: string;
+          measurement: {
+            weight: {
+              value: number;
+              unit: string;
             };
           };
-        }>;
+        };
       };
-    
+    }>;
+  };
+
 }
 
 type Address = {
@@ -509,5 +509,66 @@ export type ShopifyAdminProductsOperation = {
     };
   };
 }
+
+// types ~ Invoice
+
+export type MoneyV2 = {
+  amount: string
+  currencyCode: string
+}
+
+export type InvoiceAddress = {
+  name?: string
+  firstName?: string
+  lastName?: string
+  address1?: string
+  address2?: string
+  city?: string
+  province?: string
+  provinceCode?: string
+  country?: string
+  countryCodeV2?: string
+  zip?: string
+  phone?: string
+}
+
+export type OrderLineItem = {
+  title: string
+  quantity: number
+  sku?: string
+  originalUnitPriceSet: { shopMoney: MoneyV2 }
+  totalDiscountsSet: { shopMoney: MoneyV2 }
+  discountedTotalPriceSet: { shopMoney: MoneyV2 }
+}
+
+export type Order = {
+  id: string
+  name: string
+  createdAt: string
+  displayFinancialStatus: string
+  totalPriceSet: { shopMoney: MoneyV2 }
+  subtotalPriceSet: { shopMoney: MoneyV2 }
+  totalShippingPriceSet: { shopMoney: MoneyV2 }
+  totalTaxSet: { shopMoney: MoneyV2 }
+  customer: {
+    firstName?: string
+    lastName?: string
+    email?: string
+  }
+  shippingAddress?: InvoiceAddress
+  billingAddress?: InvoiceAddress
+  lineItems: {
+    edges: { node: OrderLineItem }[]
+  }
+}
+
+export type GetOrderResponse = {
+  order: Order
+}
+
+export type GetOrderVariables = {
+  id: string
+}
+
 
 

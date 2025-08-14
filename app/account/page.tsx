@@ -1,5 +1,6 @@
 'use client';
 
+import InvoiceModal from 'components/InvoiceModal';
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -33,9 +34,12 @@ export default function AccountPage() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalOrders, setTotalOrders] = useState(0);
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const ordersPerPage = 50;
 
   const companyName = customer?.companyContactProfiles?.[0]?.company?.name || null;
+
+  console.log("This is orders --> ", orders);
 
   // Fetch customer info on mount
   useEffect(() => {
@@ -183,43 +187,61 @@ export default function AccountPage() {
             <div className="overflow-x-auto rounded border border-gray-200">
               <table className="min-w-full text-left">
                 <thead className="bg-gray-100 border-b">
-                    <tr>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700">Order ID</th>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700">Date</th>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700">Financial Status</th>
-                        <th className="px-4 py-3 text-sm font-semibold text-gray-700">Total</th>
-                    </tr>
+                  <tr>
+                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">Order ID</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">Date</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">Financial Status</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">Total</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-gray-700"></th>
+                  </tr>
                 </thead>
                 <tbody className="divide-y">
-                {ordersLoading ? (
+                  {ordersLoading ? (
                     <tr>
-                    <td colSpan={3} className="px-4 py-4 text-center text-sm text-gray-500">
+                      <td colSpan={5} className="px-4 py-4 text-center text-sm text-gray-500">
                         Loading orders...
-                    </td>
+                      </td>
                     </tr>
-                ) : orders.length === 0 ? (
+                  ) : orders.length === 0 ? (
                     <tr>
-                    <td colSpan={3} className="px-4 py-4 text-center text-sm text-gray-500">
+                      <td colSpan={5} className="px-4 py-4 text-center text-sm text-gray-500">
                         No orders found.
-                    </td>
+                      </td>
                     </tr>
-                ) : (
+                  ) : (
                     orders.map((order) => (
-                    <tr key={order.id} className="hover:bg-gray-50 transition">
+                      <tr key={order.id} className="hover:bg-gray-50 transition">
                         <td className="px-4 py-3 text-sm text-gray-800">{order.name}</td>
                         <td className="px-4 py-3 text-sm text-gray-600">
-                            {new Date(order.createdAt).toLocaleDateString()}
+                          {new Date(order.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-800">{order.displayFinancialStatus || '-'}</td>
                         <td className="px-4 py-3 text-sm text-gray-800">
-                            {order.totalPrice?.amount} {order.totalPrice?.currencyCode}
+                          {order.displayFinancialStatus || '-'}
                         </td>
-                    </tr>
+                        <td className="px-4 py-3 text-sm text-gray-800">
+                          {order.totalPrice?.amount} {order.totalPrice?.currencyCode}
+                        </td>
+                        <td className="px-4 py-3 text-sm">
+                          <button
+                            onClick={() => setSelectedOrderId(order.id)}
+                            className="px-3 py-1 rounded bg-blue-600 text-white cursor-pointer hover:bg-blue-700 transition-colors duration-200"
+                          >
+                            View Invoice
+                          </button>
+                        </td>
+                      </tr>
                     ))
-                )}
+                  )}
                 </tbody>
               </table>
             </div>
+
+            {selectedOrderId && (
+              <InvoiceModal
+                orderId={selectedOrderId}
+                onClose={() => setSelectedOrderId(null)}
+              />
+            )}
 
             {/* Pagination Controls */}
             {totalPages > 1 && (
