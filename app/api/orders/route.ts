@@ -15,7 +15,7 @@ export async function GET() {
 
     const variables = {
       first: 20,
-      query: `customer_email:${email}`,
+      query: `email:${email}`,
     };
 
     const data = await shopifyFetch(GET_CUSTOMER_ORDERS, variables);
@@ -29,7 +29,7 @@ export async function GET() {
           amount: node.totalPriceSet?.shopMoney?.amount || '0.00',
           currencyCode: node.totalPriceSet?.shopMoney?.currencyCode || 'USD',
         },
-        
+
       })) || [];
 
     return NextResponse.json({ orders });
