@@ -210,7 +210,14 @@ export default function AccountPage() {
                     </tr>
                   ) : (
                     orders.map((order) => (
-                      <tr key={order.id} className="hover:bg-gray-50 transition">
+                      <tr
+                        key={order.id}
+                        className="hover:bg-gray-50 transition cursor-pointer"
+                        onClick={() => {
+                          const numericOrderId = order.id.replace("gid://shopify/Order/", "");
+                          window.location.href = `https://shopify.com/${process.env.NEXT_PUBLIC_SHOPIFY_SHOPID}/account/orders/${numericOrderId}`;
+                        }}
+                      >
                         <td className="px-4 py-3 text-sm text-gray-800">{order.name}</td>
                         <td className="px-4 py-3 text-sm text-gray-600">
                           {new Date(order.createdAt).toLocaleDateString()}
@@ -223,7 +230,10 @@ export default function AccountPage() {
                         </td>
                         <td className="px-4 py-3 text-sm">
                           <button
-                            onClick={() => setSelectedOrderId(order.id)}
+                            onClick={(e) => {
+                              e.stopPropagation(); // stops bubbling to <tr>
+                              setSelectedOrderId(order.id);
+                            }}
                             className="px-3 py-1 rounded bg-blue-600 text-white cursor-pointer hover:bg-blue-700 transition-colors duration-200"
                           >
                             View Invoice
