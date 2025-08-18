@@ -1,6 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import { useReactToPrint } from 'react-to-print';
 
 interface Money {
     amount: string;
@@ -15,6 +16,13 @@ interface InvoiceModalProps {
 export default function InvoiceModal({ orderId, onClose }: InvoiceModalProps) {
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(false);
+
+    const printRef = useRef<HTMLDivElement>(null);
+
+    const handlePrint = useReactToPrint({
+        contentRef: printRef,
+        documentTitle: order ? `Invoice-${order.name}` : 'Invoice'
+    });
 
     useEffect(() => {
         if (!orderId) return;
@@ -82,9 +90,9 @@ export default function InvoiceModal({ orderId, onClose }: InvoiceModalProps) {
             .finally(() => setLoading(false));
     }, [orderId]);
 
-    const handlePrint = () => {
-        window.print();
-    };
+    // const handlePrint = () => {
+    //     window.print();
+    // };
 
 
     if (!orderId) return null;
@@ -104,7 +112,7 @@ export default function InvoiceModal({ orderId, onClose }: InvoiceModalProps) {
                 ) : !order ? (
                     <p>No order found.</p>
                 ) : (
-                    <div id="invoice-content" className="text-sm text-gray-800 font-sans">
+                    <div ref={printRef} id="invoice-content" className="text-sm text-gray-800 font-sans print:mx-8">
                         <h1 className="text-2xl font-bold mb-6">Invoice</h1>
 
                         {/* Bill to / Ship to */}
@@ -224,14 +232,26 @@ export default function InvoiceModal({ orderId, onClose }: InvoiceModalProps) {
                             If you have any questions, please send an email to {order.supportEmail}
                         </p>
 
-                        <div className="mt-6 text-right print:hidden">
+                        {/* <div className="mt-6 text-right print:hidden">
                             <button
                                 onClick={handlePrint}
                                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
                             >
                                 Print
                             </button>
-                        </div>
+                        </div> */}
+
+                        {!loading && order && (
+                            <div className="mt-6 text-right print:hidden">
+                                <button
+                                    onClick={handlePrint}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                >
+                                    Print
+                                </button>
+                            </div>
+                        )}
+
                     </div>
                 )}
             </div>
