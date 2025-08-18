@@ -2,6 +2,7 @@
 
 import InvoiceModal from 'components/InvoiceModal';
 import Cookies from 'js-cookie';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
@@ -21,10 +22,30 @@ interface Order {
   displayFinancialStatus?: string;
 }
 
+interface Customer {
+  email: string;
+  displayName: string;
+  numberOfOrders: number;
+  companyContactProfiles?: {
+    company: {
+      id: string;
+      name: string;
+      locations: {
+        edges: { node: Location }[];
+      };
+    };
+  }[];
+  metafields?: {
+    namespace: string;
+    key: string;
+    value: string;
+  }[];
+}
+
 
 export default function AccountPage() {
   const router = useRouter();
-  const [customer, setCustomer] = useState<any>(null);
+  const [customer, setCustomer] = useState<Customer | null>(null);
   const [locations, setLocations] = useState<Location[]>([]);
   const [selectedLocationId, setSelectedLocationId] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -38,12 +59,23 @@ export default function AccountPage() {
   const ordersPerPage = 50;
 
   const companyName = customer?.companyContactProfiles?.[0]?.company?.name || null;
+  //console.log('Company data:', customer?.companyContactProfiles?.[0]?.company);
+  //console.log('Company Id:', customer?.companyContactProfiles?.[0]?.company.id);
+  //console.log("This is orders --> ", orders);
 
-  console.log("This is orders --> ", orders);
+  const isAdmin = !!(customer?.metafields?? []).some(
+    (m: any) =>
+      m.namespace === 'custom' &&
+      m.key === 'is_customer_admin' &&
+      String(m.value).trim().toLowerCase() === 'true'
+  );
+
+  console.log('customer', customer, 'isAdmin', isAdmin);
 
   // Fetch customer info on mount
   useEffect(() => {
     async function fetchCustomer() {
+      console.log('fetchCustomer called');
       try {
         const res = await fetch('/api/customer');
         if (res.status === 200) {
@@ -60,6 +92,9 @@ export default function AccountPage() {
 
           const isSecure = typeof window !== 'undefined' && window.location.protocol === 'https:';
           const cookieLocId = Cookies.get('companyLocationId');
+
+          const companyId = data?.companyContactProfiles?.[0]?.company?.id;
+          //console.log("companyId", companyId);
 
           if (cookieLocId) {
             setSelectedLocationId(cookieLocId);
@@ -143,9 +178,19 @@ export default function AccountPage() {
       {customer && (
         <>
           {/* Welcome Header */}
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
-            Welcome, {customer.displayName}
-          </h1>
+          <div className="flex justify-between items-center">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
+              Welcome, {customer.displayName}
+            </h1>
+            {!loading && isAdmin && (
+              <Link
+                href="/account/users"
+                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+              >
+                Manage Users
+              </Link>
+            )}
+          </div>
 
           {/* User info + Location */}
           <section className="bg-white shadow-md rounded-lg p-6 border border-gray-200">

@@ -31,6 +31,7 @@ import {
   getAdminProductQuery,
   getAdminProductsQuery
 } from './queries/getAdminProducts';
+import { getCompanyContactsQuery } from './queries/getCompanyContacts';
 import { getCustomerByEmailQuery } from './queries/getCustomerByEmail';
 import { getMenuQuery } from './queries/menu';
 import { getPageQuery, getPagesQuery } from './queries/page';
@@ -91,8 +92,11 @@ export async function shopifyFetch<T>({
 }: {
   headers?: HeadersInit;
   query: string;
-  variables?: ExtractVariables<T>;
-}): Promise<{ status: number; body: T } | never> {
+  variables?: Record<string, any>;
+}): Promise<{
+    [x: string]: any;
+    status: number; body: T 
+} | never> {
   try {
     const result = await fetch(endpoint, {
       method: 'POST',
@@ -850,3 +854,28 @@ export async function revalidate(req: NextRequest): Promise<NextResponse> {
 
   return NextResponse.json({ status: 200, revalidated: true, now: Date.now() });
 }
+
+// lib/shopify.ts
+
+export async function fetchCompanyContacts(companyId: string) {
+  const res = await fetch(adminEndpoint, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-Shopify-Access-Token': process.env.SHOPIFY_ADMIN_TOKEN!,
+    },
+    body: JSON.stringify({
+      query: getCompanyContactsQuery,
+      variables: { companyId },
+    }),
+  });
+
+  const json = await res.json();
+
+  if (!res.ok || json.errors) {
+    throw new Error('Failed to fetch company contacts');
+  }
+
+  return json.data.company.contacts.edges;
+}
+

@@ -317,6 +317,7 @@ export type ShopifyProductsOperation = {
 };
 
 export type Customer = {
+  metafields: any;
   id: string;
   email: string;
   firstName: string;
