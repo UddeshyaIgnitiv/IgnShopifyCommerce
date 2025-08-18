@@ -3,8 +3,40 @@ export const getCustomerByEmailQuery = `
     customers(first: 1, query: $query) {
       edges {
         node {
+          id
+          email
           displayName
           numberOfOrders
+          firstName
+          lastName
+          phone
+          note
+          verifiedEmail
+          validEmailAddress
+          tags
+          createdAt
+          updatedAt
+          amountSpent { amount currencyCode }
+          defaultAddress {
+            address1 address2 city province zip country formattedArea
+          }
+          addresses {
+            address1 address2 city province zip country
+          }
+          image { src }
+          canDelete
+          
+          # ✅ Add metafields for custom namespace
+          metafields(first: 10, namespace: "custom") {
+            edges {
+              node {
+                namespace
+                key
+                value
+              }
+            }
+          }
+
           orders(first: 10) {
             edges {
               node {
@@ -17,6 +49,7 @@ export const getCustomerByEmailQuery = `
               }
             }
           }
+
           companyContactProfiles {
             title
             id
@@ -43,26 +76,6 @@ export const getCustomerByEmailQuery = `
               }
             }
           }
-          id
-          email
-          firstName
-          lastName
-          phone
-          note
-          verifiedEmail
-          validEmailAddress
-          tags
-          createdAt
-          updatedAt
-          amountSpent { amount currencyCode }
-          defaultAddress {
-            address1 address2 city province zip country formattedArea
-          }
-          addresses {
-            address1 address2 city province zip country
-          }
-          image { src }
-          canDelete
         }
       }
     }

@@ -4,6 +4,7 @@ import {
   COMPANY_CONTACT_CREATE_MUTATION,
   UPDATE_CUSTOMER_TAGS_MUTATION
 } from 'lib/shopify/mutations/companyCreateMainContactAndAssign';
+import { UPDATE_CUSTOMER_ADMIN_METAFIELD_MUTATION } from 'lib/shopify/mutations/updateCustomerAdminMetafield';
 import { GET_COMPANY_QUERY } from 'lib/shopify/queries/getCompany';
 import { shopifyFetch } from 'lib/shopify_service';
 import { CountryCode, parsePhoneNumberFromString } from 'libphonenumber-js/max';
@@ -126,7 +127,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: roleErrors }, { status: 400 });
     }
 
-    // ✅ Step 6: Add customer tag
+    // ✅ Step 7: Add customer tag
     const tagRes = await shopifyFetch(UPDATE_CUSTOMER_TAGS_MUTATION, {
       input: {
         id: customer.id,
@@ -144,6 +145,18 @@ export async function POST(req: Request) {
       }));
       return NextResponse.json({ error: formattedTagErrors }, { status: 400 });
     }
+
+    // ✅ Step 8: Set custom.is_customer_admin = true
+    const adminMetafieldRes = await shopifyFetch(UPDATE_CUSTOMER_ADMIN_METAFIELD_MUTATION, {
+      customerId: customer.id,
+      value: "true",
+    });
+
+    const adminErrors = adminMetafieldRes?.customerUpdate?.userErrors ?? [];
+    if (adminErrors.length > 0) {
+      return NextResponse.json({ error: adminErrors }, { status: 400 });
+    }
+
 
     // ✅ Success
     return NextResponse.json({

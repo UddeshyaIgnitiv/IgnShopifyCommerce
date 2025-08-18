@@ -3,9 +3,9 @@ import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-    const cookieStore = cookies();
-    const emailRaw = (await cookieStore).get('user_email')?.value;
-    const companyLocationId = (await cookieStore).get('companyLocationId')?.value;
+    const cookieStore = await cookies();
+    const emailRaw = cookieStore.get('user_email')?.value;
+    const companyLocationId = cookieStore.get('companyLocationId')?.value;
     const email = emailRaw ? decodeURIComponent(emailRaw) : null;
 
     if (!email) {
@@ -16,6 +16,11 @@ export async function GET() {
         const customer = await getCustomerByEmail(email);
         if (!customer) {
             return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
+        }
+
+        // ✅ Flatten metafields if they exist as edges → node
+        if (customer?.metafields?.edges) {
+        customer.metafields = customer.metafields.edges.map((edge: any) => edge.node);
         }
 
         const firstLocationId = customer.companyContactProfiles?.[0]?.company?.locations?.edges?.[0]?.node?.id;

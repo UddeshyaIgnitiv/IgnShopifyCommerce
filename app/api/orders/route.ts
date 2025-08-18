@@ -5,8 +5,8 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const cookieStore = cookies();
-    const emailRaw = (await cookieStore).get('user_email')?.value;
+    const cookieStore = await cookies();
+    const emailRaw = cookieStore.get('user_email')?.value;
     const email = emailRaw ? decodeURIComponent(emailRaw) : null;
 
     if (!email) {

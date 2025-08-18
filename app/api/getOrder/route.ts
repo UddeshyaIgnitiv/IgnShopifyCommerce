@@ -10,7 +10,7 @@ export async function GET(req: Request) {
         const url = new URL(req.url)
         const orderId = url.searchParams.get('id')
 
-        console.log("This is order ID ---> ", orderId);
+        //console.log("This is order ID ---> ", orderId);
 
         if (!orderId) {
             return NextResponse.json({ error: 'Missing order ID' }, { status: 400 })
