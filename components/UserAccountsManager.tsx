@@ -44,8 +44,14 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
   const [posting, setPosting] = useState(false);
   const [emailError, setEmailError] = useState(''); // State for email error message
   const [locations, setLocations] = useState<Location[]>([]);
-  const [roles, setRoles] = useState<Role[]>([]);
+  //const [roles, setRoles] = useState<Role[]>([]);
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
+
+  const UI_ROLE_OPTIONS = [
+    { id: 'admin', label: 'Admin' },
+    { id: 'purchaser', label: 'Purchaser' },
+    { id: 'non_purchaser', label: 'Non-purchaser' }
+  ];
 
   async function load() {
     setLoading(true);
@@ -57,7 +63,7 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
 
       setUsers(j.users || []);
       setLocations(j.locations || []);
-      setRoles(j.roles || []);
+      //setRoles(j.roles || []);
       setCurrentUserEmail(j.currentUserEmail || '');
     } catch (e: any) {
       setMsg(e.message || 'Failed to load users');
@@ -295,9 +301,9 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
               required
             >
               <option value="">Select Role</option>
-              {roles.map((r) => (
+              {UI_ROLE_OPTIONS.map((r) => (
                 <option key={r.id} value={r.id}>
-                  {r.name}
+                  {r.label}
                 </option>
               ))}
             </select>
