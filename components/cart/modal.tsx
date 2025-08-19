@@ -1,8 +1,8 @@
 'use client';
 
-import clsx from 'clsx';
 import { Dialog, Transition } from '@headlessui/react';
 import { ShoppingCartIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import clsx from 'clsx';
 import LoadingDots from 'components/loading-dots';
 import Price from 'components/price';
 import { DEFAULT_OPTION } from 'lib/constants';
@@ -21,12 +21,55 @@ type MerchandiseSearchParams = {
   [key: string]: string;
 };
 
+function useUserRole() {
+  const [role, setRole] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchRole() {
+      //console.log('[useUserRole] Fetching user role...');
+      try {
+        const res = await fetch('/api/users');
+        if (!res.ok) throw new Error('Failed to fetch user role');
+        const data = await res.json();
+        //console.log("data", data);
+        //console.log('[useUserRole] Role fetched:', data.role);
+
+        // Sanitize role: remove extra quotes if present
+        let cleanRole = data.role;
+        if (typeof cleanRole === 'string') {
+          cleanRole = cleanRole.replace(/^"(.*)"$/, '$1');
+        }
+
+        //console.log('[useUserRole] Role fetched:', cleanRole);
+
+        setRole(cleanRole  || 'purchaser'); // default fallback
+      } catch (error) {
+        console.error('Error fetching role:', error);
+        setRole('purchaser');
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchRole();
+  }, []);
+
+  return { role, loading };
+}
+
 export default function CartModal() {
   const { cart, updateCartItem } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const quantityRef = useRef(cart?.totalQuantity);
   const openCart = () => setIsOpen(true);
   const closeCart = () => setIsOpen(false);
+
+  const { role, loading: roleLoading } = useUserRole();
+  const isNonPurchaser = role === 'non_purchaser';
+
+  //console.log('Current user role:', role);
+  //console.log('Is user non_purchaser?', isNonPurchaser);
+
 
   useEffect(() => {
     if (!cart) {
@@ -216,7 +259,7 @@ export default function CartModal() {
                     </div>
                   </div>
                   <form action={redirectToCheckout}>
-                    <CheckoutButton />
+                    <CheckoutButton disabled={roleLoading || isNonPurchaser} />
                   </form>
                 </div>
               )}
@@ -241,14 +284,20 @@ function CloseCart({ className }: { className?: string }) {
   );
 }
 
-function CheckoutButton() {
+function CheckoutButton({ disabled }: { disabled?: boolean }) {
   const { pending } = useFormStatus();
 
   return (
     <button
-      className="block w-full rounded-full bg-blue-600 p-3 text-center text-sm font-medium text-white opacity-90 hover:opacity-100"
-      type="submit"
-      disabled={pending}
+      className={clsx(
+        'block w-full rounded-full p-3 text-center text-sm font-medium',
+        disabled || pending
+          ? 'bg-blue-600 text-white opacity-50 cursor-not-allowed pointer-events-none'
+          : 'bg-blue-600 text-white opacity-90 hover:opacity-100'
+      )}
+      type={disabled ? 'button' : 'submit'}
+      disabled={pending || disabled}
+      title={disabled ? 'You are not allowed to purchase' : undefined}
     >
       {pending ? <LoadingDots className="bg-white" /> : 'Proceed to Checkout'}
     </button>

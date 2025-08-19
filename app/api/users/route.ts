@@ -2,10 +2,21 @@ import { adminGraphql, getCompanyContactRoles, getCompanyContacts } from 'lib/sh
 import { cookies } from 'next/headers';
 import { NextResponse } from 'next/server';
 
+// Helper: Maps UI roles to Shopify Admin role names, then finds their ID from fetched roles
+function mapUIRoleToShopifyRoleId(uiRole: string, shopifyRoles: any[]): string | null {
+  const roleMap: Record<string, string> = {
+    admin: 'Location Admin',
+    purchaser: 'Ordering only',
+    non_purchaser: 'Ordering only',
+  };
+  const targetShopifyRoleName = roleMap[uiRole];
+  return shopifyRoles.find((r) => r.name === targetShopifyRoleName)?.id || null;
+}
+
 export async function GET() {
   try {
     const email = (await cookies()).get('user_email')?.value;
-    console.log("email", email);
+    //console.log("email", email);
     if (!email) {
       return NextResponse.json({ error: 'Not logged in' }, { status: 401 });
     }
@@ -32,21 +43,23 @@ export async function GET() {
     const customerNode = res?.customers?.edges?.[0]?.node;
     const companyProfile = customerNode?.companyContactProfiles?.[0]?.company;
     const companyId = companyProfile?.id;
+    const customerId = customerNode?.id;
 
-    // console.log("res", res);
-    // console.log("customerNode", customerNode);
-    // console.log("companyProfile", companyProfile);
-    // console.log("companyId", companyId);
+    //console.log("res", res);
+    //console.log("customerNode", customerNode);
+    //console.log("companyProfile", companyProfile);
+    //console.log("companyId", companyId);
+    //console.log("customerId", customerId);
 
-    if (!companyId) {
-      return NextResponse.json({ error: 'No company associated', status: 404 });
+    if (!companyId || !customerId) {
+      return NextResponse.json({ error: 'Missing company or customer data' }, { status: 404 });
     }
 
     // Step 2: Fetch all contacts using companyId
     const user = await getCompanyContacts(companyId);
-    console.log("user", user);
+    //console.log("user", user);
 
-    // ✅ Step 3: Fetch available company contact roles
+    // Step 3: Fetch available company contact roles
     const roles = await getCompanyContactRoles(companyId);
     //console.log("roles", roles);
 
@@ -72,9 +85,23 @@ export async function GET() {
     const locations = locationEdges.map((edge: any) => ({
       id: edge.node.id,
       name: edge.node.name,
-    }));
+    })) || [];
 
-    return NextResponse.json({ companyId, users: user, roles, locations, currentUserEmail: email,  }); // <- include roles
+    // 👇 Fetch the b2b.role metafield
+    const GET_CUSTOMER_ROLE_METAFIELD = `
+      query getCustomerRoleMetafield($id: ID!) {
+        customer(id: $id) {
+          metafield(namespace: "b2b", key: "role") {
+            value
+          }
+        }
+      }
+    `;
+
+    const roleRes = await adminGraphql(GET_CUSTOMER_ROLE_METAFIELD, { id: customerId });
+    const b2bRole = roleRes?.customer?.metafield?.value || 'purchaser';
+
+    return NextResponse.json({ companyId, users: user, roles, locations, currentUserEmail: email, role: b2bRole,  }); // <- include roles
   } catch (e: any) {
     console.error('[GET /api/users] error:', e?.message || e);
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
@@ -148,7 +175,7 @@ export async function POST(req: Request) {
       }
 
       locationId = locRes?.companyLocationCreate?.companyLocation?.id;
-      console.log("locationId", locationId);
+      //console.log("locationId", locationId);
     } else {
       // // If existing location selected, look up its ID
       // const LOCATIONS_QUERY = `query getCompanyLocations($id: ID!) {
@@ -182,7 +209,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'No valid location ID found or created' }, { status: 400 });
     }
 
-    // Step 3: Create the contact
+    // Step 3: Fetch roles so we can map ui role → Shopify role ID
+    const roles = await getCompanyContactRoles(companyId);
+    const shopifyRoleId = mapUIRoleToShopifyRoleId(role, roles);
+
+    console.log("Roles", roles, "shopifyRoleId", shopifyRoleId);
+
+    if (!shopifyRoleId) {
+      return NextResponse.json({ error: 'Shopify role mapping failed' }, { status: 400 });
+    }
+
+    // Step 4: Create the contact
     const CREATE_CONTACT = `
       mutation companyContactCreate($companyId: ID! $input: CompanyContactInput!) {
         companyContactCreate(companyId: $companyId, input: $input) {
@@ -213,7 +250,6 @@ export async function POST(req: Request) {
       },
     };
 
-
     const contactRes = await adminGraphql(CREATE_CONTACT, contactPayload);
     const contactErrors = contactRes?.companyContactCreate?.userErrors;
 
@@ -221,22 +257,50 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: contactErrors[0]?.message || 'Failed to create user' }, { status: 400 });
     }
 
-     // Extract contactId from the response here:
+    // Extract contactId & customerId
     const contactId = contactRes?.companyContactCreate?.companyContact?.id;
+    const customerId = contactRes?.companyContactCreate?.companyContact?.customer?.id;
 
-    if (!contactId) {
-      return NextResponse.json({ error: 'Failed to retrieve created contact ID' }, { status: 500 });
+    if (!contactId || !customerId) {
+      return NextResponse.json({ error: 'Failed to retrieve created contact or customer ID' }, { status: 500 });
     }
 
+    // --- UPDATE b2b.role metafield on customer ---
+    const UPDATE_B2B_ROLE = `
+      mutation updateB2BRoleMetafield($customerId: ID!, $value: String!) {
+        customerUpdate(input: {
+          id: $customerId,
+          metafields: [{
+            namespace: "b2b",
+            key: "role",
+            type: "json",
+            value: $value
+          }]
+        }) {
+          userErrors { field message }
+        }
+      }
+    `;
+
+    const b2bRoleRes = await adminGraphql(UPDATE_B2B_ROLE, {
+      customerId,
+      value: JSON.stringify(role), // admin | purchaser | non-purchaser
+    });
+
+    if (b2bRoleRes?.customerUpdate?.userErrors?.length) {
+      return NextResponse.json({ error: b2bRoleRes.customerUpdate.userErrors[0].message }, { status: 400 });
+    }
+
+    // Step 5: Assign Shopify Admin role to the contact
     const ASSIGN_ROLE = `
       mutation companyContactAssignRole(
-        $companyContactId: ID!, 
-        $companyLocationId: ID!, 
+        $companyContactId: ID!,
+        $companyLocationId: ID!,
         $companyContactRoleId: ID!
       ) {
         companyContactAssignRole(
-          companyContactId: $companyContactId, 
-          companyLocationId: $companyLocationId, 
+          companyContactId: $companyContactId,
+          companyLocationId: $companyLocationId,
           companyContactRoleId: $companyContactRoleId
         ) {
           userErrors { field message }
@@ -247,7 +311,7 @@ export async function POST(req: Request) {
     const assignPayload = {
       companyContactId: contactId,
       companyLocationId: locationId,
-      companyContactRoleId: role,
+      companyContactRoleId: shopifyRoleId,
     };
 
     const assignRes = await adminGraphql(ASSIGN_ROLE, assignPayload);
@@ -272,32 +336,26 @@ export async function DELETE(req: Request) {
     }
 
     // Get current user's company and contact ID
-    const GET_CUSTOMER_COMPANY = `query getCustomerCompany($q: String!) {
-      customers(first: 1, query: $q) {
-        edges {
-          node {
-            id
-            email
-            companyContactProfiles {
+    const GET_CUSTOMER_COMPANY = `
+      query getCustomerCompany($q: String!) {
+        customers(first: 1, query: $q) {
+          edges {
+            node {
               id
-              company { id }
+              email
+              companyContactProfiles {
+                id
+                company { id }
+              }
             }
           }
         }
       }
-    }`;
+    `;
     const res = await adminGraphql(GET_CUSTOMER_COMPANY, { q: `email:${email}` });
     const currentCustomer = res?.customers?.edges?.[0]?.node;
-    //const companyId = currentCustomer?.companyContactProfiles?.[0]?.company?.id;
     const currentContactId = currentCustomer?.companyContactProfiles?.[0]?.id;
-    const isAdmin = String(currentCustomer?.metafield?.value || '').toLowerCase() === 'true';
 
-    //const isAdmin = String(customer?.metafields?.find(mf => mf.namespace === "custom" && mf.key === "is_customer_admin")?.value || '').toLowerCase() === 'true';
-    // if (!companyId) {
-    //   return NextResponse.json({ error: 'No company found for admin.' }, { status: 404 });
-    // }
-
-    // 🚫 Prevent admin from deleting their own account
     if (contactId === currentContactId) {
       return NextResponse.json(
         { error: 'Admins cannot delete their own account.' },
