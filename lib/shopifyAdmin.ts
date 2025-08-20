@@ -98,6 +98,11 @@ export async function getCompanyContacts(companyId: string) {
         };
       });
 
+      // ✅ Get b2b.role metafield and determine isAdmin
+      const rawB2bValue = customer?.metafield?.value || '';
+      const b2bValue = rawB2bValue.replace(/^"+|"+$/g, '');
+      const isB2bAdminRole = b2bValue === 'admin';
+
       return {
         id: customer.id,
         contactId: contact.id,
@@ -106,6 +111,8 @@ export async function getCompanyContacts(companyId: string) {
         lastName: customer.lastName,
         permissions: rolesAndLocations,
         isMainContact: contact.isMainContact,
+        isB2bAdminRole,
+        b2bRole: b2bValue || '',
       };
     })
     .filter(Boolean);
