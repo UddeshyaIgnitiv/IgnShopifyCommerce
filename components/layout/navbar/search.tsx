@@ -85,7 +85,7 @@ export default function Search() {
   return (
     <form
       onSubmit={handleSubmit}
-      className="relative w-full max-w-xl"
+      className="relative w-full"
       role="search"
       aria-label="Product search"
     >
@@ -114,7 +114,7 @@ export default function Search() {
       </div>
 
       {showDropdown && suggestions.length > 0 && (
-       <ul
+        <ul
           ref={dropdownRef}
           id="search-suggestion-list"
           role="listbox"

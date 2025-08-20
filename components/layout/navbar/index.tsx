@@ -44,7 +44,7 @@ export async function Navbar() {
           {idToken === undefined ? (
             <Link
               href="/login"
-              className="text-sm font-semibold text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 underline-offset-4 hover:underline transition-colors duration-200 whitespace-nowrap"
+              className="text-sm font-semibold text-white hover:text-secondary underline-offset-4 hover:underline transition-colors duration-200 whitespace-nowrap"
             >
               Register/Login
             </Link>
@@ -58,7 +58,7 @@ export async function Navbar() {
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 text-neutral-600 dark:text-neutral-400"
+                  className="h-6 w-6 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -71,13 +71,13 @@ export async function Navbar() {
                   />
                 </svg>
 
-                <span className="hidden md:inline-block text-sm font-semibold text-neutral-600 dark:text-neutral-400">
+                <span className="hidden md:inline-block text-sm font-semibold text-white">
                   Account
                 </span>
 
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
-                  className="h-4 w-4 text-neutral-600 dark:text-neutral-400"
+                  className="h-4 w-4 text-white"
                   fill="none"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
@@ -119,7 +119,7 @@ export async function Navbar() {
       </div>
 
       {/* --- Second Row: Nav Menu --- */}
-      <div className="flex items-center justify-center px-4 pb-3 lg:px-8">
+      <div className="flex bg-secondary items-center justify-center px-4 pt-3 pb-3 lg:px-8">
         {/* Desktop Nav Menu */}
         {menu.length > 0 && (
           <ul className="hidden md:flex items-center space-x-6 text-sm">
@@ -127,13 +127,13 @@ export async function Navbar() {
               .filter(item => item.title !== 'Profile')
               .map((item: Menu) => (
                 <li key={item.title} className="whitespace-nowrap">
-                  <Link href={item.path} prefetch className="text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+                  <Link href={item.path} prefetch className="text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
                     {item.title}
                   </Link>
                 </li>
               ))}
             <li className="whitespace-nowrap">
-              <Link href="/account/profile" prefetch className="text-neutral-600 hover:text-blue-600 dark:text-neutral-400 dark:hover:text-blue-400 font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+              <Link href="/account/profile" prefetch className="text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
                 Draft order
               </Link>
             </li>
