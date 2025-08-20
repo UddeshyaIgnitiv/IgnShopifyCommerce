@@ -16,6 +16,9 @@ export const getCompanyContactsQuery = `
               email
               firstName
               lastName
+              metafield(namespace: "b2b", key: "role") {
+                value
+              }
             }
             roleAssignments(first: 5) {
               edges {
