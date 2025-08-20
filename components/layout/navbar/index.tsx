@@ -21,7 +21,7 @@ export async function Navbar() {
     <nav className="border-b border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black">
 
       {/* --- First Row: Logo + Search + Login/Register + Cart --- */}
-      <div className="flex flex-col md:flex-row items-center justify-between px-4 py-3 lg:px-8 gap-y-3 md:gap-y-0">
+      <div className="flex flex-col bg-primary md:flex-row items-center justify-between px-4 py-3 lg:px-8 gap-y-3 md:gap-y-0">
 
         {/* Left: Logo */}
         <div className="flex md:flex-1 justify-start">

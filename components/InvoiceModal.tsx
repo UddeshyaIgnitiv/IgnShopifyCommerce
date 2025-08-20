@@ -90,11 +90,6 @@ export default function InvoiceModal({ orderId, onClose }: InvoiceModalProps) {
             .finally(() => setLoading(false));
     }, [orderId]);
 
-    // const handlePrint = () => {
-    //     window.print();
-    // };
-
-
     if (!orderId) return null;
 
     return (
@@ -231,15 +226,6 @@ export default function InvoiceModal({ orderId, onClose }: InvoiceModalProps) {
                         <p className="mt-6 text-xs">
                             If you have any questions, please send an email to {order.supportEmail}
                         </p>
-
-                        {/* <div className="mt-6 text-right print:hidden">
-                            <button
-                                onClick={handlePrint}
-                                className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-                            >
-                                Print
-                            </button>
-                        </div> */}
 
                         {!loading && order && (
                             <div className="mt-6 text-right print:hidden">
