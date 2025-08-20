@@ -13,6 +13,15 @@
   }
 }
 
+@theme {
+  /* Custom colors */
+  --color-primary: #DB3A34;
+  --color-secondary: #FFC857;
+  --color-dark: #323031;
+  --color-teal: #084C61;
+  --color-cyan: #177E89;
+}
+
 @media (prefers-color-scheme: dark) {
   html {
     color-scheme: dark;
