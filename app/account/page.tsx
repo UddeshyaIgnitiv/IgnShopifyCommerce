@@ -2,6 +2,7 @@
 
 import InvoiceModal from 'components/InvoiceModal';
 import Cookies from 'js-cookie';
+import { useUserRole } from 'lib/utils/useUserRole';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -57,6 +58,7 @@ export default function AccountPage() {
   const [totalOrders, setTotalOrders] = useState(0);
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const ordersPerPage = 50;
+  const { role: userRole, loading: roleLoading } = useUserRole();
 
   const companyName = customer?.companyContactProfiles?.[0]?.company?.name || null;
   //console.log('Company data:', customer?.companyContactProfiles?.[0]?.company);
@@ -182,7 +184,7 @@ export default function AccountPage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">
               Welcome, {customer.displayName}
             </h1>
-            {!loading && isAdmin && (
+            {!loading && !roleLoading && isAdmin && userRole === 'admin' && (
               <Link
                 href="/account/users"
                 className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"

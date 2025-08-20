@@ -5,7 +5,7 @@ import { NextResponse } from 'next/server';
 // Helper: Maps UI roles to Shopify Admin role names, then finds their ID from fetched roles
 function mapUIRoleToShopifyRoleId(uiRole: string, shopifyRoles: any[]): string | null {
   const roleMap: Record<string, string> = {
-    admin: 'Location Admin',
+    admin: 'Location admin',
     purchaser: 'Ordering only',
     non_purchaser: 'Ordering only',
   };

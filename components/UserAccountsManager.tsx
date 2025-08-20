@@ -1,6 +1,6 @@
 'use client';
+import { useUserRole } from 'lib/utils/useUserRole';
 import { useEffect, useState } from 'react';
-
 type User = {
   id: string;
   contactId: string;
@@ -46,6 +46,9 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
   const [locations, setLocations] = useState<Location[]>([]);
   //const [roles, setRoles] = useState<Role[]>([]);
   const [currentUserEmail, setCurrentUserEmail] = useState<string>('');
+
+  const { role: userRole, loading: roleLoading } = useUserRole();
+
 
   const UI_ROLE_OPTIONS = [
     { id: 'admin', label: 'Admin' },
@@ -158,12 +161,14 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
       <div className="bg-white p-6 rounded shadow">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">List of Users</h2>
+          {!roleLoading && userRole === 'admin' && (
           <button
             onClick={() => setShowForm(!showForm)}
             className="px-3 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
           >
             Add User
           </button>
+          )}
         </div>
         {formMsg && (
           <div className="text-green-600 mb-4 text-sm border border-green-300 bg-green-50 px-4 py-2 rounded">
@@ -253,6 +258,7 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
       </div>
 
       {/* Add User Form with animation */}
+      {!roleLoading && userRole === 'admin' && (
       <div
         className={`overflow-hidden transition-all shadow duration-500 ease-in-out ${showForm ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}
       >
@@ -349,6 +355,7 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
           </form>
         </div>
       </div>
+      )}
     </div>
   );
 }
