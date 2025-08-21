@@ -12,7 +12,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Fragment, useEffect, useRef, useState } from 'react';
 import { useFormStatus } from 'react-dom';
-import { createCartAndSetCookie, redirectToCheckout } from './actions';
+import { createCartAndSetCookie, redirectToCheckout, requestQuote } from './actions';
 import { useCart } from './cart-context';
 import { DeleteItemButton } from './delete-item-button';
 import { EditItemQuantityButton } from './edit-item-quantity-button';
@@ -226,6 +226,9 @@ export default function CartModal() {
                   <form action={redirectToCheckout}>
                     <CheckoutButton disabled={roleLoading || isNonPurchaser} />
                   </form>
+                  <form>
+                    <RequestQuoteButton disabled={roleLoading || isNonPurchaser}/>
+                  </form>
                 </div>
               )}
             </Dialog.Panel>
@@ -268,3 +271,54 @@ function CheckoutButton({ disabled }: { disabled?: boolean }) {
     </button>
   );
 }
+
+function RequestQuoteButton({ disabled }: { disabled?: boolean }) {
+  const { pending } = useFormStatus();
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  async function handleAction(formData: FormData) {
+    try {
+      await requestQuote(formData); // run server action
+      setMessage({ type: 'success', text: 'Your quote request has been submitted' });
+      setTimeout(() => setMessage(null), 10000);
+    } catch (err: any) {
+      setMessage({ type: 'error', text: err.message || 'Something went wrong while creating quote' });
+    }
+
+    // Auto-hide after 3s
+    setTimeout(() => setMessage(null), 7000);
+  }
+
+  return (
+    <>
+      <button
+        formAction={handleAction}
+        className={clsx(
+          'mt-2 block w-full rounded-full p-3 text-center text-sm font-medium',
+          pending
+            ? 'bg-gray-600 text-white opacity-50 cursor-not-allowed pointer-events-none'
+            : 'bg-gray-600 text-white opacity-90 hover:opacity-100'
+        )}
+        type="submit"
+        disabled={pending}
+      >
+        {pending ? <LoadingDots className="bg-white" /> : 'Request Quote'}
+      </button>
+
+      {message && (
+        <div
+          className={clsx(
+            'mt-3 rounded-md p-2 text-center text-sm',
+            message.type === 'success'
+              ? 'bg-green-100 text-green-800'
+              : 'bg-red-100 text-red-800'
+          )}
+        >
+          {message.text}
+        </div>
+      )}
+    </>
+  );
+}
+
+

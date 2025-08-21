@@ -96,10 +96,18 @@ export type SEO = {
   description: string;
 };
 
+export type CartCustomer = {
+  id: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+};
+
 export type ShopifyCart = {
   id: string | undefined;
   checkoutUrl: string;
   buyerIdentity: {
+    customer?: CartCustomer | null;
     email?: string;
     purchasingCompany: {
       location: {

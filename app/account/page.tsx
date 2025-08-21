@@ -72,7 +72,7 @@ export default function AccountPage() {
       String(m.value).trim().toLowerCase() === 'true'
   );
 
-  console.log('customer', customer, 'isAdmin', isAdmin);
+  //console.log('customer', customer, 'isAdmin', isAdmin);
 
   // Fetch customer info on mount
   useEffect(() => {
