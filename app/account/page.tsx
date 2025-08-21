@@ -65,7 +65,7 @@ export default function AccountPage() {
   //console.log('Company Id:', customer?.companyContactProfiles?.[0]?.company.id);
   //console.log("This is orders --> ", orders);
 
-  const isAdmin = !!(customer?.metafields?? []).some(
+  const isAdmin = !!(customer?.metafields ?? []).some(
     (m: any) =>
       m.namespace === 'custom' &&
       m.key === 'is_customer_admin' &&
@@ -187,7 +187,7 @@ export default function AccountPage() {
             {!loading && !roleLoading && isAdmin && userRole === 'admin' && (
               <Link
                 href="/account/users"
-                className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                className="bg-teal text-white px-4 py-2 font-semibold rounded-lg transition-colors hover:bg-cyan"
               >
                 Manage Users
               </Link>
@@ -281,7 +281,7 @@ export default function AccountPage() {
                               e.stopPropagation(); // stops bubbling to <tr>
                               setSelectedOrderId(order.id);
                             }}
-                            className="px-3 py-1 rounded bg-blue-600 text-white cursor-pointer hover:bg-blue-700 transition-colors duration-200"
+                            className="px-3 py-1 cursor-pointer"
                           >
                             View Invoice
                           </button>

@@ -44,7 +44,7 @@ export async function Navbar() {
           {idToken === undefined ? (
             <Link
               href="/login"
-              className="text-sm font-semibold text-white hover:text-secondary underline-offset-4 hover:underline transition-colors duration-200 whitespace-nowrap"
+              className="text-base font-semibold text-white hover:text-secondary underline-offset-4 hover:underline transition-colors duration-200 whitespace-nowrap"
             >
               Register/Login
             </Link>
@@ -52,7 +52,7 @@ export async function Navbar() {
             <div className="relative group inline-block text-left">
               <button
                 type="button"
-                className="flex items-center space-x-2 focus:outline-none"
+                className="flex items-center space-x-2 focus:outline-none bg-transparent"
                 aria-haspopup="true"
                 aria-expanded="false"
               >
@@ -71,9 +71,10 @@ export async function Navbar() {
                   />
                 </svg>
 
-                <span className="hidden md:inline-block text-sm font-semibold text-white">
+                <span className="hidden md:inline-block text-sm md:text-base font-semibold text-white">
                   Account
                 </span>
+
 
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -127,13 +128,13 @@ export async function Navbar() {
               .filter(item => item.title !== 'Profile')
               .map((item: Menu) => (
                 <li key={item.title} className="whitespace-nowrap">
-                  <Link href={item.path} prefetch className="text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+                  <Link href={item.path} prefetch className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
                     {item.title}
                   </Link>
                 </li>
               ))}
             <li className="whitespace-nowrap">
-              <Link href="/account/profile" prefetch className="text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+              <Link href="/account/profile" prefetch className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
                 Draft order
               </Link>
             </li>

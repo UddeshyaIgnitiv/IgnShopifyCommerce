@@ -3,6 +3,24 @@
 @plugin "@tailwindcss/container-queries";
 @plugin "@tailwindcss/typography";
 
+@theme {
+  /* Custom colors */
+  --color-primary: #DB3A34;
+  --color-secondary: #FFC857;
+  --color-dark: #323031;
+  --color-teal: #084C61;
+  --color-cyan: #177E89;
+
+  /* Button theme tokens */
+  --button-primary-bg: var(--color-teal);
+  --button-primary-text: white;
+  --button-primary-hover: var(--color-cyan);
+
+  --button-secondary-bg: var(--color-primary);
+  --button-secondary-text: white;
+  --button-secondary-hover: color-mix(in srgb, var(--color-primary) 90%, black);
+}
+
 @layer base {
   *,
   ::after,
@@ -11,15 +29,30 @@
   ::file-selector-button {
     border-color: var(--color-gray-200, currentColor);
   }
-}
 
-@theme {
-  /* Custom colors */
-  --color-primary: #DB3A34;
-  --color-secondary: #FFC857;
-  --color-dark: #323031;
-  --color-teal: #084C61;
-  --color-cyan: #177E89;
+  html {
+    font-size: 1rem;
+  }
+
+  button {
+    @apply px-4 py-2 font-semibold rounded-lg transition-colors duration-300;
+    background-color: var(--button-primary-bg);
+    color: var(--button-primary-text);
+  }
+
+  button:hover {
+    background-color: var(--button-primary-hover);
+  }
+
+  .btn-secondary {
+    @apply transition-colors duration-300;
+    background-color: var(--button-secondary-bg);
+    color: var(--button-secondary-text);
+  }
+
+  .btn-secondary:hover {
+    background-color: var(--button-secondary-hover);
+  }
 }
 
 @media (prefers-color-scheme: dark) {
