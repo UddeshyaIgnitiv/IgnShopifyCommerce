@@ -213,7 +213,7 @@ export async function POST(req: Request) {
     const roles = await getCompanyContactRoles(companyId);
     const shopifyRoleId = mapUIRoleToShopifyRoleId(role, roles);
 
-    console.log("Roles", roles, "shopifyRoleId", shopifyRoleId);
+    //console.log("Roles", roles, "shopifyRoleId", shopifyRoleId);
 
     if (!shopifyRoleId) {
       return NextResponse.json({ error: 'Shopify role mapping failed' }, { status: 400 });
