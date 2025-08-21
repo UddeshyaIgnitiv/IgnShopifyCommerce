@@ -57,7 +57,7 @@ export default function CartModal() {
 
   return (
     <>
-      <button aria-label="Open cart" onClick={openCart}>
+      <button aria-label="Open cart" onClick={openCart} className="bg-transparent">
         <OpenCart quantity={cart?.totalQuantity} />
       </button>
       <Transition show={isOpen}>
@@ -162,7 +162,7 @@ export default function CartModal() {
                                       {item.merchandise.product.title}
                                     </span>
                                     {item.merchandise.title !==
-                                    DEFAULT_OPTION ? (
+                                      DEFAULT_OPTION ? (
                                       <p className="text-sm text-neutral-500 dark:text-neutral-400">
                                         {item.merchandise.title}
                                       </p>
