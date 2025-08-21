@@ -25,9 +25,13 @@ type MerchandiseSearchParams = {
 export default function CartModal() {
   const { cart, updateCartItem } = useCart();
   const [isOpen, setIsOpen] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const quantityRef = useRef(cart?.totalQuantity);
   const openCart = () => setIsOpen(true);
-  const closeCart = () => setIsOpen(false);
+  const closeCart = () => {
+    setIsOpen(false);
+    setMessage(null); // clear message when closing cart
+  };;
 
   const { role, loading: roleLoading } = useUserRole();
   const isNonPurchaser = role === 'non_purchaser';
@@ -92,10 +96,18 @@ export default function CartModal() {
 
               {!cart || cart.lines.length === 0 ? (
                 <div className="mt-20 flex w-full flex-col items-center justify-center overflow-hidden">
-                  <ShoppingCartIcon className="h-16" />
-                  <p className="mt-6 text-center text-2xl font-bold">
-                    Your cart is empty.
-                  </p>
+                  {message && message.type === 'success' ? (
+                    <p className="text-center text-green-700 bg-green-100 rounded-md px-4 py-2 text-sm">
+                      {message.text}
+                    </p>
+                  ) : (
+                    <>
+                      <ShoppingCartIcon className="h-16" />
+                      <p className="mt-6 text-center text-2xl font-bold">
+                        Your cart is empty.
+                      </p>
+                    </>
+                  )}
                 </div>
               ) : (
                 <div className="flex h-full flex-col justify-between overflow-hidden p-1">
@@ -227,7 +239,7 @@ export default function CartModal() {
                     <CheckoutButton disabled={roleLoading || isNonPurchaser} />
                   </form>
                   <form>
-                    <RequestQuoteButton disabled={roleLoading || isNonPurchaser}/>
+                    <RequestQuoteButton disabled={roleLoading || isNonPurchaser} setMessage={setMessage}/>
                   </form>
                 </div>
               )}
@@ -272,24 +284,22 @@ function CheckoutButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-function RequestQuoteButton({ disabled }: { disabled?: boolean }) {
+function RequestQuoteButton({ disabled, setMessage }: { disabled?: boolean, setMessage: (msg: { type: 'success' | 'error'; text: string } | null) => void; }) {
   const { pending } = useFormStatus();
-  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   async function handleAction(formData: FormData) {
     try {
       await requestQuote(formData); // run server action
       setMessage({ type: 'success', text: 'Your quote request has been submitted' });
-      setTimeout(() => setMessage(null), 10000);
+      setTimeout(() => setMessage(null), 20000);
     } catch (err: any) {
       setMessage({ type: 'error', text: 'Something went wrong while creating quote' });
       console.log("Quote error", err);
-      setTimeout(() => setMessage(null), 10000);
+      setTimeout(() => setMessage(null), 20000);
     }
   }
 
   return (
-    <>
       <button
         formAction={handleAction}
         className={clsx(
@@ -303,20 +313,6 @@ function RequestQuoteButton({ disabled }: { disabled?: boolean }) {
       >
         {pending ? <LoadingDots className="bg-white" /> : 'Request Quote'}
       </button>
-
-      {message && (
-        <div
-          className={clsx(
-            'mt-3 rounded-md p-2 text-center text-sm',
-            message.type === 'success'
-              ? 'bg-green-100 text-green-800'
-              : 'bg-red-100 text-red-800'
-          )}
-        >
-          {message.text}
-        </div>
-      )}
-    </>
   );
 }
 
