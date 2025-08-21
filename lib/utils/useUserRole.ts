@@ -30,7 +30,7 @@ export function useUserRole() {
         setLoading(false);
       }
     }
-    fetchRole();
+    fetchRole(); // add login check
   }, []);
 
   return { role, loading };

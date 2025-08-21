@@ -282,11 +282,10 @@ function RequestQuoteButton({ disabled }: { disabled?: boolean }) {
       setMessage({ type: 'success', text: 'Your quote request has been submitted' });
       setTimeout(() => setMessage(null), 10000);
     } catch (err: any) {
-      setMessage({ type: 'error', text: err.message || 'Something went wrong while creating quote' });
+      setMessage({ type: 'error', text: 'Something went wrong while creating quote' });
+      console.log("Quote error", err);
+      setTimeout(() => setMessage(null), 10000);
     }
-
-    // Auto-hide after 3s
-    setTimeout(() => setMessage(null), 7000);
   }
 
   return (
