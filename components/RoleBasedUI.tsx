@@ -7,7 +7,7 @@ import ProductSearch from './product/ProductSearch';
 interface CustomerData {
   customerId: string;
   email: string;
-  role: 'buyer' | 'approver' | string;
+  role: 'purchaser' | 'admin' | string;
 }
 
 interface LineItem {
@@ -59,7 +59,7 @@ export default function RoleBasedUI() {
         const data: CustomerData = await res.json();
         setCustomer(data);
 
-        if (data.role === 'approver') {
+        if (data.role === 'admin') {
           await fetchDraftOrders();
         }
       } catch (err: any) {
@@ -196,7 +196,7 @@ export default function RoleBasedUI() {
         Welcome <strong>{customer.email}</strong>. Your role is <strong>{customer.role}</strong>.
       </p>
 
-      {customer.role === 'buyer' && (
+      {customer.role === 'purchaser' && (
         <>
           <div className="mb-4">
             <h3 className="font-semibold text-lg mb-2">Create Draft Orders</h3>
@@ -212,7 +212,7 @@ export default function RoleBasedUI() {
         </>
       )}
 
-      {customer.role === 'approver' && (
+      {customer.role === 'admin' && (
         <div>
           <h2 className="text-xl font-semibold mb-4">Pending Draft Orders</h2>
 
