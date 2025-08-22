@@ -1,5 +1,3 @@
-import { Carousel } from 'components/carousel';
-import { ThreeItemGrid } from 'components/grid/three-items';
 import Footer from 'components/layout/footer';
 
 // app/page.tsx
@@ -22,8 +20,8 @@ export default async function HomePage() {
   return (
     <>
       <BuilderWrapper content={content} />
-      <Carousel />
-      <ThreeItemGrid />
+      {/* <Carousel /> */}
+      {/* <ThreeItemGrid /> */}
       <Footer />
 
     </>
