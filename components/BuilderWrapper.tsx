@@ -4,7 +4,7 @@
 import { BuilderComponent, builder } from '@builder.io/react';
 
 // Optional: only call init here if not done elsewhere
-builder.init(process.env.BUILDER_IO_API_KEY!);
+builder.init(process.env.NEXT_PUBLIC_BUILDER_IO_API_KEY!);
 
 export default function BuilderWrapper({ content }: { content: any }) {
   if (!content) {
