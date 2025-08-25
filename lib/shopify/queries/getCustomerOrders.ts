@@ -1,6 +1,6 @@
 export const GET_CUSTOMER_ORDERS = `
-  query getCustomerOrders($first: Int!, $query: String!) {
-    orders(first: $first, query: $query, sortKey: CREATED_AT, reverse: true) {
+  query getCustomerOrders($first: Int!, $after: String, $query: String!) {
+    orders(first: $first, after: $after, query: $query, sortKey: CREATED_AT, reverse: true) {
       edges {
         cursor
         node {
