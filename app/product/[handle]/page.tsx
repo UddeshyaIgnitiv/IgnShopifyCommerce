@@ -22,16 +22,31 @@ export async function generateMetadata(props: {
   const params = await props.params;
   const companyLocationId = (await cookies()).get('companyLocationId')?.value;
 
-  if (!companyLocationId) return notFound();
+  if (!companyLocationId) {
+    return {
+      title: "Product Not Found",
+      description: "No product found for this location.",
+    };
+  }
 
   // Get the product via Storefront API to get the Admin ID
   const storefrontProduct = await getProduct(params.handle); // Storefront version
 
-   if (!storefrontProduct?.id) return notFound();
+  if (!storefrontProduct?.id) {
+    return {
+      title: "Product Not Found",
+      description: "The product you are looking for does not exist.",
+    };
+  }
 
   const product = await getProduct(params.handle, undefined, true, companyLocationId, storefrontProduct.id);
 
-  if (!product) return notFound();
+  if (!product) {
+    return {
+      title: "Product Not Found",
+      description: "The product you are looking for does not exist.",
+    };
+  }
 
   const { url, width, height, altText: alt } = product.featuredImage || {};
   const indexable = !product.tags.includes(HIDDEN_PRODUCT_TAG);
@@ -67,15 +82,45 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
   const { handle } = await params;
   const companyLocationId = (await cookies()).get('companyLocationId')?.value;
 
-  if (!companyLocationId) return notFound();
+  // if (!companyLocationId) return notFound();
+
+  if (!companyLocationId) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-center text-lg font-bold">
+          Please Login to View Product
+        </p>
+      </div>
+    );
+  }
 
   // Get the product via Storefront API to get the Admin ID
 
   const product = await getProduct(params.handle); // Storefront version
-  
-   if (!product?.id) return notFound();
+
+  // if (!product?.id) return notFound();
+
+  if (!product?.id) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-center text-lg font-bold">
+          Product Not Found
+        </p>
+      </div>
+    );
+  }
 
   const adminProduct = await getProduct(params.handle, undefined, true, companyLocationId, product.id);
+
+  if (!adminProduct) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-center text-lg font-bold">
+          Product Not Found
+        </p>
+      </div>
+    );
+  }
 
   const prices = adminProduct?.variants?.map(variant => Number(variant?.price?.amount)) as number[];
 
@@ -89,21 +134,21 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
       amount: Math.min(...prices)?.toString(),
     } as Money
   };
- 
+
   if (adminProduct?.variants && product?.variants) {
 
-	  for (const adminProdVariant of adminProduct?.variants) {
+    for (const adminProdVariant of adminProduct?.variants) {
 
-		const matchingVariant = product.variants.find(
-      variant => variant.id === adminProdVariant.id
-    );
-    if (matchingVariant) {
-      matchingVariant.price = adminProdVariant?.contextualPricing?.price;
+      const matchingVariant = product.variants.find(
+        variant => variant.id === adminProdVariant.id
+      );
+      if (matchingVariant) {
+        matchingVariant.price = adminProdVariant?.contextualPricing?.price;
+      }
+
     }
 
-	  }
-
-	}
+  }
 
   if (!product) return notFound();
 
@@ -125,44 +170,51 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
   };
 
   return (
-    <ProductProvider variants={product.variants}>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(productJsonLd)
-        }}
-      />
-      <div className="mx-auto max-w-(--breakpoint-2xl) px-4">
-        <div className="flex flex-col rounded-lg border border-neutral-200 bg-white p-8 md:p-12 lg:flex-row lg:gap-8 dark:border-neutral-800 dark:bg-black">
-          {/* <div className="h-full w-full basis-full lg:basis-4/6">
-            <Suspense
-              fallback={
-                <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden" />
-              }
-            >
-              <Gallery
-                images={product.images.slice(0, 5).map((image: Image) => ({
-                  src: image.url,
-                  altText: image.altText
-                }))}
-              />
-            </Suspense>
-          </div> */}
+    <>
+      {adminProduct ? (
+        <ProductProvider variants={product.variants}>
+          <script
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify(productJsonLd)
+            }}
+          />
+          <div className="mx-auto max-w-(--breakpoint-2xl) px-4">
+            <div className="flex flex-col rounded-lg border border-neutral-200 bg-white p-8 md:p-12 lg:flex-row lg:gap-8 dark:border-neutral-800 dark:bg-black">
+              {/* <div className="h-full w-full basis-full lg:basis-4/6">
+              <Suspense
+                fallback={
+                  <div className="relative aspect-square h-full max-h-[550px] w-full overflow-hidden" />
+                }
+              >
+                <Gallery
+                  images={product.images.slice(0, 5).map((image: Image) => ({
+                    src: image.url,
+                    altText: image.altText
+                  }))}
+                />
+              </Suspense>
+            </div> */}
 
-          <div className="h-full w-full basis-full lg:basis-4/6">
-            <ProductContentClient initialProduct={product} handle={handle} />
-          </div>
+              <div className="h-full w-full basis-full lg:basis-4/6">
+                <ProductContentClient initialProduct={product} handle={handle} />
+              </div>
 
-          <div className="basis-full lg:basis-2/6">
-            <Suspense fallback={null}>
-              <ProductDescription product={product} />
-            </Suspense>
+              <div className="basis-full lg:basis-2/6">
+                <Suspense fallback={null}>
+                  <ProductDescription product={product} />
+                </Suspense>
+              </div>
+            </div>
+            <RelatedProducts id={product.id} />
           </div>
-        </div>
-        <RelatedProducts id={product.id} />
-      </div>
-      <Footer />
-    </ProductProvider>
+          <Footer />
+        </ProductProvider>
+      ) : (
+        <h1>Product Not Found</h1>
+      )
+      }
+    </>
   );
 }
 

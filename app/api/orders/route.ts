@@ -25,6 +25,7 @@ export async function GET() {
         name: node.name,
         createdAt: node.createdAt,
         displayFinancialStatus: node.displayFinancialStatus,
+        displayFulfillmentStatus: node.displayFulfillmentStatus,
         totalPrice: {
           amount: node.totalPriceSet?.shopMoney?.amount || '0.00',
           currencyCode: node.totalPriceSet?.shopMoney?.currencyCode || 'USD',
