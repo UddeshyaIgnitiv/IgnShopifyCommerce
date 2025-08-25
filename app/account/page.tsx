@@ -21,6 +21,7 @@ interface Order {
     currencyCode: string;
   };
   displayFinancialStatus?: string;
+  displayFulfillmentStatus?: string;
 }
 
 interface Customer {
@@ -238,6 +239,7 @@ export default function AccountPage() {
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700">Order ID</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700">Date</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700">Financial Status</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">Order Status</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700">Total</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700"></th>
                   </tr>
@@ -273,6 +275,9 @@ export default function AccountPage() {
                           {order.displayFinancialStatus || '-'}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-800">
+                          {order.displayFulfillmentStatus || '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-800">
                           {order.totalPrice?.amount} {order.totalPrice?.currencyCode}
                         </td>
                         <td className="px-4 py-3 text-sm">
@@ -281,7 +286,9 @@ export default function AccountPage() {
                               e.stopPropagation(); // stops bubbling to <tr>
                               setSelectedOrderId(order.id);
                             }}
-                            className="px-3 py-1 cursor-pointer"
+                            disabled={order.displayFulfillmentStatus !== "FULFILLED"}
+                            className={`px-3 py-1 rounded 
+                              ${order.displayFulfillmentStatus !== "FULFILLED" ? "bg-gray-400 text-gray-200 cursor-not-allowed" : "cursor-pointer"}`}
                           >
                             View Invoice
                           </button>

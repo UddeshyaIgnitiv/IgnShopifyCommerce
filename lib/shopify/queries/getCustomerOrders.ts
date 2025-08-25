@@ -8,6 +8,7 @@ export const GET_CUSTOMER_ORDERS = `
           name
           createdAt
           displayFinancialStatus
+          displayFulfillmentStatus
           totalPriceSet {
             shopMoney {
               amount

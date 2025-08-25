@@ -89,7 +89,7 @@ export default function CartModal() {
             <Dialog.Panel className="fixed bottom-0 right-0 top-0 flex h-full w-full flex-col border-l border-neutral-200 bg-white/80 p-6 text-black backdrop-blur-xl md:w-[390px] dark:border-neutral-700 dark:bg-black/80 dark:text-white">
               <div className="flex items-center justify-between">
                 <p className="text-lg font-semibold">My Cart</p>
-                <button aria-label="Close cart" onClick={closeCart}>
+                <button className='bg-transparent' aria-label="Close cart" onClick={closeCart}>
                   <CloseCart />
                 </button>
               </div>
@@ -239,7 +239,7 @@ export default function CartModal() {
                     <CheckoutButton disabled={roleLoading || isNonPurchaser} />
                   </form>
                   <form>
-                    <RequestQuoteButton disabled={roleLoading || isNonPurchaser} setMessage={setMessage}/>
+                    <RequestQuoteButton disabled={roleLoading || isNonPurchaser} setMessage={setMessage} />
                   </form>
                 </div>
               )}
@@ -272,8 +272,8 @@ function CheckoutButton({ disabled }: { disabled?: boolean }) {
       className={clsx(
         'block w-full rounded-full p-3 text-center text-sm font-medium',
         disabled || pending
-          ? 'bg-blue-600 text-white opacity-50 cursor-not-allowed pointer-events-none'
-          : 'bg-blue-600 text-white opacity-90 hover:opacity-100'
+          ? 'bg-teal text-white opacity-50 cursor-not-allowed pointer-events-none'
+          : 'bg-teal text-white opacity-90 cursor-pointer hover:bg-cyan'
       )}
       type={disabled ? 'button' : 'submit'}
       disabled={pending || disabled}
@@ -300,19 +300,19 @@ function RequestQuoteButton({ disabled, setMessage }: { disabled?: boolean, setM
   }
 
   return (
-      <button
-        formAction={handleAction}
-        className={clsx(
-          'mt-2 block w-full rounded-full p-3 text-center text-sm font-medium',
-          pending
-            ? 'bg-gray-600 text-white opacity-50 cursor-not-allowed pointer-events-none'
-            : 'bg-gray-600 text-white opacity-90 hover:opacity-100'
-        )}
-        type="submit"
-        disabled={pending}
-      >
-        {pending ? <LoadingDots className="bg-white" /> : 'Request Quote'}
-      </button>
+    <button
+      formAction={handleAction}
+      className={clsx(
+        'mt-2 block w-full rounded-full p-3 text-center text-sm font-medium transition-all duration-200 ease-in-out',
+        pending
+          ? 'bg-gray-600 text-white opacity-50 cursor-not-allowed pointer-events-none'
+          : 'bg-gray-600 text-white opacity-90 hover:opacity-100 cursor-pointer'
+      )}
+      type="submit"
+      disabled={pending}
+    >
+      {pending ? <LoadingDots className="bg-white" /> : 'Request Quote'}
+    </button>
   );
 }
 
