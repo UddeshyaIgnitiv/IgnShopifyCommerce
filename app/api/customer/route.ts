@@ -18,6 +18,18 @@ export async function GET() {
             return NextResponse.json({ error: 'Customer not found' }, { status: 404 });
         }
 
+        const companyId = customer?.companyContactProfiles?.[0]?.company?.id || null;
+
+        const metafields = customer?.metafields?.edges || [];
+        const adminField = metafields.find((m: any) => m.node.key === 'is_customer_admin');
+        const isAdmin = String(adminField?.node?.value || '').trim().toLowerCase() === 'true';
+
+        // 🔹 Set cookies here
+        cookieStore.set('is_customer_admin', isAdmin ? 'true' : 'false');
+        if (companyId) {
+        cookieStore.set('company_id', companyId, { path: '/' });
+        }
+
         // ✅ Flatten metafields if they exist as edges → node
         if (customer?.metafields?.edges) {
         customer.metafields = customer.metafields.edges.map((edge: any) => edge.node);
