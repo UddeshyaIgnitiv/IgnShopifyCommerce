@@ -96,7 +96,7 @@ export async function Navbar() {
                     <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path d="M5.121 17.804A4 4 0 017 16h10a4 4 0 011.879 1.804M12 12a5 5 0 100-10 5 5 0 000 10z" />
                     </svg>
-                    <span className="text-sm text-neutral-800 dark:text-neutral-200 font-medium">Company Profile</span>
+                    <span className="text-sm text-neutral-800 dark:text-neutral-200 font-medium">Customer Profile</span>
                   </Link>
 
                   <hr className="border-t border-neutral-200 dark:border-neutral-700" />

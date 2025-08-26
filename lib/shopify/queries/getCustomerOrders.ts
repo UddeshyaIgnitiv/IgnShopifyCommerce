@@ -15,6 +15,11 @@ export const GET_CUSTOMER_ORDERS = `
               currencyCode
             }
           }
+          customer {
+            email
+            firstName
+            lastName
+          }
         }
       }
       pageInfo {

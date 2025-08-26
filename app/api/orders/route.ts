@@ -73,6 +73,11 @@ export async function GET() {
           amount: node.totalPriceSet?.shopMoney?.amount || '0.00',
           currencyCode: node.totalPriceSet?.shopMoney?.currencyCode || 'USD',
         },
+        customer: {
+          email: node.customer?.email || '',
+          firstName: node.customer?.firstName || '',
+          lastName: node.customer?.lastName || '',
+        }
 
       })) || [];
 
