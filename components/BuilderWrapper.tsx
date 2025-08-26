@@ -12,13 +12,12 @@ builder.init(process.env.NEXT_PUBLIC_BUILDER_IO_API_KEY!);
 //   if (!content) {
 //     return <div>Page not found</div>;
 //   }
-
 //   return <BuilderComponent model="page" content={content} />;
 // }
 
 export default function BuilderClient({ content }: { content: any }) {
   const [isMounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
-  if (!content || !isMounted) return null;
+  if (!content || !isMounted) return <div>Page not found</div>;
   return <BuilderComponent model="page" content={content} />;
 }
