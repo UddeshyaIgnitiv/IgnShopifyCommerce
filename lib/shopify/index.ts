@@ -94,8 +94,8 @@ export async function shopifyFetch<T>({
   query: string;
   variables?: Record<string, any>;
 }): Promise<{
-    [x: string]: any;
-    status: number; body: T 
+  [x: string]: any;
+  status: number; body: T
 } | never> {
   try {
     const result = await fetch(endpoint, {
@@ -440,7 +440,7 @@ export async function getAdminProduct({
 
   return res.body?.data?.product;
 }
-  
+
 export async function getAdminProducts({
   companyLocationId
 }: {
@@ -503,6 +503,8 @@ export async function getCollectionProducts({
     // 1. Fetch admin products (with contextual prices)
     const adminProducts = await getAdminProducts({ companyLocationId });
 
+    // console.log("Admin Products: ", adminProducts);
+
     // 2. Fetch storefront products from collection (using Storefront API)
     const res = await shopifyFetch<ShopifyCollectionProductsOperation>({
       query: getCollectionProductsQuery,
@@ -527,9 +529,9 @@ export async function getCollectionProducts({
       const matchingProduct = storefrontProducts.find(p => p.id === adminProduct.id);
       if (matchingProduct) {
         const prices = Array.isArray(adminProduct?.variants?.edges)
-            ? adminProduct.variants.edges.map(edge => Number(edge.node.contextualPricing?.price?.amount))
-            : [];
-      
+          ? adminProduct.variants.edges.map(edge => Number(edge.node.contextualPricing?.price?.amount))
+          : [];
+
         matchingProduct.priceRange = {
           maxVariantPrice: {
             ...matchingProduct.priceRange.maxVariantPrice,
@@ -541,7 +543,7 @@ export async function getCollectionProducts({
           }
         };
 
-        //console.log(`[getCollectionProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
+        // console.log(`[getCollectionProducts] Updated price range for ${matchingProduct.title}:`, matchingProduct.priceRange);
 
         for (const edge of adminProduct.variants.edges) {
           const adminVariant = edge.node;
@@ -692,7 +694,7 @@ export async function getProduct(
     if (!adminProduct) return undefined;
 
     const storefrontProduct = transformAdminProductToShopifyProduct(adminProduct);
-  return reshapeProduct(storefrontProduct, false);
+    return reshapeProduct(storefrontProduct, false);
   }
 
   // Default to Storefront API

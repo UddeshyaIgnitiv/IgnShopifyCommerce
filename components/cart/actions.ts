@@ -6,6 +6,7 @@ import {
   cartBuyerIdentityUpdate,
   createCart,
   getCart,
+  getCustomerByEmail,
   removeFromCart,
   updateCart
 } from 'lib/shopify';
@@ -17,6 +18,7 @@ import { redirect } from 'next/navigation';
 
 // ✅ shared Admin API helper
 import { adminGraphql } from 'lib/shopifyAdmin';
+import { NextResponse } from 'next/server';
 
 export async function addItem(
   prevState: any,
@@ -152,11 +154,10 @@ export async function createCartAndSetCookie() {
   //console.log("🛒 New Cart set, companyLocationId ---> ", companyLocationId);
 }
 
-export async function requestQuote(_formData: FormData): Promise<void> {
+export async function requestQuote(_formData: FormData): Promise<NextResponse | void> {
   console.log('🚀 requestQuote started...');
 
   const cart = await getCart();
-  //console.log('Cart fetched:', cart?.id);
 
   if (!cart) throw new Error('No active cart found');
   if (!cart.lines.length) throw new Error('Your cart is empty.');
@@ -175,84 +176,82 @@ export async function requestQuote(_formData: FormData): Promise<void> {
     throw new Error('You must be logged in or provide an email to request a quote.');
   }
 
+  if (!customerEmail) {
+          return NextResponse.json({ error: 'Email cookie missing' }, { status: 401 });
+      }
+
+  const customer = await getCustomerByEmail(customerEmail);
+  const customerId = customer?.id;
+
+  // 🔁 Update cart buyer identity with cookies (for pricing by location)
+  const buyerIdentity: CartBuyerIdentityInput = {};
+  if (customerAccessToken) buyerIdentity.customerAccessToken = customerAccessToken;
+  if (companyLocationId) buyerIdentity.companyLocationId = companyLocationId;
+  if (customerEmail) buyerIdentity.email = customerEmail;
+
    // 🛠 Update cart with buyer identity if available
-  let updatedCart = cart;
-  if (customerAccessToken || companyLocationId || customerEmail) {
-    const buyerIdentity: CartBuyerIdentityInput = {};
-    if (customerAccessToken) {
-  buyerIdentity.customerAccessToken = customerAccessToken;
 
-  if (companyLocationId) {
-    buyerIdentity.companyLocationId = companyLocationId;
-  }
-}
-
-if (customerEmail) {
-  buyerIdentity.email = customerEmail;
-}
-
-    updatedCart = await cartBuyerIdentityUpdate({
+  const updatedCart = await cartBuyerIdentityUpdate({
       cartId: cart.id,
       buyerIdentity,
     });
+  //console.log('🔄 Cart buyer identity updated.');
 
-    console.log('🔄 Cart buyer identity updated.');
-  }
+  // 🧾 Prepare line items with adjusted price
+    const lineItems = updatedCart.lines.map((line) => {
+    const variantId = line.merchandise?.id;
+    const quantity = line.quantity;
+    const totalAmount = parseFloat(line.cost.totalAmount?.amount || '0');
+  const currencyCode = line.cost.totalAmount?.currencyCode;
 
-  // ✅ Filter out invalid line items
-  const lineItems = cart.lines
-    .filter((line) => line.merchandise?.id)
-    .map((line) => ({
-      variantId: line.merchandise.id as string,
-      quantity: line.quantity,
-    }));
+  // 💡 Calculate unit price
+  const unitPrice = quantity > 0 ? totalAmount / quantity : null;
 
-  //console.log('Line items prepared for draft order:', lineItems);
+  if (!variantId || !unitPrice || !currencyCode) return null;
 
-  const customerId = updatedCart?.buyerIdentity?.customer?.id;
+    return {
+      variantId,
+      quantity,
+      priceOverride: {
+    amount: unitPrice.toFixed(2),
+    currencyCode, // fallback just in case
+    }, // Shopify expects stringified number
+      };
+    }).filter(Boolean); // Remove nulls
+
+    //console.log('🧱 Line items for draft order:', lineItems);
 
   const draftOrderInput: any = {
-  lineItems,
-  note: 'Requested quote from storefront',
-  tags: ['request_quote'],
-};
+    lineItems,
+    note: 'Requested quote from storefront',
+    tags: ['request_quote'],
+  };
 
-if (customerId) {
-  draftOrderInput.customerId = customerId;
-  //console.log('✅ Using customerId:', customerId);
-} else if (customerEmail) {
-  draftOrderInput.email = customerEmail;
-  //console.log('✅ Using fallback customer email:', customerEmail);
-} else {
-  console.warn('⚠️ No customerId or email available for draft order');
-}
-  
-  if (!customerId) {
-  console.warn('⚠️ No customer ID found on updated cart. Was the user logged in?');
-}
 
-//console.log('✅ Customer ID attached to draft order:', customerId || 'none');
-
-  // ✅ Create draft order
-  const data = await adminGraphql(CREATE_DRAFT_ORDER, {
-    input: draftOrderInput,
-  });
-
-  //console.log('Draft order response:', JSON.stringify(data, null, 2));
-
-  if (data.errors?.length) {
-    console.error('❌ Draft order creation error:', data.errors);
-    throw new Error(data.errors[0].message || 'Failed to create draft order');
+  if (customerId) {
+      draftOrderInput.customerId = customerId;
+    } else if (customerEmail) {
+      draftOrderInput.email = customerEmail;
   }
 
-  if (data.data?.draftOrderCreate?.userErrors?.length) {
-    console.error('⚠️ Draft order user errors:', data.data.draftOrderCreate.userErrors);
-    throw new Error(
-      data.data.draftOrderCreate.userErrors[0].message || 'Failed to create draft order'
-    );
+  // 🧠 Call GraphQL Admin API to create draft order
+  const response = await adminGraphql(CREATE_DRAFT_ORDER, { input: draftOrderInput });
+
+  const draftOrder = response?.draftOrderCreate?.draftOrder;
+  const userErrors = response?.draftOrderCreate?.userErrors;
+  const graphqlErrors = response?.errors;
+
+  if (graphqlErrors?.length) {
+    console.error('❌ GraphQL errors:', graphqlErrors);
+    throw new Error(graphqlErrors[0]?.message || 'Failed to create draft order');
   }
 
-  //console.log('✅ Draft order created:', data?.data?.draftOrderCreate?.draftOrder?.id);
+  if (userErrors?.length) {
+    console.error('⚠️ Draft order user errors:', userErrors);
+    throw new Error(userErrors[0]?.message || 'Failed to create draft order');
+  }
+
+  //console.log('✅ Draft order created:', draftOrder?.id);
 
   // ✅ Empty the cart after successful draft order
   try {
@@ -267,6 +266,7 @@ if (customerId) {
       revalidateTag(TAGS.cart);
       console.log('🛒 Cart emptied after draft order creation');
     }
+    
   } catch (err) {
     console.error('⚠️ Failed to empty cart after draft order:', err);
   }

@@ -362,6 +362,8 @@ export type Customer = {
     id: string;
     isMainContact: boolean;
     company: {
+      id:string;
+      name:string;
       locations: Connection<{
         id: string;
         name: string;

@@ -21,6 +21,12 @@ interface Order {
     currencyCode: string;
   };
   displayFinancialStatus?: string;
+  displayFulfillmentStatus?: string;
+  customer?: {
+    email?: string;
+    firstName?: string;
+    lastName?: string;
+  };
 }
 
 interface Customer {
@@ -208,9 +214,9 @@ export default function AccountPage() {
 
               {locations.length > 0 && (
                 <div>
-                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Company Location</h2>
+                  <h2 className="text-xl font-semibold text-gray-800 mb-4">Ship To Location</h2>
                   <label htmlFor="location" className="block mb-2 text-sm font-medium text-gray-700">
-                    Select a company location:
+                    Select a ship to location:
                   </label>
                   <select
                     id="location"
@@ -237,7 +243,9 @@ export default function AccountPage() {
                   <tr>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700">Order ID</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700">Date</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">Customer Info</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700">Financial Status</th>
+                    <th className="px-4 py-3 text-sm font-semibold text-gray-700">Order Status</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700">Total</th>
                     <th className="px-4 py-3 text-sm font-semibold text-gray-700"></th>
                   </tr>
@@ -269,8 +277,19 @@ export default function AccountPage() {
                         <td className="px-4 py-3 text-sm text-gray-600">
                           {new Date(order.createdAt).toLocaleDateString()}
                         </td>
+                        <td className="px-4 py-3 text-sm text-gray-600">
+                           <div className="flex flex-col">
+                              <span className="font-medium">
+                                {order.customer?.firstName || ''} {order.customer?.lastName || ''}
+                              </span>
+                              <span className="text-gray-600">{order.customer?.email || '-'}</span>
+                            </div>
+                        </td>
                         <td className="px-4 py-3 text-sm text-gray-800">
                           {order.displayFinancialStatus || '-'}
+                        </td>
+                        <td className="px-4 py-3 text-sm text-gray-800">
+                          {order.displayFulfillmentStatus || '-'}
                         </td>
                         <td className="px-4 py-3 text-sm text-gray-800">
                           {order.totalPrice?.amount} {order.totalPrice?.currencyCode}
@@ -281,7 +300,9 @@ export default function AccountPage() {
                               e.stopPropagation(); // stops bubbling to <tr>
                               setSelectedOrderId(order.id);
                             }}
-                            className="px-3 py-1 cursor-pointer"
+                            disabled={order.displayFulfillmentStatus !== "FULFILLED"}
+                            className={`px-3 py-1 rounded 
+                              ${order.displayFulfillmentStatus !== "FULFILLED" ? "bg-gray-400 text-gray-200 cursor-not-allowed" : "cursor-pointer"}`}
                           >
                             View Invoice
                           </button>
