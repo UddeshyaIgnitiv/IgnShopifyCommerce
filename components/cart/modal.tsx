@@ -33,7 +33,7 @@ export default function CartModal() {
   const closeCart = () => {
     setIsOpen(false);
     setMessage(null); // clear message when closing cart
-  };
+  };;
 
   const idToken = Cookies.get('shopify_id_token')?.valueOf;
 
