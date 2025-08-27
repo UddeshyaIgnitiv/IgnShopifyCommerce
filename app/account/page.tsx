@@ -366,13 +366,13 @@ export default function AccountPage() {
                     <table className="min-w-full text-left">
                       <thead className="bg-gray-100 border-b">
                         <tr>
-                          <th className="px-4 py-3 text-sm font-semibold text-gray-700">Order ID</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-gray-700">Date</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-gray-700">Customer Info</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-gray-700">Financial Status</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-gray-700">Order Status</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-gray-700">Total</th>
-                          <th className="px-4 py-3 text-sm font-semibold text-gray-700"></th>
+                          <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Order ID</th>
+                          <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Date</th>
+                          <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Customer Info</th>
+                          <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Financial Status</th>
+                          <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Order Status</th>
+                          <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Total</th>
+                          <th className="border px-4 py-3 text-sm font-semibold text-gray-700"></th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
@@ -399,10 +399,10 @@ export default function AccountPage() {
                               }}
                             >
                               <td className="px-4 py-3 text-sm text-gray-800">{order.name}</td>
-                              <td className="px-4 py-3 text-sm text-gray-600">
+                              <td className="border px-4 py-3 text-sm text-gray-600">
                                 {new Date(order.createdAt).toLocaleDateString()}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-600">
+                              <td className="border px-4 py-3 text-sm text-gray-600">
                                 <div className="flex flex-col">
                                     <span className="font-medium">
                                       {order.customer?.firstName || ''} {order.customer?.lastName || ''}
@@ -410,16 +410,16 @@ export default function AccountPage() {
                                     <span className="text-gray-600">{order.customer?.email || '-'}</span>
                                   </div>
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-800">
+                              <td className="border px-4 py-3 text-sm text-gray-800">
                                 {order.displayFinancialStatus || '-'}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-800">
+                              <td className="border px-4 py-3 text-sm text-gray-800">
                                 {order.displayFulfillmentStatus || '-'}
                               </td>
-                              <td className="px-4 py-3 text-sm text-gray-800">
+                              <td className="border px-4 py-3 text-sm text-gray-800">
                                 {order.totalPrice?.amount} {order.totalPrice?.currencyCode}
                               </td>
-                              <td className="px-4 py-3 text-sm">
+                              <td className="border px-4 py-3 text-sm">
                                 <button
                                   onClick={(e) => {
                                     e.stopPropagation(); // stops bubbling to <tr>
@@ -503,25 +503,25 @@ export default function AccountPage() {
                         <table className="min-w-full table-auto border-collapse border border-gray-300">
                           <thead>
                             <tr className="bg-gray-100">
-                              <th className="border px-4 py-2 text-left">Quote ID</th>
-                              <th className="border px-4 py-2 text-left">Status</th>
-                              <th className="border px-4 py-2 text-left">Created At</th>
-                              <th className="border px-4 py-2 text-left">Customer</th>
-                              <th className="border px-4 py-2 text-left">Email</th>
-                              <th className="border px-4 py-2 text-left">Line Items</th>
+                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Quote ID</th>
+                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Status</th>
+                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Created At</th>
+                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Customer</th>
+                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Email</th>
+                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Line Items</th>
                             </tr>
                           </thead>
                           <tbody>
                             {draftQuotes.map((quote) => (
                               <tr key={quote.id} className="bg-white">
-                                <td className="border px-4 py-2">{quote.name}</td>
-                                <td className="border px-4 py-2">{quote.status}</td>
-                                <td className="border px-4 py-2">{new Date(quote.createdAt).toLocaleDateString()}</td>
-                                <td className="border px-4 py-2">
+                                <td className="border px-4 py-3 text-sm text-gray-800">{quote.name}</td>
+                                <td className="border px-4 py-3 text-sm text-gray-800">{quote.status}</td>
+                                <td className="border px-4 py-3 text-sm text-gray-800">{new Date(quote.createdAt).toLocaleDateString()}</td>
+                                <td className="border px-4 py-3 text-sm text-gray-800">
                                   {quote.customer?.firstName} {quote.customer?.lastName}
                                 </td>
-                                <td className="border px-4 py-2">{quote.customer?.email}</td>
-                                <td className="border px-4 py-2">
+                                <td className="border px-4 py-3 text-sm text-gray-800">{quote.customer?.email}</td>
+                                <td className="border px-4 py-3 text-sm text-gray-800">
                                   <ul className="list-disc ml-4">
                                     {quote.lineItems?.edges.map(({ node }) => (
                                       <li key={node.variant?.id}>
