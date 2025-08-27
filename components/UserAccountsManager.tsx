@@ -140,7 +140,7 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
 
   return (
     <div className="max-w-3xl w-full space-y-8">
-      <div className="bg-white p-6 rounded shadow">
+      <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">List of Users</h2>
           {!roleLoading && userRole === 'admin' && (

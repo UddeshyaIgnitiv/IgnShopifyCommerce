@@ -1,6 +1,6 @@
 //app\api\orders\draft-orders\pending\route.ts
 
-import GET_PENDING_DRAFT_ORDERS from 'lib/shopify/queries/getPendingDraftOrders';
+import GET_DRAFT_ORDERS from 'lib/shopify/queries/getDraftOrders';
 import { shopifyFetch } from 'lib/shopify_service';
 import { NextRequest, NextResponse } from 'next/server';
 
@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
     };
 
     // Fetch draft orders from Shopify
-    const data = await shopifyFetch(GET_PENDING_DRAFT_ORDERS, variables);
+    const data = await shopifyFetch(GET_DRAFT_ORDERS, variables);
 
     // Process the draft orders
     const orders =
