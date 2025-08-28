@@ -24,12 +24,32 @@ export async function addItem(
   prevState: any,
   selectedVariantId: string | undefined
 ) {
+  const cookieStore = cookies();
   if (!selectedVariantId) {
     return 'Error adding item to cart';
   }
+  const cartId = (await cookieStore).get('cartId')?.value;
+  const companyLocationId = (await cookieStore).get('companyLocationId')?.value;
+  const customerEmailRaw = (await cookieStore).get('user_email')?.value;
+  const customerEmail = customerEmailRaw ? decodeURIComponent(customerEmailRaw) : null;
+  const customerAccessToken = (await cookieStore).get('shopify_access_token')?.value;
+  const buyerIdentity: CartBuyerIdentityInput = {};
+
+  if (customerAccessToken || companyLocationId || customerEmail) {
+    if (customerAccessToken) buyerIdentity.customerAccessToken = customerAccessToken;
+    if (companyLocationId) buyerIdentity.companyLocationId = companyLocationId;
+    if (customerEmail) buyerIdentity.email = customerEmail;
+  }
+
 
   try {
     await addToCart([{ merchandiseId: selectedVariantId, quantity: 1 }]);
+    if(cartId && (customerAccessToken || companyLocationId || customerEmail)){
+      await cartBuyerIdentityUpdate({
+        cartId: cartId? cartId : '',
+        buyerIdentity,
+      });
+    }
     revalidateTag(TAGS.cart);
   } catch (e) {
     return 'Error adding item to cart';
