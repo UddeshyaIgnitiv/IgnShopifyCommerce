@@ -14,7 +14,8 @@ export function Gallery({ images }: { images: { src: string; altText: string }[]
   const previousImageIndex = imageIndex === 0 ? images.length - 1 : imageIndex - 1;
 
   const buttonClassName =
-    'h-full px-6 transition-all ease-in-out hover:scale-110 hover:text-black dark:hover:text-white flex items-center justify-center';
+    'h-12 w-12 flex items-center justify-center rounded-full bg-cyan hover:bg-secondary text-dark hover:text-primary transition-all ease-in-out hover:scale-105 p-0 m-4';
+  // 'h-full px-6 transition-all ease-in-out hover:scale-110 hover:text-black dark:hover:text-white flex items-center justify-center';
 
   return (
     <form>
@@ -31,32 +32,33 @@ export function Gallery({ images }: { images: { src: string; altText: string }[]
         )}
 
         {images.length > 1 ? (
-          <div className="absolute bottom-[15%] flex w-full justify-center">
-            <div className="mx-auto flex h-11 items-center rounded-full border border-white bg-neutral-50/80 text-neutral-500 backdrop-blur-sm dark:border-black dark:bg-neutral-900/80">
-              <button
-                formAction={() => {
-                  const newState = updateImage(previousImageIndex.toString());
-                  updateURL(newState);
-                }}
-                aria-label="Previous product image"
-                className={buttonClassName}
-              >
-                <ArrowLeftIcon className="h-5" />
-              </button>
-              <div className="mx-1 h-6 w-px bg-neutral-500"></div>
-              <button
-                formAction={() => {
-                  const newState = updateImage(nextImageIndex.toString());
-                  updateURL(newState);
-                }}
-                aria-label="Next product image"
-                className={buttonClassName}
-              >
-                <ArrowRightIcon className="h-5" />
-              </button>
-            </div>
+          <div className="absolute inset-0 flex items-center justify-between px-4">
+            {/* Previous Button */}
+            <button
+              formAction={() => {
+                const newState = updateImage(previousImageIndex.toString());
+                updateURL(newState);
+              }}
+              aria-label="Previous product image"
+              className={buttonClassName}
+            >
+              <ArrowLeftIcon className="h-5 w-5" />
+            </button>
+
+            {/* Next Button */}
+            <button
+              formAction={() => {
+                const newState = updateImage(nextImageIndex.toString());
+                updateURL(newState);
+              }}
+              aria-label="Next product image"
+              className={buttonClassName}
+            >
+              <ArrowRightIcon className="h-5 w-5" />
+            </button>
           </div>
         ) : null}
+
       </div>
 
       {images.length > 1 ? (
@@ -72,7 +74,7 @@ export function Gallery({ images }: { images: { src: string; altText: string }[]
                     updateURL(newState);
                   }}
                   aria-label="Select product image"
-                  className="h-full w-full"
+                  className="h-full w-full bg-cyan hover:bg-secondary"
                 >
                   <GridTileImage
                     alt={image.altText}
