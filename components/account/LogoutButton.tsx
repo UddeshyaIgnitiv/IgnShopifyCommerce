@@ -32,6 +32,7 @@ export function LogoutButton() {
         }
 
         Cookies.remove('shopify_id_token');
+        Cookies.remove('companyLocationId');    //Remove if code breaks on logout
 
         // This does a full browser navigation to the external URL
         router.push(targetUrl);
