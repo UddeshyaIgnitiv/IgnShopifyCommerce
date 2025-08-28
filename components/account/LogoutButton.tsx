@@ -4,7 +4,11 @@
 import Cookies from 'js-cookie';
 import { useRouter } from 'next/navigation';
 
-export function LogoutButton() {
+interface LogoutButtonProps {
+    className?: string;
+}
+
+export default function LogoutButton({ className }: LogoutButtonProps) {
     const router = useRouter();
 
     const handleLogout = async () => {
@@ -38,11 +42,6 @@ export function LogoutButton() {
     };
 
     return (
-        <button
-            onClick={handleLogout}
-            className="text-sm font-semibold text-neutral-600 hover:text-blue-600 transition bg-transparent cursor-pointer"
-        >
-            Logout
-        </button>
+        <span onClick={handleLogout} className={className}>Logout</span>
     );
 }
