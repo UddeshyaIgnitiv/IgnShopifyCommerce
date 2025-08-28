@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client'; // or 'graphql-tag' if you're not using Apollo
 
-const GET_PENDING_DRAFT_ORDERS = gql`
+const GET_DRAFT_ORDERS = gql`
   query getDraftOrders($query: String!) {
     draftOrders(first: 20, query: $query) {
       edges {
@@ -37,4 +37,4 @@ const GET_PENDING_DRAFT_ORDERS = gql`
   }
 `;
 
-export default GET_PENDING_DRAFT_ORDERS;
+export default GET_DRAFT_ORDERS;

@@ -44,6 +44,9 @@ importers:
       jwt-decode:
         specifier: ^4.0.0
         version: 4.0.0
+      keen-slider:
+        specifier: ^6.8.6
+        version: 6.8.6
       libphonenumber-js:
         specifier: ^1.12.8
         version: 1.12.8
@@ -819,6 +822,9 @@ packages:
   jwt-decode@4.0.0:
     resolution: {integrity: sha512-+KJGIyHgkGuIq3IEBNftfhW/LfWhXUIY6OmyVWjliu5KH1y0fw7VQ8YndE2O4qZdMSd9SqbnC8GOcZEy0Om7sA==}
     engines: {node: '>=18'}
+
+  keen-slider@6.8.6:
+    resolution: {integrity: sha512-dcEQ7GDBpCjUQA8XZeWh3oBBLLmyn8aoeIQFGL/NTVkoEOsmlnXqA4QykUm/SncolAZYGsEk/PfUhLZ7mwMM2w==}
 
   libphonenumber-js@1.12.8:
     resolution: {integrity: sha512-f1KakiQJa9tdc7w1phC2ST+DyxWimy9c3g3yeF+84QtEanJr2K77wAmBPP22riU05xldniHsvXuflnLZ4oysqA==}
@@ -1937,6 +1943,8 @@ snapshots:
   json-parse-even-better-errors@2.3.1: {}
 
   jwt-decode@4.0.0: {}
+
+  keen-slider@6.8.6: {}
 
   libphonenumber-js@1.12.8: {}
 

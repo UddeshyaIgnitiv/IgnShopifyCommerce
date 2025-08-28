@@ -5,6 +5,7 @@ import { ShoppingCartIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import LoadingDots from 'components/loading-dots';
 import Price from 'components/price';
+import Cookies from 'js-cookie';
 import { DEFAULT_OPTION } from 'lib/constants';
 import { createUrl } from 'lib/utils';
 import { useUserRole } from 'lib/utils/useUserRole';
@@ -28,10 +29,61 @@ export default function CartModal() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const quantityRef = useRef(cart?.totalQuantity);
   const openCart = () => setIsOpen(true);
+
   const closeCart = () => {
     setIsOpen(false);
     setMessage(null); // clear message when closing cart
   };;
+
+  const idToken = Cookies.get('shopify_id_token')?.valueOf;
+
+  if(!idToken) return (
+    <>
+      <button aria-label="Open cart" onClick={openCart} className="bg-transparent">
+        <OpenCart quantity={cart?.totalQuantity} />
+      </button>
+      <Transition show={isOpen}>
+        <Dialog onClose={closeCart} className="relative z-50">
+          <Transition.Child
+            as={Fragment}
+            enter="transition-all ease-in-out duration-300"
+            enterFrom="opacity-0 backdrop-blur-none"
+            enterTo="opacity-100 backdrop-blur-[.5px]"
+            leave="transition-all ease-in-out duration-200"
+            leaveFrom="opacity-100 backdrop-blur-[.5px]"
+            leaveTo="opacity-0 backdrop-blur-none"
+          >
+            <div className="fixed inset-0 bg-black/30" aria-hidden="true" />
+          </Transition.Child>
+          <Transition.Child
+            as={Fragment}
+            enter="transition-all ease-in-out duration-300"
+            enterFrom="translate-x-full"
+            enterTo="translate-x-0"
+            leave="transition-all ease-in-out duration-200"
+            leaveFrom="translate-x-0"
+            leaveTo="translate-x-full"
+          >
+            <Dialog.Panel className="fixed bottom-0 right-0 top-0 flex h-full w-full flex-col border-l border-neutral-200 bg-white/80 p-6 text-black backdrop-blur-xl md:w-[390px] dark:border-neutral-700 dark:bg-black/80 dark:text-white">
+              <div className="flex items-center justify-between">
+                <p className="text-lg font-semibold">My Cart</p>
+                <button aria-label="Close cart" onClick={closeCart}>
+                  <CloseCart />
+                </button>
+              </div>
+                <div className="mt-20 flex w-full flex-col items-center justify-center overflow-hidden">
+                  <ShoppingCartIcon className="h-16" />
+                  <p className="mt-6 text-center text-2xl font-bold">
+                    Your cart is empty.
+                  </p>
+                </div>
+            </Dialog.Panel>
+          </Transition.Child>
+        </Dialog>
+      </Transition>
+    </>
+  );
+
 
   const { role, loading: roleLoading } = useUserRole();
   const isNonPurchaser = role === 'non_purchaser';

@@ -1,4 +1,4 @@
-import { LogoutButton } from 'components/account/LogoutButton';
+import LogoutButton from 'components/account/LogoutButton';
 import CartModal from 'components/cart/modal';
 import LogoSquare from 'components/logo-square';
 import { getMenu } from 'lib/shopify';
@@ -96,7 +96,7 @@ export async function Navbar() {
                     <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                       <path d="M5.121 17.804A4 4 0 017 16h10a4 4 0 011.879 1.804M12 12a5 5 0 100-10 5 5 0 000 10z" />
                     </svg>
-                    <span className="text-sm text-neutral-800 dark:text-neutral-200 font-medium">Company Profile</span>
+                    <span className="text-sm text-neutral-800 dark:text-neutral-200 font-medium">Customer Profile</span>
                   </Link>
 
                   <hr className="border-t border-neutral-200 dark:border-neutral-700" />
@@ -107,7 +107,7 @@ export async function Navbar() {
                       <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
                     </svg>
                     <div className="text-sm text-red-600 dark:text-red-400 font-medium">
-                      <LogoutButton />
+                      <LogoutButton className="text-sm font-semibold text-neutral-600 hover:text-blue-600 transition bg-transparent cursor-pointer"/>
                     </div>
                   </div>
                 </div>
