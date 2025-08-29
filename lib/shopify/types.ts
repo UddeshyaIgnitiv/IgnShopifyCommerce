@@ -79,55 +79,27 @@ export type ProductOption = {
   values: string[];
 };
 
-interface ContextualPrice {
-  price: {
-    amount: string;
-    currencyCode: string;
-  } | null;
-}
-
-type VariantPrice = {
-  amount: string;
-  currencyCode: string;
-};
-
-export interface ProductVariant {
+export type ProductVariant = {
+  contextualPricing: any;
   id: string;
   title: string;
-  sku: string;
-  barcode: string | null;
   availableForSale: boolean;
-  price: VariantPrice;
-  compareAtPrice: string | null;
-  contextualPricing: ContextualPrice | null;
-  selectedOptions: { name: string; value: string }[];
-  image: { url: string; altText: string | null } | null;
-  inventoryItem: {
-    id: string;
-    measurement: {
-      weight: { value: number; unit: string };
-    };
-  };
-}
-
+  selectedOptions: {
+    name: string;
+    value: string;
+  }[];
+  price: Money;
+};
 
 export type SEO = {
   title: string;
   description: string;
 };
 
-export type CartCustomer = {
-  id: string;
-  email?: string;
-  firstName?: string;
-  lastName?: string;
-};
-
 export type ShopifyCart = {
   id: string | undefined;
   checkoutUrl: string;
   buyerIdentity: {
-    customer?: CartCustomer | null;
     email?: string;
     purchasingCompany: {
       location: {
@@ -382,8 +354,6 @@ export type Customer = {
     id: string;
     isMainContact: boolean;
     company: {
-      id:string;
-      name:string;
       locations: Connection<{
         id: string;
         name: string;
@@ -531,17 +501,12 @@ export type ShopifyAdminProductOperation = {
 export type ShopifyAdminProductsOperation = {
   variables: {
     companyLocationId: string;
-    cursor?: string;
   };
   data: {
     products: {
       edges: Array<{
         node: ShopifyAdminProduct;
       }>;
-      pageInfo: {
-        hasNextPage: boolean;
-        endCursor: string;
-      };
     };
   };
 }

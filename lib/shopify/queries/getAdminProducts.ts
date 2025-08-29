@@ -2,28 +2,46 @@ import productFragment from '../fragments/productAdmin';
 
 export const getAdminProductQuery = /* GraphQL */ `
   query getProduct($id: ID!, $companyLocationId: ID!) {
-  product(id: $id) {
-    ...product
-  }
-}
-${productFragment}
-`;
-
-export const getAdminProductsQuery = /* GraphQL */ `
-  query getProducts($companyLocationId: ID!, $cursor: String) {
-    products(first: 100, after: $cursor) {
-      edges {
-        cursor
-        node {
-          ...product
+    product(id: $id) {
+      ...product
+      variants(first: 50) {
+        edges {
+          node {
+            contextualPricing(context: { companyLocationId: $companyLocationId }) {
+              price {
+                amount
+                currencyCode
+              }
+            }
+          }
         }
-      }
-      pageInfo {
-        hasNextPage
-        endCursor
       }
     }
   }
   ${productFragment}
 `;
 
+export const getAdminProductsQuery = /* GraphQL */ `
+  query getProducts($companyLocationId: ID!) {
+    products(first: 100) {
+      edges {
+        node {
+          ...product
+          variants(first: 50) {
+            edges {
+              node {
+                contextualPricing(context: { companyLocationId: $companyLocationId }) {
+                  price {
+                    amount
+                    currencyCode
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+  ${productFragment}
+`;

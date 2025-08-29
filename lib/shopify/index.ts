@@ -435,7 +435,7 @@ export async function getAdminProduct({
 }) {
   const res = await shopifyAdminFetch<ShopifyAdminProductOperation>({
     query: getAdminProductQuery,
-    variables: { id, companyLocationId },
+    variables: { id, companyLocationId }
   });
 
   return res.body?.data?.product;
@@ -448,7 +448,7 @@ export async function getAdminProducts({
 }) {
   const res = await shopifyAdminFetch<ShopifyAdminProductsOperation>({
     query: getAdminProductsQuery,
-    variables: { companyLocationId },
+    variables: { companyLocationId }
   });
 
   const edges = res.body?.data?.products?.edges;
@@ -549,10 +549,7 @@ export async function getCollectionProducts({
           const adminVariant = edge.node;
           const variant = matchingProduct.variants.find(v => v.id === adminVariant.id);
           if (variant) {
-            variant.price = {
-              amount: adminVariant.contextualPricing?.price?.amount ?? '0.00',
-              currencyCode: adminVariant.contextualPricing?.price?.currencyCode ?? 'USD'
-            };
+            variant.price = adminVariant.contextualPricing?.price;
           } else {
             console.warn(`[getCollectionProducts] No matching storefront variant found for admin variant ID: ${adminVariant.id}`);
           }
@@ -760,31 +757,6 @@ export async function getProducts({
     // 1. Fetch admin products (with contextual pricing)
     const adminProducts = await getAdminProducts({ companyLocationId });
 
-    for (const adminProduct of adminProducts) {
-      //console.log(`\nProduct: ${adminProduct.title} (${adminProduct.id})`);
-
-      for (const variantEdge of adminProduct.variants.edges) {
-        const variant = variantEdge.node;
-        const price = variant?.contextualPricing?.price?.amount;
-        const currency = variant?.contextualPricing?.price?.currencyCode;
-
-        //console.log(`  Variant ID: ${variant.id}`);
-        //console.log(`  Price: ${price} ${currency}`);
-      }
-    }
-
-    const productIdToFind = 'gid://shopify/Product/8994040578262';
-
-const product = adminProducts.find(p => p.id === productIdToFind);
-
-if (product) {
-  console.log('🎯 Found product in Admin API:', product.title, product.id);
-  console.log('Full product data Admin:', JSON.stringify(product, null, 2));
-} else {
-  console.warn('❌ Product not found in Admin API:', productIdToFind);
-}
-
-
     // 2. Fetch storefront products using Storefront API (for general shape, title, SEO, etc.)
     const storefrontRes = await shopifyFetch<ShopifyProductsOperation>({
       query: getProductsQuery,
@@ -792,18 +764,6 @@ if (product) {
     });
 
     const storefrontProducts = reshapeProducts(removeEdgesAndNodes(storefrontRes.body.data.products));
-
-    const productSIdToFind = 'gid://shopify/Product/8994040578262';
-
-const matchingStorefrontProduct = storefrontProducts.find(p => p.id === productSIdToFind);
-
-if (matchingStorefrontProduct) {
-  console.log('🎯 Found product in Storefront API:', matchingStorefrontProduct.title, matchingStorefrontProduct.id);
-  console.log('Full product data Storefront:', JSON.stringify(matchingStorefrontProduct, null, 2));
-} else {
-  console.warn('❌ Product not found in Storefront API:', productIdToFind);
-}
-
 
     // 3. Transform admin product → storefront format (contextualized)
     const adminStorefrontProducts = adminProducts.map(transformAdminProductToShopifyProduct);
@@ -816,7 +776,7 @@ if (matchingStorefrontProduct) {
         const flattenedVariants = removeEdgesAndNodes(adminProduct.variants);
 
         const prices = flattenedVariants.map(variant =>
-          Number(variant?.price ?? 0)
+          Number(variant?.price?.amount ?? 0)
         );
 
         if (prices.length > 0) {
