@@ -8,11 +8,11 @@ export async function GET(req: Request) {
     const cookieStore = await cookies();
 
     const emailRaw = cookieStore.get('user_email')?.value;
-    const isAdminRaw = cookieStore.get('is_customer_admin')?.value;
+    //const isAdminRaw = cookieStore.get('is_customer_admin')?.value;
     const rawCustomerId = cookieStore.get('customer_id')?.value;
 
     //const email = emailRaw ? decodeURIComponent(emailRaw) : null;
-    const isAdmin = isAdminRaw === 'true';
+    //const isAdmin = isAdminRaw === 'true';
 
     if (!rawCustomerId && !emailRaw) {
       return NextResponse.json({ error: 'Unauthorized: Missing customer ID or email' }, { status: 401 });
@@ -21,7 +21,7 @@ export async function GET(req: Request) {
     // Filter only by email or customerId if not admin
     let queryString = '';
 
-    if (isAdmin) {
+    //if (isAdmin) {
       if (rawCustomerId) {
         const customerId = decodeURIComponent(rawCustomerId);
         queryString = `customer_id:${customerId}`;
@@ -29,7 +29,7 @@ export async function GET(req: Request) {
         const email = decodeURIComponent(emailRaw);
         queryString = `customer_email:${email}`;
       }
-    }
+    //}
 
     //console.log('📦 Querying draft orders with:', queryString);
 
