@@ -53,6 +53,19 @@ export function transformAdminProductToShopifyProduct(
               currencyCode: variant.contextualPricing?.price?.currencyCode ?? 'USD',
             }
           },
+          sku: variant.sku ?? '',
+          barcode: variant.barcode ?? '',
+          compareAtPrice: variant.compareAtPrice ?? null,
+          image: variant.image ?? null,
+          inventoryItem: variant.inventoryItem ?? {
+            id: '',
+            measurement: {
+              weight: {
+                value: 0,
+                unit: 'GRAMS',
+              },
+            },
+          },
         },
       })),
     },

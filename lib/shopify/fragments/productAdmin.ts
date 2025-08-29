@@ -68,6 +68,12 @@ const productFragment = /* GraphQL */ `
           availableForSale
           price
           compareAtPrice
+          contextualPricing(context: { companyLocationId: $companyLocationId }) {
+            price {
+              amount
+              currencyCode
+            }
+          }
           selectedOptions {
             name
             value

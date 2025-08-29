@@ -79,17 +79,37 @@ export type ProductOption = {
   values: string[];
 };
 
-export type ProductVariant = {
-  contextualPricing: any;
+interface ContextualPrice {
+  price: {
+    amount: string;
+    currencyCode: string;
+  } | null;
+}
+
+type VariantPrice = {
+  amount: string;
+  currencyCode: string;
+};
+
+export interface ProductVariant {
   id: string;
   title: string;
+  sku: string;
+  barcode: string | null;
   availableForSale: boolean;
-  selectedOptions: {
-    name: string;
-    value: string;
-  }[];
-  price: Money;
-};
+  price: VariantPrice;
+  compareAtPrice: string | null;
+  contextualPricing: ContextualPrice | null;
+  selectedOptions: { name: string; value: string }[];
+  image: { url: string; altText: string | null } | null;
+  inventoryItem: {
+    id: string;
+    measurement: {
+      weight: { value: number; unit: string };
+    };
+  };
+}
+
 
 export type SEO = {
   title: string;
@@ -511,12 +531,17 @@ export type ShopifyAdminProductOperation = {
 export type ShopifyAdminProductsOperation = {
   variables: {
     companyLocationId: string;
+    cursor?: string;
   };
   data: {
     products: {
       edges: Array<{
         node: ShopifyAdminProduct;
       }>;
+      pageInfo: {
+        hasNextPage: boolean;
+        endCursor: string;
+      };
     };
   };
 }
