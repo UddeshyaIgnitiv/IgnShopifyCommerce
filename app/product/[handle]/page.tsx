@@ -81,10 +81,21 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
   const params = await props.params;
   const { handle } = await params;
   const companyLocationId = (await cookies()).get('companyLocationId')?.value;
+  const shopify_id_token = (await cookies()).get('shopify_id_token')?.value;
 
   // if (!companyLocationId) return notFound();
 
   if (!companyLocationId) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-center text-lg font-bold">
+          Please Login to View Product
+        </p>
+      </div>
+    );
+  }
+
+  if (!shopify_id_token) {
     return (
       <div className="flex h-screen items-center justify-center">
         <p className="text-center text-lg font-bold">

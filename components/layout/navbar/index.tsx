@@ -1,8 +1,8 @@
 import LogoutButton from 'components/account/LogoutButton';
 import CartModal from 'components/cart/modal';
 import LogoSquare from 'components/logo-square';
+import SideSliderMenu from 'components/sideSliderMenu';
 import { getMenu } from 'lib/shopify';
-import { Menu } from 'lib/shopify/types';
 import { cookies } from 'next/headers';
 import Link from 'next/link';
 import { Suspense } from 'react';
@@ -107,7 +107,7 @@ export async function Navbar() {
                       <path d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1" />
                     </svg>
                     <div className="text-sm text-red-600 dark:text-red-400 font-medium">
-                      <LogoutButton className="text-sm font-semibold text-neutral-600 hover:text-blue-600 transition bg-transparent cursor-pointer"/>
+                      <LogoutButton className="text-sm font-semibold text-neutral-600 hover:text-blue-600 transition bg-transparent cursor-pointer" />
                     </div>
                   </div>
                 </div>
@@ -120,29 +120,34 @@ export async function Navbar() {
       </div>
 
       {/* --- Second Row: Nav Menu --- */}
-      <div className="flex bg-secondary items-center justify-center px-4 pt-3 pb-3 lg:px-8">
-        {/* Desktop Nav Menu */}
+      <div className="flex bg-secondary items-center justify-flex-start px-4 pt-3 pb-3 lg:px-8">
+        {/* Desktop Side Slider Menu */}
         {menu.length > 0 && (
-          <ul className="hidden md:flex items-center space-x-6 text-sm">
-            {menu
-              .filter(item => item.title !== 'Profile')
-              .map((item: Menu) => (
-                <li key={item.title} className="whitespace-nowrap">
-                  <Link href={item.path} prefetch className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
-                    {item.title}
-                  </Link>
-                </li>
-              ))}
-            <li className="whitespace-nowrap">
-              <Link href="/account/profile" prefetch className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
-                Draft order
-              </Link>
-            </li>
-          </ul>
+          <>
+            <div className="hidden md:block">
+              <SideSliderMenu menu={menu} />
+            </div>
+            <ul className="hidden md:flex items-center space-x-6 text-sm ml-12">
+              <li className="whitespace-nowrap">
+                <Link href="/account" prefetch className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+                  Profile
+                </Link>
+              </li>
+              <li className="whitespace-nowrap">
+                <Link href="/" prefetch className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+                  About Us
+                </Link>
+              </li>
+              <li className="whitespace-nowrap">
+                <Link href="/" prefetch className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline transition-colors duration-200">
+                  Contact US
+                </Link>
+              </li>
+            </ul>
+          </>
         )}
 
-
-        {/* Mobile Menu */}
+        {/* Mobile Menu - Keep your existing mobile menu */}
         <div className="md:hidden w-full">
           <Suspense fallback={null}>
             <MobileMenu menu={menu} />

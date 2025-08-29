@@ -10,6 +10,8 @@ import { VariantSelector } from './variant-selector';
 export function ProductDescription({ product }: { product: Product }) {
   const { selectedVariant, isLoading } = useProduct();
 
+  console.log("This is product data --> ", product);
+
   //console.log('🔵 Rendering ProductDescription. Selected Variant:', selectedVariant);
 
   if (isLoading) {
@@ -22,8 +24,8 @@ export function ProductDescription({ product }: { product: Product }) {
 
   return (
     <>
-      <div className="mb-6 flex flex-col border-b pb-6 dark:border-neutral-700">
-        <h1 className="mb-2 text-5xl font-medium">{product.title}</h1>
+      <div className="mb-8 flex flex-col border-b pb-6 dark:border-neutral-700">
+        <h1 className="mb-3 text-4xl font-medium">{product.title}</h1>
         <div className="mr-auto w-auto bg-transparent p-2 text-xl font-bold text-primary">
           <Price
             amount={price.amount}
@@ -36,7 +38,7 @@ export function ProductDescription({ product }: { product: Product }) {
 
       {product.descriptionHtml ? (
         <Prose
-          className="mb-6 text-sm leading-tight dark:text-white/[60%]"
+          className="mb-12 text-sm leading-tight dark:text-white/[60%]"
           html={product.descriptionHtml}
         />
       ) : null}
