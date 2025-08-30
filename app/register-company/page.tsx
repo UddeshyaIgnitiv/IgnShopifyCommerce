@@ -5,6 +5,11 @@ import { getAllCountries, getRegionsByCountryCode } from 'lib/utils/countryRegio
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+function formatPhoneToE164(phone: string): string {
+  const digitsOnly = phone.replace(/\D/g, ''); // "1234567890"
+  return `+1${digitsOnly}`;
+}
+
 export default function RegisterCompanyPage() {
   const [formData, setFormData] = useState({
     name: '',
@@ -26,13 +31,59 @@ export default function RegisterCompanyPage() {
   const [regions, setRegions] = useState<{ name: string; shortCode?: string }[]>([]);
   const [countries, setCountries] = useState<{ name: string; code: string }[]>([]);
 
+  // useEffect(() => {
+  //   setCountries(getAllCountries());
+  // }, []);
+
   useEffect(() => {
-    setCountries(getAllCountries());
+    const all = getAllCountries();
+    const usOnly = all.filter((c) => c.code === 'US');
+    setCountries(usOnly);
+
+    // Set US as default selected
+    setFormData((prev) => ({ ...prev, country: 'US' }));
+    setRegions(getRegionsByCountryCode('US'));
   }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
+    let updatedValue = value;
+
+    if (['firstName', 'lastName'].includes(name)) {
+      // Remove numbers
+      updatedValue = value.replace(/[0-9]/g, '');
+
+      // remove any special characters except letters, hyphens, and spaces
+      updatedValue = updatedValue.replace(/[^A-Za-z\s\-]/g, '');
+
+      // Capitalize the first letter of each word
+      updatedValue = updatedValue.toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+
+    if (name === 'phone') {
+      // Remove non-digits
+      const digitsOnly = value.replace(/\D/g, '');
+
+      // Format as 3-3-4 (e.g. 123-456-7890)
+      if (digitsOnly.length <= 3) {
+        updatedValue = digitsOnly;
+      } else if (digitsOnly.length <= 6) {
+        updatedValue = `${digitsOnly.slice(0, 3)}-${digitsOnly.slice(3)}`;
+      } else if (digitsOnly.length <= 10) {
+        updatedValue = `${digitsOnly.slice(0, 3)}-${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6)}`;
+      } else {
+        updatedValue = `${digitsOnly.slice(0, 3)}-${digitsOnly.slice(3, 6)}-${digitsOnly.slice(6, 10)}`;
+      }
+    }
+    if (name === 'email') {
+      updatedValue = value.replace(/\s/g, '');
+    }
+
+    if (typeof updatedValue === 'string') {
+      updatedValue = updatedValue.trimStart(); // Or `.trim()` if you want to remove from both ends
+    }
+
+    setFormData((prev) => ({ ...prev, [name]: updatedValue }));
     setErrors((prev) => ({ ...prev, [name]: '' }));
 
     if (name === 'country') {
@@ -65,6 +116,33 @@ export default function RegisterCompanyPage() {
       }
     });
 
+    // ✅ Phone number format validation (3-3-4)
+    if (formData.phone && !/^\d{3}-\d{3}-\d{4}$/.test(formData.phone)) {
+      newErrors.phone = 'Phone must be in 3-3-4 format (e.g. 123-456-7890).';
+    }
+
+    // ✅ Email format validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = 'Please enter a valid email address.';
+    }
+
+    // ✅ First and last name validation
+    if (formData.firstName && !/^[A-Za-z\s\-]+$/.test(formData.firstName)) {
+      newErrors.firstName = 'First name can only contain letters, spaces, and hyphens.';
+    }
+    if (formData.lastName && !/^[A-Za-z\s\-]+$/.test(formData.lastName)) {
+      newErrors.lastName = 'Last name can only contain letters, spaces, and hyphens.';
+    }
+
+    // ✅ US-specific address validation
+    if (formData.country === 'US' || formData.country === 'USA') {
+      // US ZIP code (5 or 9 digits with dash)
+      if (!/^\d{5}(-\d{4})?$/.test(formData.zip)) {
+        newErrors.zip = 'ZIP code must be in 5-digit or 5+4-digit format (e.g. 12345 or 12345-6789).';
+      }
+
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -72,14 +150,46 @@ export default function RegisterCompanyPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setStatus('');
-    if (!validateFields()) return;
+    if (!validateFields()) {
+      setStatus('❌ Please fill in all required fields before submitting.');
+      return;
+    }
 
     let companyId = null;
     let customerId = null;
 
     try {
       const { phone, ...companyData } = formData;
+      const phoneE164 = formatPhoneToE164(phone);
       setStatus('🚀 Validating company creation...');
+
+      const existingUser = await fetch('/api/register/check-customer',{
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: formData.email }),
+      });
+
+      const existingUserData = await existingUser.json();
+
+      const existingUserDataViaPhone = await fetch('/api/register/check-customer', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phoneNumber: phoneE164 }),
+      });
+      const existingUserDataViaPhoneData = await existingUserDataViaPhone.json();
+
+      if(existingUserData?.existingCustomer === true && existingUserDataViaPhoneData?.existingCustomer === true){
+        setStatus('❌ A customer with this email and phone number already exists. Please log in or use different credentials.');
+        return;
+      }else if (existingUserData?.existingCustomer === true) {
+        setStatus(
+          "❌ A customer with this email already exists. Please log in or use different email address."
+        );
+        return;
+      }else if (existingUserDataViaPhoneData?.existingCustomer === true) {
+        setStatus('❌ A customer with this phone number already exists. Please log in or use a different phone number.');
+        return;
+      }
 
       // Step 1: Create company
       const res = await fetch('/api/register/company', {
@@ -104,7 +214,7 @@ export default function RegisterCompanyPage() {
       const contactRes = await fetch('/api/register/customer', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...formData, companyId: company.id }),
+        body: JSON.stringify({ ...formData, phone: phoneE164, companyId: company.id }),
       });
 
       const contactResult = await contactRes.json();
@@ -169,7 +279,12 @@ export default function RegisterCompanyPage() {
             Register your business to access exclusive pricing and services.
           </p>
         </div>
-
+        {/* Status output */}
+        {status && (
+          <pre className="mt-6 text-sm bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap px-3 py-2 mb-6">
+            {status}
+          </pre>
+        )}
         {/* Form */}
         <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           {/* Input fields */}
@@ -264,12 +379,6 @@ export default function RegisterCompanyPage() {
           </Link>
         </div>
 
-        {/* Status output */}
-        {status && (
-          <pre className="mt-6 text-sm bg-gray-100 p-4 rounded border text-gray-800 whitespace-pre-wrap">
-            {status}
-          </pre>
-        )}
       </div>
     </main>
   );
