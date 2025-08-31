@@ -23,11 +23,33 @@ type MerchandiseSearchParams = {
   [key: string]: string;
 };
 
+const PopupMessage = ({ message, onClose }: { message: string, onClose: () => void }) => (
+    <>
+      {/* Overlay */}
+      <div className="fixed inset-0 bg-black/50 z-[9998]" aria-hidden="true"></div>
+
+      {/* Popup Message */}
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] bg-white p-6 rounded-md w-80 text-center shadow-lg">
+        <p className="text-sm text-red-700">{message}</p>
+        <button
+          onClick={onClose} // Close the popup when clicked
+          className="mt-4 bg-red-500 text-white rounded-full px-4 py-2"
+        >
+          Close
+        </button>
+      </div>
+    </>
+  );
+
 export default function CartModal() {
   const { cart, updateCartItem } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [showPopup, setShowPopup] = useState(false);
+  const [popupMessage, setPopupMessage] = useState('');
+
   const quantityRef = useRef(cart?.totalQuantity);
+
   const openCart = () => setIsOpen(true);
 
   const closeCart = () => {
@@ -84,7 +106,6 @@ export default function CartModal() {
     </>
   );
 
-
   const { role, loading: roleLoading } = useUserRole();
   const isNonPurchaser = role === 'non_purchaser';
 
@@ -111,11 +132,39 @@ export default function CartModal() {
     }
   }, [isOpen, cart?.totalQuantity, quantityRef]);
 
+  // Handle checkout with error message handling
+  const handleCheckout = async () => {
+    setMessage(null); 
+
+    try {
+      await redirectToCheckout(); 
+    } catch (err: any) {
+      let errorText = 'An unexpected error occurred during checkout. Please try again later.';
+
+      if (err.message.includes('Company location not found or not allowed')) {
+        errorText = `${err.message}. Please verify your location and try again.`;
+      } else {
+        errorText = err.message || errorText;
+      }
+      
+      setPopupMessage(errorText); 
+      setShowPopup(true); 
+      console.error('Checkout error:', err);
+    }
+  };
+
   return (
     <>
       <button aria-label="Open cart" onClick={openCart} className="bg-transparent">
         <OpenCart quantity={cart?.totalQuantity} />
       </button>
+      {/* Custom Popup Message */}
+      {showPopup && (
+        <PopupMessage 
+          message={popupMessage} 
+          onClose={() => setShowPopup(false)} // Close the popup when clicked
+        />
+      )}
       <Transition show={isOpen}>
         <Dialog onClose={closeCart} className="relative z-50">
           <Transition.Child
@@ -287,7 +336,7 @@ export default function CartModal() {
                       />
                     </div>
                   </div>
-                  <form action={redirectToCheckout}>
+                  <form action={handleCheckout}>
                     <CheckoutButton disabled={roleLoading || isNonPurchaser} />
                   </form>
                   <form>

@@ -236,27 +236,27 @@ export default function RegisterCompanyPage() {
       setStatus((prev) => `${prev}\n✅ Default role Admin assigned to the customer!`);
 
       // Step 3: Send email invite
-      const inviteRes = await fetch('/api/register/email-invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ customerId }),
-      });
+      // const inviteRes = await fetch('/api/register/email-invite', {
+      //   method: 'POST',
+      //   headers: { 'Content-Type': 'application/json' },
+      //   body: JSON.stringify({ customerId }),
+      // });
 
-      const inviteResult = await inviteRes.json();
-      const inviteErrors = inviteResult?.error || inviteResult?.data?.customerSendAccountInviteEmail?.userErrors;
+      // const inviteResult = await inviteRes.json();
+      // const inviteErrors = inviteResult?.error || inviteResult?.data?.customerSendAccountInviteEmail?.userErrors;
 
-      if (!inviteRes.ok || (Array.isArray(inviteErrors) && inviteErrors.length > 0)) {
-        const msg = Array.isArray(inviteErrors)
-          ? inviteErrors[0]?.message
-          : inviteErrors || 'Unknown error while sending invite.';
-        setStatus((prev) => `${prev}\n❌ Invite failed: ${msg}`);
+      // if (!inviteRes.ok || (Array.isArray(inviteErrors) && inviteErrors.length > 0)) {
+      //   const msg = Array.isArray(inviteErrors)
+      //     ? inviteErrors[0]?.message
+      //     : inviteErrors || 'Unknown error while sending invite.';
+      //   setStatus((prev) => `${prev}\n❌ Invite failed: ${msg}`);
 
-        await fetch(`/api/delete/customer/${customerId}`, { method: 'DELETE' });
-        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });
-        return;
-      }
+      //   await fetch(`/api/delete/customer/${customerId}`, { method: 'DELETE' });
+      //   await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });
+      //   return;
+      // }
 
-      setStatus((prev) => `${prev}\n✅ Invite sent successfully!`);
+      //setStatus((prev) => `${prev}\n✅ Invite sent successfully!`);
     } catch (error: unknown) {
       console.error('Client-side error:', error);
       setStatus((prev) => `${prev}\n❌ Unexpected error: ${(error as Error).message || 'Something went wrong'}`);
