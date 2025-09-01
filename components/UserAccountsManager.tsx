@@ -246,7 +246,7 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
                           disabled={isProtected}
                           className={`px-2 py-1 text-sm rounded 
                             ${isProtected
-                              ? 'bg-red-200 text-white-400 cursor-not-allowed opacity-70'
+                              ? 'bg-red-200 text-white cursor-not-allowed opacity-70'
                               : 'bg-red-600 text-white hover:bg-red-700'}`}
                         >
                           Delete
