@@ -4,6 +4,7 @@ import { ArrowLeftIcon, ArrowRightIcon } from '@heroicons/react/24/outline';
 import { GridTileImage } from 'components/grid/tile';
 import { useProduct, useUpdateURL } from 'components/product/product-context';
 import Image from 'next/image';
+import PlaceHolderImage from 'public/noImage.png';
 
 export function Gallery({ images }: { images: { src: string; altText: string }[] }) {
   const { state, updateImage } = useProduct();
@@ -25,8 +26,8 @@ export function Gallery({ images }: { images: { src: string; altText: string }[]
             className="h-full w-full object-contain"
             fill
             sizes="(min-width: 1024px) 66vw, 100vw"
-            alt={images[imageIndex]?.altText as string}
-            src={images[imageIndex]?.src as string}
+            alt={images[imageIndex]?.altText as string || 'no image available'}
+            src={images[imageIndex]?.src as string || PlaceHolderImage.src }
             priority={true}
           />
         )}

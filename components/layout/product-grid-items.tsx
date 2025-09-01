@@ -2,9 +2,10 @@ import Grid from 'components/grid';
 import { GridTileImage } from 'components/grid/tile';
 import { Product } from 'lib/shopify/types';
 import Link from 'next/link';
+import PlaceHolderImage from 'public/noImage.png';
 
 export default function ProductGridItems({ products }: { products: Product[] }) {
-  // console.log("This is plp data -> ", products);
+
   return (
     <>
       {products.map((product) => (
@@ -21,7 +22,7 @@ export default function ProductGridItems({ products }: { products: Product[] }) 
                 amount: product.priceRange.maxVariantPrice.amount,
                 currencyCode: product.priceRange.maxVariantPrice.currencyCode
               }}
-              src={product.featuredImage?.url}
+              src={product.featuredImage ? product.featuredImage.url : PlaceHolderImage.src }
               fill
               sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
             />

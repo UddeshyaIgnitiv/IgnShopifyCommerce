@@ -4,6 +4,7 @@ import 'keen-slider/keen-slider.min.css';
 import { useKeenSlider } from 'keen-slider/react';
 import Image from 'next/image';
 import Link from 'next/link';
+import PlaceHolderImage from 'public/noImage.png';
 
 export function Carousel({ products }: { products: any[] }) {
   const [sliderRef, slider] = useKeenSlider<HTMLDivElement>({
@@ -19,8 +20,7 @@ export function Carousel({ products }: { products: any[] }) {
     <div className="relative w-full">
       <div ref={sliderRef} className="keen-slider w-full pb-6 pt-1">
         {products.map((product, i) => {
-          const productImage =
-            product?.featuredImage?.url || "../public/images/targetsupply.svg";
+          const productImage = product.featuredImage ? product?.featuredImage?.url : PlaceHolderImage.src;
 
           return (
             <div
