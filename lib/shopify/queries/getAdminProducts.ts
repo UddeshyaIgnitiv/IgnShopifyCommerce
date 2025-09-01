@@ -23,7 +23,7 @@ export const getAdminProductQuery = /* GraphQL */ `
 
 export const getAdminProductsQuery = /* GraphQL */ `
   query getProducts($companyLocationId: ID!) {
-    products(first: 100) {
+    products(first: 229) {
       edges {
         node {
           ...product

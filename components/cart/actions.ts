@@ -125,40 +125,47 @@ export async function updateItemQuantity(
 
 export async function redirectToCheckout() {
   const cookieStore = cookies();
+  let updatedCart;
 
-  // 1. load current cart
-  const cart = await getCart();
-  if (!cart) {
-    throw new Error('No active cart found');
+  try {
+    // 1. Load current cart
+    const cart = await getCart();
+    if (!cart) {
+      throw new Error('No active cart found');
+    }
+
+    if (!cart.id) {
+      throw new Error('Cart is missing its ID — cannot update buyerIdentity');
+    }
+
+    // 2. Pull buyerIdentity values from cookies
+    const customerAccessToken = (await cookieStore).get('shopify_access_token')?.value;
+    const companyLocationId = (await cookieStore).get('companyLocationId')?.value;
+    const customerEmailRaw = (await cookieStore).get('user_email')?.value;
+    const customerEmail = customerEmailRaw ? decodeURIComponent(customerEmailRaw) : null;
+
+    // 3. Only call mutation if needed
+    updatedCart = cart;
+    if (customerAccessToken || companyLocationId || customerEmail) {
+      const buyerIdentity: CartBuyerIdentityInput = {};
+      if (customerAccessToken) buyerIdentity.customerAccessToken = customerAccessToken;
+      if (companyLocationId) buyerIdentity.companyLocationId = companyLocationId;
+      if (customerEmail) buyerIdentity.email = customerEmail;
+
+      updatedCart = await cartBuyerIdentityUpdate({
+        cartId: cart.id,
+        buyerIdentity,
+      });
+    }
+  } catch (error) {
+    console.error('Error during checkout redirect:', error);
+    throw error; 
   }
 
-  if (!cart.id) {
-    throw new Error('Cart is missing its ID — cannot update buyerIdentity');
-  }
-
-  // 2. pull buyerIdentity values from cookies
-  const customerAccessToken = (await cookieStore).get('shopify_access_token')?.value;
-  const companyLocationId = (await cookieStore).get('companyLocationId')?.value;
-  const customerEmailRaw = (await cookieStore).get('user_email')?.value;
-  const customerEmail = customerEmailRaw ? decodeURIComponent(customerEmailRaw) : null;
-
-  // 3. only call mutation if needed
-  let updatedCart = cart;
-  if (customerAccessToken || companyLocationId || customerEmail) {
-    const buyerIdentity: CartBuyerIdentityInput = {};
-    if (customerAccessToken) buyerIdentity.customerAccessToken = customerAccessToken;
-    if (companyLocationId) buyerIdentity.companyLocationId = companyLocationId;
-    if (customerEmail) buyerIdentity.email = customerEmail;
-
-    updatedCart = await cartBuyerIdentityUpdate({
-      cartId: cart.id,
-      buyerIdentity,
-    });
-  }
-
-  // 4. redirect
+  // ✅ 4. Safe to call redirect here (outside try/catch)
   redirect(updatedCart.checkoutUrl);
 }
+
 
 export async function createCartAndSetCookie() {
   const cookieStore = cookies();
