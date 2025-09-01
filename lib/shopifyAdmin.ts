@@ -1,5 +1,6 @@
 // lib/shopifyAdmin.ts
 // import fetch from 'node-fetch';
+import { draftOrderCalculate } from 'lib/shopify/mutations/orders/draftOrderCalculate';
 import { getCompanyContactRolesQuery, getCompanyContactsQuery } from './shopify/queries/getCompanyContacts';
 const SHOPIFY_STORE_DOMAIN = process.env.SHOPIFY_STORE_DOMAIN!;
 const SHOPIFY_ADMIN_API_ACCESS_TOKEN = process.env.SHOPIFY_ADMIN_API_ACCESS_TOKEN!;
@@ -127,3 +128,40 @@ export async function getCompanyContactRoles(companyId: string) {
     })) || []
   );
 }
+
+// lib/shopifyAdmin.ts
+export async function getCompanyLocationById(id: string) {
+  const query = `
+    query GetCompanyLocation($id: ID!) {
+      companyLocation(id: $id) {
+        shippingAddress {
+          firstName
+          lastName
+          address1
+          address2
+          city
+          province
+          zip
+          country
+          phone
+        }
+      }
+    }
+  `;
+  const variables = { id };
+  const response = await adminGraphql(query, variables);
+  return response?.companyLocation?.shippingAddress || null;
+}
+
+export async function calculateDraftOrder(input: any) {
+  const calcResponse = await adminGraphql(draftOrderCalculate, { input });
+  const calcErrors = calcResponse?.draftOrderCalculate?.userErrors;
+  if (calcErrors?.length) {
+    console.error('Draft order calculate errors:', calcErrors);
+    throw new Error(calcErrors[0].message);
+  }
+  return calcResponse?.draftOrderCalculate?.calculatedDraftOrder;
+}
+
+
+ 

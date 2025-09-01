@@ -12,12 +12,13 @@ import {
 } from 'lib/shopify';
 import CREATE_DRAFT_ORDER from 'lib/shopify/mutations/orders/createDraftOrder';
 import { CartBuyerIdentityInput } from 'lib/shopify/types';
+import { normalizeAddressForShopify } from 'lib/utils/normalizeAddressForShopify';
 import { revalidateTag } from 'next/cache';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 
 // ✅ shared Admin API helper
-import { adminGraphql } from 'lib/shopifyAdmin';
+import { adminGraphql, calculateDraftOrder, getCompanyLocationById } from 'lib/shopifyAdmin';
 import { NextResponse } from 'next/server';
 
 export async function addItem(
@@ -185,30 +186,35 @@ export async function requestQuote(_formData: FormData): Promise<NextResponse | 
   console.log('🚀 requestQuote started...');
 
   const cart = await getCart();
-
-  if (!cart) throw new Error('No active cart found');
-  if (!cart.lines.length) throw new Error('Your cart is empty.');
-  if (!cart?.id) {
-    throw new Error('Cart is missing its ID — cannot update buyerIdentity');
+  if (!cart || !cart.lines.length || !cart.id) {
+    throw new Error('Cart is missing or empty.');
   }
 
   // 🧠 Fetch identity from cookies
   const cookieStore = cookies();
   const customerAccessToken = (await cookieStore).get('shopify_access_token')?.value;
   const companyLocationId = (await cookieStore).get('companyLocationId')?.value;
+  const companyId = (await cookieStore).get('company_id')?.value;
   const customerEmailRaw = (await cookieStore).get('user_email')?.value;
   const customerEmail = customerEmailRaw ? decodeURIComponent(customerEmailRaw) : null;
+
+  //console.log('🔐 Cookies:', { companyId, companyLocationId, customerEmail,  });
 
   if (!customerAccessToken && !customerEmail) {
     throw new Error('You must be logged in or provide an email to request a quote.');
   }
 
   if (!customerEmail) {
-          return NextResponse.json({ error: 'Email cookie missing' }, { status: 401 });
+          return NextResponse.json({ error: 'Email missing for quote request.' }, { status: 401 });
       }
 
   const customer = await getCustomerByEmail(customerEmail);
+  const companyContactId = customer?.companyContactProfiles?.[0]?.id;
   const customerId = customer?.id;
+  const defaultAddress = customer?.defaultAddress;
+
+  //console.log('👤 Customer from Admin API:', customer);
+  //console.log('✅ customerId to use:', customerId, companyContactId);
 
   // 🔁 Update cart buyer identity with cookies (for pricing by location)
   const buyerIdentity: CartBuyerIdentityInput = {};
@@ -225,26 +231,19 @@ export async function requestQuote(_formData: FormData): Promise<NextResponse | 
   //console.log('🔄 Cart buyer identity updated.');
 
   // 🧾 Prepare line items with adjusted price
-    const lineItems = updatedCart.lines.map((line) => {
+  const lineItems = updatedCart.lines.map((line) => {
     const variantId = line.merchandise?.id;
     const quantity = line.quantity;
     const totalAmount = parseFloat(line.cost.totalAmount?.amount || '0');
-  const currencyCode = line.cost.totalAmount?.currencyCode;
+    const currencyCode = line.cost.totalAmount?.currencyCode;
 
-  // 💡 Calculate unit price
-  const unitPrice = quantity > 0 ? totalAmount / quantity : null;
+    //Calculate unit price
+    const unitPrice = quantity > 0 ? totalAmount / quantity : null;
 
-  if (!variantId || !unitPrice || !currencyCode) return null;
+    if (!variantId || !unitPrice || !currencyCode) return null;
 
-    return {
-      variantId,
-      quantity,
-      priceOverride: {
-    amount: unitPrice.toFixed(2),
-    currencyCode, // fallback just in case
-    }, // Shopify expects stringified number
-      };
-    }).filter(Boolean); // Remove nulls
+    return variantId && quantity ? { variantId, quantity, taxable: true } : null;
+  }).filter(Boolean); 
 
     //console.log('🧱 Line items for draft order:', lineItems);
 
@@ -252,39 +251,86 @@ export async function requestQuote(_formData: FormData): Promise<NextResponse | 
     lineItems,
     note: 'Requested quote from storefront',
     tags: ['request_quote'],
+    email: customerEmail,
   };
 
+  //console.log('Draft Order Input:', JSON.stringify(draftOrderInput, null, 2));
 
-  if (customerId) {
-      draftOrderInput.customerId = customerId;
-    } else if (customerEmail) {
-      draftOrderInput.email = customerEmail;
+  // ✅ Either send customer info OR purchasingEntity (not both)
+  const isCompanyOrder = Boolean(companyId && companyLocationId && companyContactId);
+
+  // 🏠 Determine shipping address
+  let shippingAddress = null;
+
+  if (isCompanyOrder && companyLocationId) {
+    // Fetch company location address
+    const rawCompanyAddress = await getCompanyLocationById(companyLocationId);
+    shippingAddress = normalizeAddressForShopify(rawCompanyAddress);
+    //console.log('🏢 Using company location as shipping address:', shippingAddress);
+  } else if (defaultAddress) {
+    // Fallback to customer's default address
+    shippingAddress = normalizeAddressForShopify({
+      firstName: defaultAddress.firstName || 'N/A',
+      lastName: defaultAddress.lastName || 'N/A',
+      address1: defaultAddress.address1,
+      address2: defaultAddress.address2,
+      city: defaultAddress.city,
+      province: defaultAddress.province,
+      zip: defaultAddress.zip,
+      country: defaultAddress.country,
+      phone: defaultAddress.phone || '',
+    });
+    //console.log('🏠 Using customer default address as shipping address:', shippingAddress);
   }
 
-  // 🧠 Call GraphQL Admin API to create draft order
+  // 📨 Add shipping & billing addresses
+  if (shippingAddress) {
+    draftOrderInput.shippingAddress = shippingAddress;
+
+    // ✅ Set billing address same as shipping address
+    draftOrderInput.billingAddress = {
+      ...shippingAddress
+    };
+  }
+
+  if (isCompanyOrder) {
+    draftOrderInput.purchasingEntity = {
+      purchasingCompany: {
+        companyId,
+        companyLocationId,
+        companyContactId,
+      },
+    };
+  } else if (customerId) {
+    draftOrderInput.customerId = customerId;
+  } else if (customerEmail) {
+    draftOrderInput.email = customerEmail;
+  }
+
+  // *** NEW STEP: Calculate draft order before creation ***
+  try {
+    const calculatedDraftOrder = await calculateDraftOrder(draftOrderInput);
+    //console.log('Calculated Draft Order:', calculatedDraftOrder);
+  } catch (error) {
+    console.error('Failed to calculate draft order:', error);
+    throw error; // or handle gracefully
+  }
+
+  // Create draft order with the input
   const response = await adminGraphql(CREATE_DRAFT_ORDER, { input: draftOrderInput });
-
-  const draftOrder = response?.draftOrderCreate?.draftOrder;
-  const userErrors = response?.draftOrderCreate?.userErrors;
-  const graphqlErrors = response?.errors;
-
-  if (graphqlErrors?.length) {
-    console.error('❌ GraphQL errors:', graphqlErrors);
-    throw new Error(graphqlErrors[0]?.message || 'Failed to create draft order');
-  }
+  const userErrors = response?.draftOrderCreate?.userErrors || response?.errors;
 
   if (userErrors?.length) {
     console.error('⚠️ Draft order user errors:', userErrors);
     throw new Error(userErrors[0]?.message || 'Failed to create draft order');
   }
 
-  //console.log('✅ Draft order created:', draftOrder?.id);
+  const draftOrder = response?.draftOrderCreate?.draftOrder;
+  console.log('✅ Draft order created:', draftOrder?.id);
 
   // ✅ Empty the cart after successful draft order
   try {
-    const idsToRemove = cart.lines
-      .map((line) => line.id)
-      .filter((id): id is string => Boolean(id));
+    const idsToRemove = cart.lines.map((line) => line.id).filter(Boolean) as string[];
 
     //console.log('Line IDs to remove from cart:', idsToRemove);
 

@@ -481,6 +481,9 @@ export type ShopifyAdminProduct = {
 }
 
 type Address = {
+  phone: string;
+  firstName: string;
+  lastName: string;
   address1: string;
   address2: string;
   city: string;
