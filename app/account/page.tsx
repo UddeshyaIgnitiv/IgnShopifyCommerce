@@ -1,9 +1,10 @@
 'use client';
 
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
-import InvoiceModal from 'components/InvoiceModal';
-import UserAccountsManager from 'components/UserAccountsManager';
 import LogoutButton from 'components/account/LogoutButton';
+import InvoiceModal from 'components/InvoiceModal';
+import QuoteDetailsModal from 'components/QuoteDetailsModal';
+import UserAccountsManager from 'components/UserAccountsManager';
 import Cookies from 'js-cookie';
 import { useUserRole } from 'lib/utils/useUserRole';
 import { useRouter } from 'next/navigation';
@@ -85,6 +86,7 @@ export default function AccountPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [draftQuotes, setDraftQuotes] = useState<Quote[]>([]);
   const [quotesLoading, setQuotesLoading] = useState(false);
+  const [selectedQuoteId, setSelectedQuoteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   // Pagination and orders state
@@ -272,7 +274,7 @@ export default function AccountPage() {
             <span className="py-4 text-xl font-semibold text-gray-800">Account</span>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="text-white-700 text-md"
+              className="text-white text-md"
               aria-label="Close menu"
             >
               <XMarkIcon className="h-5" />
@@ -306,7 +308,7 @@ export default function AccountPage() {
           <div className="lg:hidden flex items-center justify-between bg-white p-4 shadow">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-white-700 focus:outline-none"
+              className="text-white focus:outline-none"
             >
               <span className="inline-flex items-center space-x-2">
                 <Bars3Icon className="h-6 text-md" />
@@ -514,7 +516,7 @@ export default function AccountPage() {
                           <tbody>
                             {draftQuotes.map((quote) => (
                               <tr key={quote.id} className="bg-white">
-                                <td className="border px-4 py-3 text-sm text-gray-800">{quote.name}</td>
+                                <td className="border px-4 py-3 text-sm text-blue-800 hover:underline hover:text-blue-800 focus:outline-none cursor-pointer" onClick={() => setSelectedQuoteId(quote.id)}>{quote.name}</td>
                                 <td className="border px-4 py-3 text-sm text-gray-800">{quote.status}</td>
                                 <td className="border px-4 py-3 text-sm text-gray-800">{new Date(quote.createdAt).toLocaleDateString()}</td>
                                 <td className="border px-4 py-3 text-sm text-gray-800">
@@ -538,6 +540,14 @@ export default function AccountPage() {
                     )}
                   </>
                 )}
+
+                {selectedQuoteId && (
+                  <QuoteDetailsModal
+                    quoteId={selectedQuoteId}
+                    onCloseAction={() => setSelectedQuoteId(null)}
+                  />
+                )}
+
               </div>
             )}
 
