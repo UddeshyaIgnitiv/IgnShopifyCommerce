@@ -1,5 +1,6 @@
 'use client';
 
+import PlaceholderImage from 'public/noImage.png';
 import { useEffect, useState } from 'react';
 
 interface QuoteDetailsModalProps {
@@ -39,6 +40,7 @@ interface LineItem {
   quantity: number;
   variant?: Variant;
   price?: number; // Optional if available
+  image?: { url?: string; altText?: string };
 }
 
 interface PurchasingCompany {
@@ -66,6 +68,7 @@ interface Quote {
   discountAmount?: number;
   shippingPrice?: number;
   taxAmount?: number | string;
+  totalDiscounts?: number | string;
 }
 
 export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetailsModalProps) {
@@ -126,24 +129,29 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
             onClick={onCloseAction}
             aria-label="Close modal"
             className="text-white hover:text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 rounded-full p-2 transition-colors duration-150"
-            >
+          >
             <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
             >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M6 18L18 6M6 6l12 12"
+              />
             </svg>
-        </button>
-
+          </button>
         </header>
 
         <main className="px-10 py-8 space-y-12 text-gray-800 flex-grow">
           {loading && (
-            <p className="text-center text-xl font-medium py-24">Loading quote details…</p>
+            <p className="text-center text-xl font-medium py-24">
+              Loading quote details…
+            </p>
           )}
 
           {error && (
@@ -156,44 +164,44 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
             <>
               {/* Basic Info */}
               <section className="overflow-x-auto bg-white rounded-lg shadow-md max-w-full">
-                    <table className="min-w-full border border-gray-300 divide-y divide-gray-300">
-                        <thead className="bg-indigo-100 border-b border-gray-300">
-                        <tr>
-                            <th
-                            scope="col"
-                            className="border-r border-gray-300 px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wide"
-                            >
-                            Quote ID
-                            </th>
-                            <th
-                            scope="col"
-                            className="border-r border-gray-300 px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wide"
-                            >
-                            Status
-                            </th>
-                            <th
-                            scope="col"
-                            className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wide"
-                            >
-                            Created At
-                            </th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr className="hover:bg-indigo-50 transition-colors duration-150">
-                            <td className="border-r border-gray-300 px-6 py-4 whitespace-nowrap font-medium text-gray-900 select-text">
-                            {quote.name}
-                            </td>
-                            <td className="border-r border-gray-300 px-6 py-4 whitespace-nowrap capitalize text-gray-700 select-text">
-                            {quote.status || 'N/A'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-gray-700 select-text">
-                            {new Date(quote.createdAt).toLocaleString()}
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
-                </section>
+                <table className="min-w-full border border-gray-300 divide-y divide-gray-300">
+                  <thead className="bg-indigo-100 border-b border-gray-300">
+                    <tr>
+                      <th
+                        scope="col"
+                        className="border-r border-gray-300 px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wide"
+                      >
+                        Quote ID
+                      </th>
+                      <th
+                        scope="col"
+                        className="border-r border-gray-300 px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wide"
+                      >
+                        Status
+                      </th>
+                      <th
+                        scope="col"
+                        className="px-6 py-3 text-left text-xs font-semibold text-indigo-700 uppercase tracking-wide"
+                      >
+                        Created At
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="hover:bg-indigo-50 transition-colors duration-150">
+                      <td className="border-r border-gray-300 px-6 py-4 whitespace-nowrap font-medium text-gray-900 select-text">
+                        {quote.name}
+                      </td>
+                      <td className="border-r border-gray-300 px-6 py-4 whitespace-nowrap capitalize text-gray-700 select-text">
+                        {quote.status || "N/A"}
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-700 select-text">
+                        {new Date(quote.createdAt).toLocaleString()}
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </section>
               {/* Customer & Shipping */}
               <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 {/* Customer */}
@@ -204,17 +212,19 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                   {quote.customer ? (
                     <div className="space-y-2 text-md">
                       <p>
-                        <strong>Name:</strong>{' '}
+                        <strong>Name:</strong>{" "}
                         {[quote.customer.firstName, quote.customer.lastName]
                           .filter(Boolean)
-                          .join(' ') || '-'}
+                          .join(" ") || "-"}
                       </p>
                       <p>
-                        <strong>Email:</strong> {quote.customer.email || '-'}
+                        <strong>Email:</strong> {quote.customer.email || "-"}
                       </p>
                     </div>
                   ) : (
-                    <p className="italic text-gray-500">No customer information available.</p>
+                    <p className="italic text-gray-500">
+                      No customer information available.
+                    </p>
                   )}
                 </div>
 
@@ -224,98 +234,133 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                     Shipping Address
                   </h3>
                   {quote.shippingAddress ? (
-                     <address className="italic space-y-1 text-md leading-relaxed">
+                    <address className="italic space-y-1 text-md leading-relaxed">
                       {quote.shippingAddress.company && (
-      <p className="font-semibold">{quote.shippingAddress.company}</p>
-    )}
-    {quote.shippingAddress.name && <p>{quote.shippingAddress.name}</p>}
-    {quote.shippingAddress.address1 && <p>{quote.shippingAddress.address1}</p>}
-    {quote.shippingAddress.address2 && <p>{quote.shippingAddress.address2}</p>}
-    {(quote.shippingAddress.city || quote.shippingAddress.provinceCode || quote.shippingAddress.zip) && (
-      <p>
-        {[quote.shippingAddress.city, quote.shippingAddress.provinceCode, quote.shippingAddress.zip]
-          .filter(Boolean)
-          .join(' ')}
-      </p>
-    )}
-    {quote.shippingAddress.country && <p>{quote.shippingAddress.country}</p>}
-    {quote.shippingAddress.phone && <p>{quote.shippingAddress.phone}</p>}
+                        <p className="font-semibold">
+                          {quote.shippingAddress.company}
+                        </p>
+                      )}
+                      {quote.shippingAddress.name && (
+                        <p>{quote.shippingAddress.name}</p>
+                      )}
+                      {quote.shippingAddress.address1 && (
+                        <p>{quote.shippingAddress.address1}</p>
+                      )}
+                      {quote.shippingAddress.address2 && (
+                        <p>{quote.shippingAddress.address2}</p>
+                      )}
+                      {(quote.shippingAddress.city ||
+                        quote.shippingAddress.provinceCode ||
+                        quote.shippingAddress.zip) && (
+                        <p>
+                          {[
+                            quote.shippingAddress.city,
+                            quote.shippingAddress.provinceCode,
+                            quote.shippingAddress.zip,
+                          ]
+                            .filter(Boolean)
+                            .join(" ")}
+                        </p>
+                      )}
+                      {quote.shippingAddress.country && (
+                        <p>{quote.shippingAddress.country}</p>
+                      )}
+                      {quote.shippingAddress.phone && (
+                        <p>{quote.shippingAddress.phone}</p>
+                      )}
 
-    <a
-      href={`https://maps.google.com/?q=${encodeURIComponent(
-        [
-          quote.shippingAddress.address1,
-          quote.shippingAddress.address2,
-          quote.shippingAddress.city,
-          quote.shippingAddress.provinceCode,
-          quote.shippingAddress.zip,
-          quote.shippingAddress.country,
-        ]
-          .filter(Boolean)
-          .join(', ')
-      )}`}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="text-blue-600 underline text-sm mt-2 block"
-    >
-      View map
-    </a>
+                      <a
+                        href={`https://maps.google.com/?q=${encodeURIComponent(
+                          [
+                            quote.shippingAddress.address1,
+                            quote.shippingAddress.address2,
+                            quote.shippingAddress.city,
+                            quote.shippingAddress.provinceCode,
+                            quote.shippingAddress.zip,
+                            quote.shippingAddress.country,
+                          ]
+                            .filter(Boolean)
+                            .join(", ")
+                        )}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-blue-600 underline text-sm mt-2 block"
+                      >
+                        View map
+                      </a>
                     </address>
                   ) : (
-                    <p className="italic text-gray-500">No shipping address provided.</p>
+                    <p className="italic text-gray-500">
+                      No shipping address provided.
+                    </p>
                   )}
                 </div>
               </section>
 
               {/* Products */}
-             <section>
+              <section>
                 <h3 className="text-xl font-bold tracking-tight mb-4 border-b border-gray-300 pb-2">
-                    Products
+                  Products
                 </h3>
 
                 {quote.lineItems && quote.lineItems.length > 0 ? (
-                    <div className="overflow-x-auto">
+                  <div className="overflow-x-auto">
                     <table className="min-w-full border border-gray-300 text-sm">
-                        <thead className="bg-gray-100 text-gray-700">
+                      <thead className="bg-gray-100 text-gray-700">
                         <tr>
-                            <th className="border border-gray-300 px-3 py-2 text-left font-semibold w-20">Image</th>
-                            <th className="border border-gray-300 px-3 py-2 text-left font-semibold">Title</th>
-                            <th className="border border-gray-300 px-3 py-2 text-left font-semibold">Qty</th>
-                            <th className="border border-gray-300 px-3 py-2 text-left font-semibold">Unit Price</th>
+                          <th className="border border-gray-300 px-3 py-2 text-left font-semibold w-20">
+                            Image
+                          </th>
+                          <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
+                            Title
+                          </th>
+                          <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
+                            Qty
+                          </th>
+                          <th className="border border-gray-300 px-3 py-2 text-left font-semibold">
+                            Unit Price
+                          </th>
                         </tr>
-                        </thead>
-                        <tbody className="text-gray-700">
+                      </thead>
+                      <tbody className="text-gray-700">
                         {quote.lineItems.map((item, idx) => (
-                            <tr key={idx} className="hover:bg-gray-50 transition-colors duration-150">
+                          <tr
+                            key={idx}
+                            className="hover:bg-gray-50 transition-colors duration-150"
+                          >
                             <td className="border border-gray-300 px-3 py-2">
-                                {item.variant?.image?.url ? (
+                              {item?.image?.url ? (
                                 <img
-                                    src={item.variant.image.url}
-                                    alt={item.variant.image.altText || item.title}
-                                    className="w-12 h-12 object-cover rounded-sm"
+                                  src={item?.image?.url || PlaceholderImage.src}
+                                  alt={item?.image?.altText || "Product Image"}
+                                  className="w-12 h-12 object-contain"
                                 />
-                                ) : (
-                                <div className="w-12 h-12 bg-gray-100 rounded-sm flex items-center justify-center text-gray-400 text-xs">
-                                    No Image
+                              ) : (
+                                <div className="w-12 h-12 bg-gray-100 flex items-center justify-center text-gray-400 text-xs">
+                                  No Image
                                 </div>
-                                )}
+                              )}
                             </td>
-                            <td className="border border-gray-300 px-3 py-2 font-medium">{item.title}</td>
+                            <td className="border border-gray-300 px-3 py-2 font-medium">
+                              {item.title}
+                            </td>
                             <td className="border border-gray-300 px-3 py-2 text-indigo-600 font-semibold">
-                                {item.quantity}
+                              {item.quantity}
                             </td>
                             <td className="border border-gray-300 px-3 py-2 font-medium text-gray-800">
-                                {formatCurrency(item.price)}
+                              {formatCurrency(item.price)}
                             </td>
-                            </tr>
+                          </tr>
                         ))}
-                        </tbody>
+                      </tbody>
                     </table>
-                    </div>
+                  </div>
                 ) : (
-                    <p className="italic text-gray-500 text-sm mt-2">No products found.</p>
+                  <p className="italic text-gray-500 text-sm mt-2">
+                    No products found.
+                  </p>
                 )}
-                </section>
+              </section>
 
               {/* Payment Summary */}
               <section className="bg-indigo-50 border border-indigo-200 rounded-lg p-6 max-w-md mx-auto">
@@ -324,12 +369,16 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                 </h3>
                 <div className="space-y-3 text-lg text-gray-900">
                   <div className="flex justify-between">
-                    <span>Subtotal</span>
+                    <span>
+                      {Number(quote.totalDiscounts) !== 0.0
+                        ? "Discounted Subtotal"
+                        : "Subtotal"}
+                    </span>
                     <span>{formatCurrency(quote.subtotalPrice)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Discount</span>
-                    <span>{formatCurrency(quote.discountAmount ?? 0)}</span>
+                    <span>{formatCurrency(quote.totalDiscounts ?? 0)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>

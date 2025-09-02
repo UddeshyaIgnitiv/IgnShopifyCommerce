@@ -22,6 +22,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       quantity: node.quantity,
       price: parseFloat(node.originalUnitPrice),  // convert string to number
       variant: node.variant,
+      image: node.image,
     })) || [];
 
     const quote = {
@@ -36,6 +37,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       shippingPrice: draftOrder.totalShippingPriceSet?.shopMoney?.amount || 0,
       taxAmount: draftOrder.totalTaxSet?.shopMoney?.amount || 0,
       totalPrice: draftOrder.totalPrice || null,
+      totalDiscounts: draftOrder.totalDiscountsSet?.shopMoney?.amount || 0,
     };
 
     return NextResponse.json({ quote });
