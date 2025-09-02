@@ -15,16 +15,26 @@ const GET_DRAFT_ORDER = gql`
         lastName
         email
       }
-    shippingAddress {
-        name
-        address1
-        address2
-        city
-        provinceCode
-        zip
-        country
-        phone
-    }
+      shippingAddress {
+          name
+          address1
+          address2
+          city
+          provinceCode
+          zip
+          country
+          phone
+      }
+      purchasingEntity {
+        ... on PurchasingCompany {
+          company {
+            name
+          }
+          location {
+            name
+          }
+        }
+      }
       lineItems(first: 20) {
         edges {
           node {
@@ -45,35 +55,35 @@ const GET_DRAFT_ORDER = gql`
           }
         }
       }
-    subtotalPrice
-    totalShippingPriceSet {
-      shopMoney {
-        amount
-        currencyCode
-      }
-    }
-    totalTaxSet {
-      shopMoney {
-        amount
-        currencyCode
-      }
-    }
-    totalPrice
-    totalDiscountsSet{
-      shopMoney {
-        amount
-        currencyCode
-      }
-    }
-    shippingLine {
-      title
-      discountedPriceSet {
+      subtotalPrice
+      totalShippingPriceSet {
         shopMoney {
           amount
           currencyCode
         }
       }
-    }
+      totalTaxSet {
+        shopMoney {
+          amount
+          currencyCode
+        }
+      }
+      totalPrice
+      totalDiscountsSet{
+        shopMoney {
+          amount
+          currencyCode
+        }
+      }
+      shippingLine {
+        title
+        discountedPriceSet {
+          shopMoney {
+            amount
+            currencyCode
+          }
+        }
+      }
     }
   }
 `;

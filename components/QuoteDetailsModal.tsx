@@ -55,6 +55,8 @@ interface PurchasingEntity {
 }
 
 interface Quote {
+  locationName: string;
+  companyName: string;
   id: string;
   name: string;
   status?: string;
@@ -218,7 +220,13 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                           .join(" ") || "-"}
                       </p>
                       <p>
-                        <strong>Email:</strong> {quote.customer.email || "-"}
+                        <strong>Email: </strong> {quote.customer.email || "-"}
+                      </p>
+                      <p>
+                        <strong>Company: </strong> {quote?.companyName || "-"}
+                      </p>
+                      <p>
+                        <strong>Location: </strong> {quote?.locationName || "-"}
                       </p>
                     </div>
                   ) : (
