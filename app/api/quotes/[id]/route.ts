@@ -26,6 +26,9 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
     })) || [];
 
     const quote = {
+      // data: draftOrder,
+      companyName: draftOrder.purchasingEntity?.company?.name || '',
+      locationName: draftOrder.purchasingEntity?.location?.name || '',
       id: draftOrder.id,
       name: draftOrder.name,
       status: draftOrder.status,
