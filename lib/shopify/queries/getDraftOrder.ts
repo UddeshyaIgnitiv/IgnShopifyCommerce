@@ -30,6 +30,10 @@ const GET_DRAFT_ORDER = gql`
           node {
             title
             quantity
+            image{
+              url
+              altText
+            }
             variant {
               id
               image {
@@ -55,6 +59,12 @@ const GET_DRAFT_ORDER = gql`
       }
     }
     totalPrice
+    totalDiscountsSet{
+      shopMoney {
+        amount
+        currencyCode
+      }
+    }
     shippingLine {
       title
       discountedPriceSet {
