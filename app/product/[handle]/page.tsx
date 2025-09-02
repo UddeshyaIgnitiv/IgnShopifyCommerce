@@ -12,6 +12,7 @@ import { getProduct, getProductRecommendations } from 'lib/shopify';
 
 import { Money } from 'lib/shopify/types';
 import Link from 'next/link';
+import PlaceHolderImage from 'public/noImage.png';
 import { Suspense } from 'react';
 
 
@@ -48,7 +49,8 @@ export async function generateMetadata(props: {
     };
   }
 
-  const { url, width, height, altText: alt } = product.featuredImage || {};
+
+  const { url, width, height, altText: alt } = product.featuredImage || PlaceHolderImage;
   const indexable = !product.tags.includes(HIDDEN_PRODUCT_TAG);
 
   return {
@@ -168,7 +170,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
     '@type': 'Product',
     name: product.title,
     description: product.description,
-    image: product.featuredImage.url,
+    image: product.featuredImage ? product.featuredImage.url : PlaceHolderImage.src,
     offers: {
       '@type': 'AggregateOffer',
       availability: product.availableForSale
