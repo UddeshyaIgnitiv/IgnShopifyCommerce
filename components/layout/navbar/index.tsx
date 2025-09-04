@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { Suspense } from 'react';
 import MobileMenu from './mobile-menu';
 import Search from './search';
+import LocationSelector from 'components/account/locationSelector';
 
 const { SITE_NAME } = process.env;
 
@@ -100,7 +101,8 @@ export async function Navbar() {
                   </Link>
 
                   <hr className="border-t border-neutral-200 dark:border-neutral-700" />
-
+                  <LocationSelector/>
+                  <hr className="border-t border-neutral-200 dark:border-neutral-700" />
                   {/* Logout */}
                   <div className="flex items-center space-x-3 hover:bg-red-100 dark:hover:bg-red-700 p-2 rounded-md cursor-pointer transition-colors">
                     <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
