@@ -102,6 +102,10 @@ export default function AccountPage() {
   //console.log('Company data:', customer?.companyContactProfiles?.[0]?.company);
   //console.log('Company Id:', customer?.companyContactProfiles?.[0]?.company.id);
   //console.log("This is orders --> ", orders);
+  const indexOfLastOrder = currentPage * ordersPerPage;
+  const indexOfFirstOrder = indexOfLastOrder - ordersPerPage;
+  const currentOrders = orders.slice(indexOfFirstOrder, indexOfLastOrder);
+  const totalPages = Math.ceil(orders.length / ordersPerPage);
 
   const customerId = customer?.id;
 
@@ -145,6 +149,7 @@ export default function AccountPage() {
         const res = await fetch('/api/customer');
         if (res.status === 200) {
           const data = await res.json();
+          // console.log('fetchCustomer data', data);
           setCustomer(data);
 
           const locs: Location[] =
@@ -253,7 +258,6 @@ export default function AccountPage() {
     });
   };
 
-  const totalPages = Math.ceil(totalOrders / ordersPerPage);
 
   if (loading) return <main className="p-8">Loading...</main>;
 
@@ -374,7 +378,7 @@ export default function AccountPage() {
                           <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Financial Status</th>
                           <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Order Status</th>
                           <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Total</th>
-                          <th className="border px-4 py-3 text-sm font-semibold text-gray-700"></th>
+                          <th className="border px-4 py-3 text-sm font-semibold text-gray-700"> Invoice</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y">
@@ -384,14 +388,14 @@ export default function AccountPage() {
                               Loading orders...
                             </td>
                           </tr>
-                        ) : orders.length === 0 ? (
+                        ) : currentOrders.length === 0 ? (
                           <tr>
                             <td colSpan={5} className="px-4 py-4 text-center text-sm text-gray-500">
                               No orders found.
                             </td>
                           </tr>
                         ) : (
-                          orders.map((order) => (
+                          currentOrders.map((order) => (
                             <tr
                               key={order.id}
                               className="hover:bg-gray-50 transition cursor-pointer"
@@ -458,14 +462,16 @@ export default function AccountPage() {
                         <button
                           onClick={() => setCurrentPage((prev) => Math.max(prev - 1, 1))}
                           disabled={currentPage === 1}
-                          className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={`px-4 py-2 rounded-md border text-sm font-medium transition-colors duration-200
+                            ${currentPage === 1 ? 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed' : 'button text-white border-gray-300 hover:button-primary-hover'}`}
                         >
                           Previous
                         </button>
                         <button
                           onClick={() => setCurrentPage((prev) => Math.min(prev + 1, totalPages))}
                           disabled={currentPage === totalPages}
-                          className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                          className={`px-4 py-2 rounded-md border text-sm font-medium transition-colors duration-200
+                            ${currentPage === totalPages ? 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed' : 'button text-white border-gray-300 hover:button-primary-hover'}`}
                         >
                           Next
                         </button>
