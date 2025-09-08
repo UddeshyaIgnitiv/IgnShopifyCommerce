@@ -256,6 +256,8 @@ export default function AccountPage() {
       path: '/',
       expires: 7,
     });
+    // Refresh the application to ensure that the new location is reflected throughout the site.
+    router.refresh();
   };
 
 
