@@ -26,6 +26,8 @@ export default function LocationSelector() {
             path: '/',
             expires: 7, // js-cookie expects days for `expires`
         });
+        // Refresh the application to ensure that the new location is reflected throughout the site.
+        router.refresh();
     };
 
     useEffect(() => {
