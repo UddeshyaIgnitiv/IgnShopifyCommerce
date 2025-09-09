@@ -2,8 +2,8 @@ import Footer from 'components/layout/footer';
 import Collections from 'components/layout/search/collections';
 import FilterList from 'components/layout/search/filter';
 import { sorting } from 'lib/constants';
-import ChildrenWrapper from './children-wrapper';
 import { Suspense } from 'react';
+import ChildrenWrapper from './children-wrapper';
 
 export default function SearchLayout({
   children
@@ -12,7 +12,7 @@ export default function SearchLayout({
 }) {
   return (
     <>
-      <div className="mx-auto flex max-w-(--breakpoint-2xl) flex-col gap-8 px-4 pb-4 text-black md:flex-row dark:text-white">
+      <div className="mx-auto flex max-w-(--breakpoint-2xl) flex-col gap-8 px-4 pt-6 pb-4 text-black md:flex-row dark:text-white">
         <div className="order-first w-full flex-none md:max-w-[125px]">
           <Collections />
         </div>

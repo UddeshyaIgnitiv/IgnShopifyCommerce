@@ -74,6 +74,15 @@ export const getCustomerByEmailQuery = `
                   }
                 }
               }
+              metafields(first: 10, namespace: "custom") {
+                edges {
+                  node {
+                    namespace
+                    key
+                    value
+                  }
+                }
+              }
             }
           }
         }

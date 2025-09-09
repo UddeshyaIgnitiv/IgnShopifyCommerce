@@ -20,6 +20,17 @@ export async function GET() {
 
         const companyId = customer?.companyContactProfiles?.[0]?.company?.id || null;
 
+        // Set external_company_id cookie if available
+        const companyMetafields =
+            customer?.companyContactProfiles?.[0]?.company &&
+            'metafields' in customer.companyContactProfiles[0].company
+                ? (customer.companyContactProfiles[0].company as any).metafields?.edges || []
+                : [];
+        const externalMetafield = companyMetafields.find((m: any) => m.node.key === 'external_company_id');
+        if (externalMetafield) {
+            cookieStore.set('external_company_id', externalMetafield.node.value, { path: '/' });
+        }
+
         const metafields = customer?.metafields?.edges || [];
         const adminField = metafields.find((m: any) => m.node.key === 'is_customer_admin');
         const isAdmin = String(adminField?.node?.value || '').trim().toLowerCase() === 'true';

@@ -15,6 +15,9 @@ import Link from 'next/link';
 import PlaceHolderImage from 'public/noImage.png';
 import { Suspense } from 'react';
 
+function extractIdFromGid(gid: string): string {
+  return gid.split("/").pop() || "";
+}
 
 
 export async function generateMetadata(props: {
@@ -86,6 +89,12 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
   const shopify_id_token = (await cookies()).get('shopify_id_token')?.value;
 
   // if (!companyLocationId) return notFound();
+
+  const external_company_id = (await cookies()).get('external_company_id')?.value || "";
+  // console.log("external_company_id", external_company_id);
+  // console.log("companyLocationId", companyLocationId);
+
+  const externalID = extractIdFromGid(companyLocationId ?? "");
 
   if (!companyLocationId) {
     return (
@@ -163,6 +172,87 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
 
   }
 
+  let customPrices;
+  try {
+    // Extract SKUs from the product variants.
+     const skus = product.tags[0];
+    const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+    if (!baseUrl) {
+        throw new Error("Missing NEXT_PUBLIC_SITE_URL environment variable.");
+    }
+    if (!external_company_id) {
+      throw new Error("Missing external_company_id cookie.");
+    }
+    if (!externalID) {
+      throw new Error("Missing externalID cookie.");
+    }
+    // Call your custom API endpoint from the server component.
+    const response = await fetch(`${baseUrl}/api/customprice`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        "customer_number": Number(external_company_id),
+        "products": [
+          {
+            "quantity_ordered": 0,
+            "sku": skus,
+            "warehouse_code": "10"
+          }
+        ],
+        "ship_to_code": externalID
+      }),
+      // Use no-store to ensure this call is always fresh and not cached
+      cache: 'no-store'
+    });
+
+    const data = await response.json();
+
+    if (response.ok) {
+      customPrices = data;
+    } else {
+      console.error(`Failed to fetch custom prices: ${response.statusText}`);
+    }
+  } catch (error) {
+    console.error('Error calling custom price API:', error);
+  }
+
+  if (customPrices && customPrices.prices && customPrices.prices.length > 0) {
+    // Find the custom price for this product.
+    // Adjust the matching key if required.
+    // console.log("customPrices", customPrices);
+    const customPriceItem = customPrices.prices.find((item: any) => item.product === product.tags[0]);
+
+    if (customPriceItem) {
+      product.priceRange = {
+        maxVariantPrice: {
+          ...product.priceRange.maxVariantPrice,
+          amount: customPriceItem.price.toString(),
+          currencyCode: product.priceRange.maxVariantPrice.currencyCode // Use the product default or a fixed currency if desired
+        } as Money,
+        minVariantPrice: {
+          ...product.priceRange.minVariantPrice,
+          amount: customPriceItem.price.toString(),
+          currencyCode: product.priceRange.minVariantPrice.currencyCode // Use the product default or a fixed currency if desired
+        } as Money
+      };
+    }
+  }
+
+
+
+  const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/product-variant/metafield`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      ownerId: product.variants[0]? product.variants[0].id : '',
+    }),
+  });
+
+  const inventoryResult = await response.json();
+  console.log('Metafield value:', inventoryResult.metafield);
+
   if (!product) return notFound();
 
   const productJsonLd = {
@@ -189,7 +279,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
           <script
             type="application/ld+json"
             dangerouslySetInnerHTML={{
-              __html: JSON.stringify(productJsonLd)
+              __html: JSON.stringify(productJsonLd),
             }}
           />
           <div className="mx-auto max-w-(--breakpoint-2xl) px-4">
@@ -210,12 +300,18 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
             </div> */}
 
               <div className="h-full w-full basis-full lg:basis-4/6">
-                <ProductContentClient initialProduct={product} handle={handle} />
+                <ProductContentClient
+                  initialProduct={product}
+                  handle={handle}
+                />
               </div>
 
               <div className="basis-full lg:basis-2/6">
                 <Suspense fallback={null}>
-                  <ProductDescription product={product} />
+                  <ProductDescription
+                    product={product}
+                    inventoryResult={inventoryResult.metafield}
+                  />
                 </Suspense>
               </div>
             </div>
@@ -225,8 +321,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
         </ProductProvider>
       ) : (
         <h1>Product Not Found</h1>
-      )
-      }
+      )}
     </>
   );
 }
