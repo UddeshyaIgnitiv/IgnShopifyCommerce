@@ -5,9 +5,9 @@ import { shopifyFetch } from 'lib/shopify_service';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request, context: { params: Promise<{ id: string }> }) {
-    const { params } = context;
+  const { params } = context;
   const resolved = await params;
-  const draftOrderId  = decodeURIComponent(resolved.id);
+  const draftOrderId = decodeURIComponent(resolved.id);
 
   try {
     const data = await shopifyFetch(GET_DRAFT_ORDER, { id: draftOrderId });
@@ -29,6 +29,7 @@ export async function GET(request: Request, context: { params: Promise<{ id: str
       // data: draftOrder,
       companyName: draftOrder.purchasingEntity?.company?.name || '',
       locationName: draftOrder.purchasingEntity?.location?.name || '',
+      invoiceUrl: draftOrder.invoiceUrl,
       id: draftOrder.id,
       name: draftOrder.name,
       status: draftOrder.status,
