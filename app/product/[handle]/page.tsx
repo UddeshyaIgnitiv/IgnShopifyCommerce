@@ -134,6 +134,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
 
   const adminProduct = await getProduct(params.handle, undefined, true, companyLocationId, product.id);
 
+  console.log("Admin Product", adminProduct?.priceRange.minVariantPrice.amount);
   if (!adminProduct) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -145,6 +146,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
   }
 
   const prices = adminProduct?.variants?.map(variant => Number(variant?.price?.amount)) as number[];
+
 
   product.priceRange = {
     maxVariantPrice: {
@@ -218,8 +220,9 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
     console.error('Error calling custom price API:', error);
   }
 
-  console.log("customPrices pdp", customPrices);
-  if (customPrices && customPrices.prices > 0 && customPrices.prices.length > 0) {
+  let pricelistID;
+  console.log("customPrices pdp", customPrices.prices[0].price.toFixed(2));
+  if (customPrices && customPrices.prices[0].price > 0 && adminProduct?.priceRange.minVariantPrice.amount !== customPrices.prices[0].price.toFixed(2) && customPrices.prices.length > 0 ) {
     // Find the custom price for this product.
     // Adjust the matching key if required.
     // console.log("customPrices", customPrices);
@@ -239,9 +242,16 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
         } as Money
       };
     }
+
+    const catalogData = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/catalog/get`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ catalogId: 'gid://shopify/Catalog/67958014166' }),
+    });
+
+    const catalogDetails = await catalogData.json();
+    pricelistID = catalogDetails.catalog.priceList.id
   }
-
-
 
   const response = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/product-variant/metafield`, {
     method: 'POST',
@@ -252,7 +262,6 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
   });
 
   const inventoryResult = await response.json();
-  console.log('Metafield value:', inventoryResult.metafield);
 
   if (!product) return notFound();
 
@@ -312,6 +321,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
                   <ProductDescription
                     product={product}
                     inventoryResult={inventoryResult.metafield}
+                    pricelistID={pricelistID}
                   />
                 </Suspense>
               </div>

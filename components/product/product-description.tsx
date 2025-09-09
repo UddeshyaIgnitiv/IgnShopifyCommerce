@@ -8,12 +8,8 @@ import InventorySelect from './inventorySelector';
 import { useProduct } from './product-context';
 import { VariantSelector } from './variant-selector';
 
-export function ProductDescription({ product, inventoryResult }: { product: Product, inventoryResult?: any }) {
+export function ProductDescription({ product, inventoryResult, pricelistID }: { product: Product, inventoryResult?: any, pricelistID?: string }) {
   const { selectedVariant, isLoading } = useProduct();
-
-  console.log("This is product data --> ", product);
-
-  //console.log('🔵 Rendering ProductDescription. Selected Variant:', selectedVariant);
 
   if (isLoading) {
     // Show loading UI or fallback while selectedVariant is not ready
@@ -48,7 +44,7 @@ export function ProductDescription({ product, inventoryResult }: { product: Prod
       <InventorySelect
         inventoryLevels={inventoryResult.inventoryItem.inventoryLevels.edges}
       />
-      <AddToCart product={product} />
+      <AddToCart product={product} pricelistID={pricelistID} />
     </>
   );
 }
