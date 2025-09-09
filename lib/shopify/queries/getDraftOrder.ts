@@ -9,6 +9,7 @@ const GET_DRAFT_ORDER = gql`
       status
       tags
       email
+      invoiceUrl
       customer {
         id
         firstName

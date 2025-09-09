@@ -58,6 +58,7 @@ interface Quote {
   locationName: string;
   companyName: string;
   id: string;
+  invoiceUrl: string;
   name: string;
   status?: string;
   createdAt: string;
@@ -260,16 +261,16 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                       {(quote.shippingAddress.city ||
                         quote.shippingAddress.provinceCode ||
                         quote.shippingAddress.zip) && (
-                        <p>
-                          {[
-                            quote.shippingAddress.city,
-                            quote.shippingAddress.provinceCode,
-                            quote.shippingAddress.zip,
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        </p>
-                      )}
+                          <p>
+                            {[
+                              quote.shippingAddress.city,
+                              quote.shippingAddress.provinceCode,
+                              quote.shippingAddress.zip,
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </p>
+                        )}
                       {quote.shippingAddress.country && (
                         <p>{quote.shippingAddress.country}</p>
                       )}
@@ -402,6 +403,17 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                   </div>
                 </div>
               </section>
+
+              <div className="flex justify-center mt-6">
+                <a
+                  href={quote.invoiceUrl}
+                  // target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-teal text-white px-6 py-3 rounded-lg shadow-md hover:bg-cyan transition"
+                >
+                  Proceed to checkout
+                </a>
+              </div>
             </>
           )}
         </main>
