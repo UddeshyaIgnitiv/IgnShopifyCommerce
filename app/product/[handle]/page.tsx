@@ -91,8 +91,6 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
 
   console.log("🔵 Company ID:", company_id);
 
-  
-
   // if (!companyLocationId) return notFound();
 
   const external_company_id = (await cookies()).get('external_company_id')?.value || "";
@@ -235,13 +233,13 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
     }),
   });
 
-  
   const CompanyCatalog = await cData.json();
   console.log('CompanyCatalog', CompanyCatalog);
   const CatalogID = CompanyCatalog?.data.company.locations.edges[0].node.catalogs.edges[0].node.id
 
   let pricelistID;
   console.log("customPrices pdp", customPrices.prices[0].price.toFixed(2));
+
   if (customPrices && customPrices.prices[0].price > 0 && adminProduct?.priceRange.minVariantPrice.amount !== customPrices.prices[0].price.toFixed(2) && customPrices.prices.length > 0 ) {
     // Find the custom price for this product.
     // Adjust the matching key if required.

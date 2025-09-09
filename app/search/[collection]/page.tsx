@@ -94,34 +94,37 @@ export default async function CategoryPage(props: {
 
 
     let customPrices;
-    try {
-      // Extract SKUs from the product variants.
-      // const skus = product.tags[0];
-      const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
-      if (!baseUrl) {
-          throw new Error("Missing NEXT_PUBLIC_SITE_URL environment variable.");
-      }
-      // Call your custom API endpoint from the server component.
-      const response = await fetch(`${baseUrl}/api/customprice`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(payload),
-        // Use no-store to ensure this call is always fresh and not cached
-        cache: 'no-store'
-      });
+    if(companyLocationId){
+      try {
+        // Extract SKUs from the product variants.
+        // const skus = product.tags[0];
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
+        if (!baseUrl) {
+            throw new Error("Missing NEXT_PUBLIC_SITE_URL environment variable.");
+        }
+        // Call your custom API endpoint from the server component.
+        const response = await fetch(`${baseUrl}/api/customprice`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload),
+          // Use no-store to ensure this call is always fresh and not cached
+          cache: 'no-store'
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (response.ok) {
-        customPrices = data;
-      } else {
-        console.error(`Failed to fetch custom prices: ${response.statusText}`);
+        if (response.ok) {
+          customPrices = data;
+        } else {
+          console.error(`Failed to fetch custom prices: ${response.statusText}`);
+        }
+      } catch (error) {
+        console.error('Error calling custom price API:', error);
       }
-    } catch (error) {
-      console.error('Error calling custom price API:', error);
     }
+   
 
     // console.log("customPrices", customPrices);
 
