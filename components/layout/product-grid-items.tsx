@@ -28,9 +28,13 @@ export default function ProductGridItems({ products, customPrices }: { products:
     <>
       <Grid className="grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
         {currentProducts.map((product) => {
-          const customPriceData = Array.isArray(customPrices.prices)
-          ? customPrices.prices.find((cp: { product: string }) => product.tags[0]?.includes(cp.product))
-          : null;
+          let customPriceData;
+          if(customPrices){
+            customPriceData = Array.isArray(customPrices.prices)
+              ? customPrices.prices.find((cp: { product: string }) => product.tags[0]?.includes(cp.product))
+              : null;
+          }
+          
         // console.log("Custom Price Data:", customPriceData);
         const displayAmount =
           customPriceData && customPriceData.price !== 0
