@@ -218,6 +218,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
     console.error('Error calling custom price API:', error);
   }
 
+  console.log("customPrices pdp", customPrices);
   if (customPrices && customPrices.prices > 0 && customPrices.prices.length > 0) {
     // Find the custom price for this product.
     // Adjust the matching key if required.
