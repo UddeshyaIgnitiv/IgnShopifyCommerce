@@ -57,7 +57,7 @@ function SubmitButton({
   );
 }
 
-export function AddToCart({ product }: { product: Product }) {
+export function AddToCart({ product, pricelistID }: { product: Product, pricelistID?: string }) {
   const { variants, availableForSale } = product;
   const { addCartItem } = useCart();
   const { state } = useProduct();
@@ -75,9 +75,51 @@ export function AddToCart({ product }: { product: Product }) {
     (variant) => variant.id === selectedVariantId
   )!;
 
+  console.log('🔵 AddToCart Rendered. Selected Variant ID:', selectedVariantId);
+  console.log('🔵 AddToCart Rendered. Product:', product);
+
+  if(pricelistID){
+    console.log('🔵 AddToCart Rendered. PricelistID:', pricelistID);
+  }
+
+  async function fetchVariantPrice(pricelistId: string, variantId: string, product: Product) {
+    // console.log('🔵 Fetching price for Variant ID:', variantId, 'from PriceList ID:', pricelistId);
+    // console.log('🔵 Product data in fetchVariantPrice:', product);
+    const payload = {
+      priceListId: pricelistId,
+      prices: [
+          {
+            variantId: variantId,
+            price: {
+              amount: product?.priceRange.minVariantPrice.amount,
+              currencyCode: "USD"
+            },
+          }
+        ]
+      }
+    console.log('🔵 Payload for price update:', payload);
+    try {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/catalog/updatePrice`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      console.log('🔵 Price update response:', data);
+    } catch (err) {
+      console.error('❌ Failed to fetch price from pricelist', err);
+    }
+    return null;
+  }
+
   return (
     <form
       action={async () => {
+
+         if (pricelistID && selectedVariantId) {
+          console.log('🔵 Checking PriceList before adding to cart...');
+          fetchVariantPrice(pricelistID, selectedVariantId, product);
+        }
         addCartItem(finalVariant, product);
         addItemAction();
       }}
