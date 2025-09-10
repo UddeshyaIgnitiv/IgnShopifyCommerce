@@ -9,6 +9,9 @@ const GET_DRAFT_ORDERS = gql`
           name
           createdAt
           status  # ✅ Added this field to fetch the draft order status
+          metafield(namespace: "custom", key: "quote_status") {
+            value
+          }
           tags
           customer {
             id
