@@ -7,8 +7,8 @@ export default function IgnIcon({ className }: { className?: string }) {
         <Image
             src="/images/tradify.png"
             alt="Ignitiv Logo"
-            width={80}
-            height={80}
+            width={200}
+            height={200}
             className={className}
         />
     );
