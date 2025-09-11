@@ -38,6 +38,7 @@
     @apply px-4 py-2 font-semibold rounded-lg transition-colors duration-300;
     background-color: var(--button-primary-bg);
     color: var(--button-primary-text);
+    cursor: pointer;
   }
 
   button:hover {
@@ -48,6 +49,7 @@
     @apply transition-colors duration-300;
     background-color: var(--button-secondary-bg);
     color: var(--button-secondary-text);
+    cursor: pointer;
   }
 
   .btn-secondary:hover {

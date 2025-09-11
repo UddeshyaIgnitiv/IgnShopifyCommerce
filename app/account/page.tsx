@@ -524,7 +524,7 @@ export default function AccountPage() {
                         <tbody>
                           {draftQuotes.map((quote) => (
                             <tr key={quote.id} className="bg-white">
-                              <td className="border px-4 py-3 text-sm text-blue-800 hover:underline hover:text-blue-800 focus:outline-none cursor-pointer" onClick={() => setSelectedQuoteId(quote.id)}>{quote.name}</td>
+                              <td className="border px-4 py-3 text-sm text-blue-800 hover:underline hover:text-blue-800 focus:outline-none cursor-pointer" onClick={() => setSelectedQuoteId(quote.id)}>{quote.name.replace(/^#?D/, "#Q")}</td>
                               <td className="border px-4 py-3 text-sm text-gray-800">
                                 {((JSON.parse(quote.metafield?.value || "[]")[0] || quote.status) ?? "")
                                   .replace(/_/g, " ")
