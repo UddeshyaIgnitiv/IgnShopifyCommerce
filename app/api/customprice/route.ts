@@ -85,6 +85,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
 
     // Parse the request body as JSON.
     const requestBody = await req.json();
+    console.log("Request body:", requestBody);
 
     // Make the API call to the external prices endpoint.
     if (!PRICES_URL) {
@@ -100,11 +101,14 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       body: JSON.stringify(requestBody),
     });
 
-    const data = await response.json();
-    if (response.status !== 200 ) {
-        const errorText = await response.text();
-        throw new Error(`External API request failed with status ${response.status}: ${errorText}`);
+    if (!response.ok) {
+        const errorText = await response.clone().text();
+      throw new Error(
+        `External API request failed with status ${response.status}: ${errorText}`
+      );
     }
+
+    const data = await response.json();
 
     // Return the data from the external API as a JSON response.
     return NextResponse.json(data, { status: 200 });

@@ -33,15 +33,14 @@ export default function ProductGridItems({ products, customPrices }: { products:
             customPriceData = Array.isArray(customPrices.prices)
               ? customPrices.prices.find((cp: { product: string }) => product.tags[0]?.includes(cp.product))
               : null;
+            console.log("Custom Price:", customPriceData?.price);
           }
-          
         // console.log("Custom Price Data:", customPriceData);
         const displayAmount =
           customPriceData && customPriceData.price !== 0
             ? customPriceData.price
             : product.priceRange.maxVariantPrice.amount;
         console.log(`Product: ${product.title}, Display Price: ${displayAmount}`);
-        console.log("Custom Price:", customPriceData?.price);
 
         return(
           <Grid.Item key={product.handle} className="animate-fadeIn">
