@@ -274,7 +274,7 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                   <tbody>
                     <tr className="hover:bg-indigo-50 transition-colors duration-150">
                       <td className="border-r border-gray-300 px-6 py-4 whitespace-nowrap font-medium text-gray-900 select-text">
-                        {quote.name}
+                        {quote.name.replace(/^#?D/, "#Q")}
                       </td>
                       <td className="border-r border-gray-300 px-6 py-4 whitespace-nowrap capitalize text-gray-700 select-text">
                         {quote.metafield || quote.status || "N/A"}
