@@ -116,7 +116,7 @@ export function AddToCart({ product, pricelistID }: { product: Product, pricelis
     <form
       action={async () => {
 
-         if (pricelistID && selectedVariantId) {
+        if (pricelistID && selectedVariantId) {
           console.log('🔵 Checking PriceList before adding to cart...');
           fetchVariantPrice(pricelistID, selectedVariantId, product);
         }
