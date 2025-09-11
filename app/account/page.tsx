@@ -54,6 +54,7 @@ interface Customer {
 }
 
 interface Quote {
+  metafield: any;
   id: string;
   name: string;
   status?: string;
@@ -124,7 +125,7 @@ export default function AccountPage() {
     } else {
       console.warn('Could not extract numeric ID from customerId:', customerId);
     }
-}
+  }
 
   const tabs = [
     { id: 'profile', label: 'My Profile' },
@@ -226,21 +227,21 @@ export default function AccountPage() {
     }
   }, [customer, currentPage]);
 
+  async function fetchQuotes() {
+    setQuotesLoading(true);
+    try {
+      const res = await fetch('/api/quotes');
+      const data = await res.json();
+      setDraftQuotes(data.draftOrders || []);
+    } catch (err) {
+      console.error('Failed to fetch quotes:', err);
+    } finally {
+      setQuotesLoading(false);
+    }
+  }
+
   useEffect(() => {
     if (activeTab === 'quotes') {
-      const fetchQuotes = async () => {
-        setQuotesLoading(true);
-        try {
-          const res = await fetch('/api/quotes');
-          const data = await res.json();
-          setDraftQuotes(data.draftOrders || []);
-        } catch (err) {
-          console.error('Failed to fetch quotes:', err);
-        } finally {
-          setQuotesLoading(false);
-        }
-      };
-
       fetchQuotes();
     }
   }, [activeTab]);
@@ -294,79 +295,78 @@ export default function AccountPage() {
             {tabs.map((tab) => (
               <div
                 key={tab.id}
-                onClick={() => {setActiveTab(tab.id); setSidebarOpen(false);}}
-                
-                className={`px-6 py-4 cursor-pointer hover:bg-gray-100 transition text-gray-700 ${
-                  activeTab === tab.id ? 'font-semibold text-teal-600 bg-gray-100' : ''
-                }`}
+                onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
+
+                className={`px-6 py-4 cursor-pointer hover:bg-gray-100 transition text-gray-700 ${activeTab === tab.id ? 'font-semibold text-teal-600 bg-gray-100' : ''
+                  }`}
               >
                 {tab.label}
               </div>
             ))}
           </nav>
-        </div>  
+        </div>
       </aside>
 
       {/* Right Content Area */}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Mobile Top Bar */}
-          <div className="lg:hidden flex items-center justify-between bg-white p-4 shadow">
-            <button
-              onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="text-white focus:outline-none"
-            >
-              <span className="inline-flex items-center space-x-2">
-                <Bars3Icon className="h-6 text-md" />
-                <span>Menu</span>
-              </span>
-            </button>
-            <span className="font-semibold text-gray-800">Account</span>
-          </div>
-          <main className="flex-1 overflow-y-auto p-6 min-w-0">
-            {activeTab === 'profile' && (
-              <>
-                {customer && (
+        {/* Mobile Top Bar */}
+        <div className="lg:hidden flex items-center justify-between bg-white p-4 shadow">
+          <button
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="text-white focus:outline-none"
+          >
+            <span className="inline-flex items-center space-x-2">
+              <Bars3Icon className="h-6 text-md" />
+              <span>Menu</span>
+            </span>
+          </button>
+          <span className="font-semibold text-gray-800">Account</span>
+        </div>
+        <main className="flex-1 overflow-y-auto p-6 min-w-0">
+          {activeTab === 'profile' && (
+            <>
+              {customer && (
                 <>
-                <section className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h2 className="text-xl font-bold mb-6">My Profile</h2>
-                      <div className="space-y-2 text-gray-700">
-                        <p><span className="font-medium">Company:</span> {companyName}</p>
-                        <p><span className="font-medium">Email:</span> {customer.email}</p>
-                        {/* <p><span className="font-medium">Orders:</span> {customer.numberOfOrders}</p> */}
-                      </div>
-                    </div>
-
-                    {locations.length > 0 && (
+                  <section className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       <div>
-                        <h2 className="text-xl font-semibold text-gray-800 mb-4">Ship To Location</h2>
-                        <label htmlFor="location" className="block mb-2 text-sm font-medium text-gray-700">
-                          Select a ship to location:
-                        </label>
-                        <select
-                          id="location"
-                          value={selectedLocationId}
-                          onChange={handleLocationChange}
-                          className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          {locations.map((loc) => (
-                            <option key={loc.id} value={loc.id}>{loc.name}</option>
-                          ))}
-                        </select>
+                        <h2 className="text-xl font-bold mb-6">My Profile</h2>
+                        <div className="space-y-2 text-gray-700">
+                          <p><span className="font-medium">Company:</span> {companyName}</p>
+                          <p><span className="font-medium">Email:</span> {customer.email}</p>
+                          {/* <p><span className="font-medium">Orders:</span> {customer.numberOfOrders}</p> */}
+                        </div>
                       </div>
-                    )}
-                  </div>
-                </section>
-                </>
-                )}
-              </>
-            )}
 
-            {activeTab === 'orders' && (
-              <>
-                {customer && (
+                      {locations.length > 0 && (
+                        <div>
+                          <h2 className="text-xl font-semibold text-gray-800 mb-4">Ship To Location</h2>
+                          <label htmlFor="location" className="block mb-2 text-sm font-medium text-gray-700">
+                            Select a ship to location:
+                          </label>
+                          <select
+                            id="location"
+                            value={selectedLocationId}
+                            onChange={handleLocationChange}
+                            className="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+                          >
+                            {locations.map((loc) => (
+                              <option key={loc.id} value={loc.id}>{loc.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      )}
+                    </div>
+                  </section>
+                </>
+              )}
+            </>
+          )}
+
+          {activeTab === 'orders' && (
+            <>
+              {customer && (
                 <section className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
                   <h2 className="text-xl font-bold mb-6">Orders & Invoices</h2>
 
@@ -412,11 +412,11 @@ export default function AccountPage() {
                               </td>
                               <td className="border px-4 py-3 text-sm text-gray-600">
                                 <div className="flex flex-col">
-                                    <span className="font-medium">
-                                      {order.customer?.firstName || ''} {order.customer?.lastName || ''}
-                                    </span>
-                                    <span className="text-gray-600">{order.customer?.email || '-'}</span>
-                                  </div>
+                                  <span className="font-medium">
+                                    {order.customer?.firstName || ''} {order.customer?.lastName || ''}
+                                  </span>
+                                  <span className="text-gray-600">{order.customer?.email || '-'}</span>
+                                </div>
                               </td>
                               <td className="border px-4 py-3 text-sm text-gray-800">
                                 {order.displayFinancialStatus || '-'}
@@ -481,93 +481,101 @@ export default function AccountPage() {
                     </div>
                   )}
                 </section>
-                )}
-              </>
-            )}
+              )}
+            </>
+          )}
 
-            {activeTab === 'manage-users' && (
-              <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-                <h2 className="text-xl font-bold mb-6">Manage Users</h2>
-                {customer && !loading && !roleLoading && userRole === 'admin' && (
-                  <UserAccountsManager isAdmin={isAdmin} />
-                )}
-                {!roleLoading && userRole !== 'admin' && (
-                  <div className="p-4 border border-yellow-200 bg-yellow-50 text-yellow-800 rounded">
-                    You must be an admin customer to manage users.
-                  </div>
-                )}
-              </div>
-            )}
+          {activeTab === 'manage-users' && (
+            <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
+              <h2 className="text-xl font-bold mb-6">Manage Users</h2>
+              {customer && !loading && !roleLoading && userRole === 'admin' && (
+                <UserAccountsManager isAdmin={isAdmin} />
+              )}
+              {!roleLoading && userRole !== 'admin' && (
+                <div className="p-4 border border-yellow-200 bg-yellow-50 text-yellow-800 rounded">
+                  You must be an admin customer to manage users.
+                </div>
+              )}
+            </div>
+          )}
 
-            {activeTab === 'quotes' && (
-              <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
-                <h2 className="text-xl font-bold mb-6">Quotes</h2>
-                {customer && (
-                  <>
-                    {quotesLoading ? (
-                      <p>Loading quotes...</p>
-                    ) : draftQuotes.length === 0 ? (
-                      <p>No quotes found.</p>
-                    ) : (
-                      <div className="overflow-x-auto">
-                        <table className="min-w-full table-auto border-collapse border border-gray-300">
-                          <thead>
-                            <tr className="bg-gray-100">
-                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Quote ID</th>
-                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Status</th>
-                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Created At</th>
-                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Customer</th>
-                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Email</th>
-                              <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Line Items</th>
+          {activeTab === 'quotes' && (
+            <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
+              <h2 className="text-xl font-bold mb-6">Quotes</h2>
+              {customer && (
+                <>
+                  {quotesLoading ? (
+                    <p>Loading quotes...</p>
+                  ) : draftQuotes.length === 0 ? (
+                    <p>No quotes found.</p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full table-auto border-collapse border border-gray-300">
+                        <thead>
+                          <tr className="bg-gray-100">
+                            <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Quote ID</th>
+                            <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Status</th>
+                            <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Created At</th>
+                            <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Customer</th>
+                            <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Email</th>
+                            <th className="border px-4 py-3 text-sm font-semibold text-gray-700">Line Items</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {draftQuotes.map((quote) => (
+                            <tr key={quote.id} className="bg-white">
+                              <td className="border px-4 py-3 text-sm text-blue-800 hover:underline hover:text-blue-800 focus:outline-none cursor-pointer" onClick={() => setSelectedQuoteId(quote.id)}>{quote.name}</td>
+                              <td className="border px-4 py-3 text-sm text-gray-800">
+                                {((JSON.parse(quote.metafield?.value || "[]")[0] || quote.status) ?? "")
+                                  .replace(/_/g, " ")
+                                  .toLowerCase()
+                                  .replace(/^\w/, (c: string) => c.toUpperCase())}
+                              </td>
+                              <td className="border px-4 py-3 text-sm text-gray-800">{new Date(quote.createdAt).toLocaleDateString()}</td>
+                              <td className="border px-4 py-3 text-sm text-gray-800">
+                                {quote.customer?.firstName} {quote.customer?.lastName}
+                              </td>
+                              <td className="border px-4 py-3 text-sm text-gray-800">{quote.customer?.email}</td>
+                              <td className="border px-4 py-3 text-sm text-gray-800">
+                                <ul className="list-disc ml-4">
+                                  {quote.lineItems?.edges.map(({ node }) => (
+                                    <li key={node.variant?.id}>
+                                      {node.title} × {node.quantity}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </td>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {draftQuotes.map((quote) => (
-                              <tr key={quote.id} className="bg-white">
-                                <td className="border px-4 py-3 text-sm text-blue-800 hover:underline hover:text-blue-800 focus:outline-none cursor-pointer" onClick={() => setSelectedQuoteId(quote.id)}>{quote.name}</td>
-                                <td className="border px-4 py-3 text-sm text-gray-800">{quote.status}</td>
-                                <td className="border px-4 py-3 text-sm text-gray-800">{new Date(quote.createdAt).toLocaleDateString()}</td>
-                                <td className="border px-4 py-3 text-sm text-gray-800">
-                                  {quote.customer?.firstName} {quote.customer?.lastName}
-                                </td>
-                                <td className="border px-4 py-3 text-sm text-gray-800">{quote.customer?.email}</td>
-                                <td className="border px-4 py-3 text-sm text-gray-800">
-                                  <ul className="list-disc ml-4">
-                                    {quote.lineItems?.edges.map(({ node }) => (
-                                      <li key={node.variant?.id}>
-                                        {node.title} × {node.quantity}
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    )}
-                  </>
-                )}
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              )}
 
-                {selectedQuoteId && (
-                  <QuoteDetailsModal
-                    quoteId={selectedQuoteId}
-                    onCloseAction={() => setSelectedQuoteId(null)}
-                  />
-                )}
+              {selectedQuoteId && (
+                <QuoteDetailsModal
+                  quoteId={selectedQuoteId}
+                  onCloseAction={async () => {
+                    setSelectedQuoteId(null);
+                    await fetchQuotes(); // refetch quotes when modal closes
+                  }}
+                />
+              )}
 
-              </div>
-            )}
+            </div>
+          )}
 
-            {activeTab === 'logout' && (
-              <>
-                <h2 className="text-xl font-bold mb-6">Logout</h2>
-                <button className='cursor-pointer'>
-                    <LogoutButton />
-                </button>
-              </>
-            )}
-          </main>
+          {activeTab === 'logout' && (
+            <>
+              <h2 className="text-xl font-bold mb-6">Logout</h2>
+              <button className='cursor-pointer'>
+                <LogoutButton />
+              </button>
+            </>
+          )}
+        </main>
       </div>
     </div>
   );

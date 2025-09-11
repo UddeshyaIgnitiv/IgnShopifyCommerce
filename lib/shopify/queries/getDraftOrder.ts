@@ -9,6 +9,10 @@ const GET_DRAFT_ORDER = gql`
       status
       tags
       email
+      invoiceUrl
+      metafield(namespace: "custom", key: "quote_status") {
+        value
+      }
       customer {
         id
         firstName

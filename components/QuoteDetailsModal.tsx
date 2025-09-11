@@ -47,7 +47,6 @@ interface PurchasingCompany {
   companyId?: string;
   companyLocationId?: string;
   companyContactId?: string;
-  // Add more fields if available, e.g. companyName, locationName, etc.
 }
 
 interface PurchasingEntity {
@@ -58,6 +57,8 @@ interface Quote {
   locationName: string;
   companyName: string;
   id: string;
+  invoiceUrl: string;
+  metafield: string;
   name: string;
   status?: string;
   createdAt: string;
@@ -73,43 +74,124 @@ interface Quote {
   totalDiscounts?: number | string;
 }
 
+// ---------------- Spinner (small inline component) ----------------
+function Spinner() {
+  return (
+    <svg
+      className="animate-spin h-5 w-5 text-white"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="4"
+      />
+      <path
+        className="opacity-75"
+        fill="currentColor"
+        d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+      />
+    </svg>
+  );
+}
+
+// ---------------- Component ----------------
 export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetailsModalProps) {
   const [quote, setQuote] = useState<Quote | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // new: accepting state used while POST + refetch runs
+  const [accepting, setAccepting] = useState(false);
+
+  // encodedGid used for API path (matches your existing GET URL use)
   const encodedGid = encodeURIComponent(quoteId);
 
   console.log("quote", quote);
   console.log('Line items:', quote?.lineItems);
 
-  useEffect(() => {
-    async function fetchQuoteDetails() {
-      setLoading(true);
-      setError(null);
-      try {
-        const res = await fetch(`/api/quotes/${encodedGid}`);
-        if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
-        const data = await res.json();
-        setQuote(data.quote);
-      } catch (err: any) {
-        console.error('Error fetching quote:', err);
-        setError(err.message || 'Unknown error');
-      } finally {
-        setLoading(false);
-      }
+  // ---------------- fetchQuoteDetails (extracted so we can call it again) ----------------
+  async function fetchQuoteDetails() {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/quotes/${encodedGid}`);
+      if (!res.ok) throw new Error(`Fetch failed with status ${res.status}`);
+      const data = await res.json();
+      setQuote(data.quote);
+    } catch (err: any) {
+      console.error('Error fetching quote:', err);
+      setError(err.message || 'Unknown error');
+    } finally {
+      setLoading(false);
     }
+  }
+
+  // useEffect now simply calls the extracted function
+  useEffect(() => {
     fetchQuoteDetails();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [encodedGid]);
 
-  // Log the company field on each render to verify if it's available in UI
-  console.log('Company in shipping address:', quote?.shippingAddress);
+  // ---------------- acceptOffer -> POST to update metafield, then refetch ----------------
+  async function acceptOffer() {
+    // protect against double clicks
+    if (accepting) return;
 
+    setAccepting(true);
+    setError(null);
+    try {
+      // POST to the same API route your GET uses.
+      // Note: we pass draftOrderId as the original id (quoteId),
+      // while the endpoint path contains the encoded id (encodedGid).
+      const res = await fetch(`/api/quotes/${encodedGid}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          draftOrderId: quoteId, // your backend expects this
+          namespace: "custom",
+          key: "quote_status",
+          value: "accepted",
+          type: "list.single_line_text_field",
+        }),
+      });
+
+      if (!res.ok) {
+        // try to get a helpful server error message
+        const txt = await res.text();
+        throw new Error(`Failed to update quote (status ${res.status}) - ${txt}`);
+      }
+
+      const data = await res.json();
+      if (data?.error) {
+        // backend returned a structured error
+        throw new Error(data.error);
+      }
+
+      // Successful update — re-fetch to get the latest quote object from server
+      await fetchQuoteDetails();
+    } catch (err: any) {
+      console.error("Error accepting offer:", err);
+      setError(err.message || "Failed to accept the offer");
+    } finally {
+      setAccepting(false);
+    }
+  }
+
+  // Utility for currency formatting
   function formatCurrency(amount?: number | string) {
     if (typeof amount === 'undefined' || amount === null) return '-';
     const num = typeof amount === 'string' ? parseFloat(amount) : amount;
     return num.toLocaleString('en-US', { style: 'currency', currency: 'USD' });
   }
 
+  // ---------------- Render ----------------
   return (
     <div
       role="dialog"
@@ -157,8 +239,8 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
           )}
 
           {error && (
-            <p className="text-center text-red-600 font-semibold py-24 text-lg">
-              Error loading quote: {error}
+            <p className="text-center text-red-600 font-semibold py-4 text-lg">
+              Error: {error}
             </p>
           )}
 
@@ -195,7 +277,7 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                         {quote.name}
                       </td>
                       <td className="border-r border-gray-300 px-6 py-4 whitespace-nowrap capitalize text-gray-700 select-text">
-                        {quote.status || "N/A"}
+                        {quote.metafield || quote.status || "N/A"}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-gray-700 select-text">
                         {new Date(quote.createdAt).toLocaleString()}
@@ -204,6 +286,7 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                   </tbody>
                 </table>
               </section>
+
               {/* Customer & Shipping */}
               <section className="grid grid-cols-1 md:grid-cols-2 gap-12">
                 {/* Customer */}
@@ -260,16 +343,16 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                       {(quote.shippingAddress.city ||
                         quote.shippingAddress.provinceCode ||
                         quote.shippingAddress.zip) && (
-                        <p>
-                          {[
-                            quote.shippingAddress.city,
-                            quote.shippingAddress.provinceCode,
-                            quote.shippingAddress.zip,
-                          ]
-                            .filter(Boolean)
-                            .join(" ")}
-                        </p>
-                      )}
+                          <p>
+                            {[
+                              quote.shippingAddress.city,
+                              quote.shippingAddress.provinceCode,
+                              quote.shippingAddress.zip,
+                            ]
+                              .filter(Boolean)
+                              .join(" ")}
+                          </p>
+                        )}
                       {quote.shippingAddress.country && (
                         <p>{quote.shippingAddress.country}</p>
                       )}
@@ -402,6 +485,39 @@ export default function QuoteDetailsModal({ quoteId, onCloseAction }: QuoteDetai
                   </div>
                 </div>
               </section>
+
+              <div className="flex justify-center mt-6">
+                {/* ACCEPT OFFER -> now a button that calls acceptOffer */}
+                {quote.metafield === "offer_sent" && (
+                  <button
+                    onClick={acceptOffer}
+                    disabled={accepting}
+                    aria-disabled={accepting}
+                    className={`flex items-center justify-center gap-2 bg-teal text-white px-6 py-3 rounded-lg shadow-md transition
+                      ${accepting ? "opacity-50 cursor-not-allowed" : "hover:bg-cyan"}`}
+                  >
+                    {accepting ? (
+                      <>
+                        <Spinner />
+                        <span>Accepting...</span>
+                      </>
+                    ) : (
+                      "Accept Offer"
+                    )}
+                  </button>
+                )}
+
+                {/* Proceed to checkout */}
+                {quote.metafield === "accepted" && (
+                  <a
+                    href={quote.invoiceUrl}
+                    rel="noopener noreferrer"
+                    className="bg-teal text-white px-6 py-3 rounded-lg shadow-md hover:bg-cyan transition"
+                  >
+                    Proceed to checkout
+                  </a>
+                )}
+              </div>
             </>
           )}
         </main>
