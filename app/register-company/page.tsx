@@ -3,6 +3,7 @@
 import IgnIcon from 'components/icons/ignIcon';
 import { getAllCountries, getRegionsByCountryCode } from 'lib/utils/countryRegion';
 import Link from 'next/link';
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from 'react';
 
 function formatPhoneToE164(phone: string): string {
@@ -31,6 +32,7 @@ export default function RegisterCompanyPage() {
   const [regions, setRegions] = useState<{ name: string; shortCode?: string }[]>([]);
   const [countries, setCountries] = useState<{ name: string; code: string }[]>([]);
 
+  const router = useRouter();
   // useEffect(() => {
   //   setCountries(getAllCountries());
   // }, []);
@@ -96,7 +98,7 @@ export default function RegisterCompanyPage() {
   const validateFields = () => {
     const requiredFields = [
       'name',
-      'externalId',
+      // 'externalId',
       'email',
       'firstName',
       'lastName',
@@ -234,6 +236,11 @@ export default function RegisterCompanyPage() {
       customerId = customer.id;
       setStatus((prev) => `${prev}\n✅ Customer "${customer.firstName}" created and assigned to company!`);
       setStatus((prev) => `${prev}\n✅ Default role Admin assigned to the customer!`);
+      if(customerId){
+        setTimeout(() => {
+          router.push("/"); // change to your desired page
+        }, 2000);
+      }
 
       // Step 3: Send email invite
       // const inviteRes = await fetch('/api/register/email-invite', {
@@ -294,7 +301,7 @@ export default function RegisterCompanyPage() {
             { name: 'email', placeholder: 'Email', type: 'email' },
             { name: 'phone', placeholder: 'Phone Number' },
             { name: 'name', placeholder: 'Company Name' },
-            { name: 'externalId', placeholder: 'External ID' },
+            { name: 'externalId', placeholder: 'External ID Optional' },
             { name: 'locationName', placeholder: 'Location Name' },
             { name: 'address1', placeholder: 'Address Line 1' },
             { name: 'city', placeholder: 'City' },

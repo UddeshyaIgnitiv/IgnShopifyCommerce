@@ -20,7 +20,7 @@ export async function POST(req: Request) {
     const errors: { field: string; message: string }[] = [];
 
     if (!name) errors.push({ field: 'name', message: 'Company name is required.' });
-    if (!externalId) errors.push({ field: 'externalId', message: 'External ID is required.' });
+    // if (!externalId) errors.push({ field: 'externalId', message: 'External ID is required.' });
     if (!locationName) errors.push({ field: 'locationName', message: 'Location name is required.' });
     if (!address1) errors.push({ field: 'address1', message: 'Address Line 1 is required.' });
     if (!city) errors.push({ field: 'city', message: 'City is required.' });
