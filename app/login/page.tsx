@@ -10,7 +10,7 @@ export default function LoginPage() {
         
         {/* Logo above headline */}
         <div className="flex justify-center mb-6">
-          <IgnIcon className="h-[72px] w-[180px]" />
+          <IgnIcon className="h-[72px] w-[180px] object-contain" />
         </div>
 
         {/* Headline */}
