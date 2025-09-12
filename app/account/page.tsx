@@ -142,21 +142,6 @@ export default function AccountPage() {
       String(m.value).trim().toLowerCase() === 'true'
   );
 
-  //For Mail Link
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const tabFromUrl = params.get('tab');
-    const quoteIdFromUrl = params.get('quoteId');
-
-    if (tabFromUrl === 'quotes') {
-      setActiveTab('quotes');
-    }
-
-    if (quoteIdFromUrl) {
-      setSelectedQuoteId(quoteIdFromUrl);
-    }
-  }, []);
-
   // Fetch customer info on mount
   useEffect(() => {
     async function fetchCustomer() {
@@ -254,6 +239,23 @@ export default function AccountPage() {
       setQuotesLoading(false);
     }
   }
+
+   //For Mail Link
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabFromUrl = params.get('tab');
+    const quoteIdFromUrl = params.get('quoteId');
+    let quoteId;
+    if(quoteIdFromUrl){
+      quoteId = `gid://shopify/DraftOrder/${quoteIdFromUrl}`;
+    }
+    if (tabFromUrl === 'quotes') {
+      setActiveTab('quotes');
+    }
+    if (quoteId && quoteIdFromUrl) {
+      setSelectedQuoteId(quoteId);
+    }
+  }, []);
 
   useEffect(() => {
     if (activeTab === 'quotes') {
@@ -554,7 +556,7 @@ export default function AccountPage() {
                               <td className="border px-4 py-3 text-sm text-gray-800">
                                 <ul className="list-disc ml-4">
                                   {quote.lineItems?.edges.map(({ node }) => (
-                                    <li key={node.variant?.id}>
+                                    <li key={node.variant?.id || quote.lineItems?.edges.length}>
                                       {node.title} × {node.quantity}
                                     </li>
                                   ))}
