@@ -142,6 +142,19 @@ export default function AccountPage() {
       String(m.value).trim().toLowerCase() === 'true'
   );
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const tabFromUrl = params.get('tab');
+    const quoteIdFromUrl = params.get('quoteId');
+
+    if (tabFromUrl === 'quotes') {
+      setActiveTab('quotes');
+    }
+
+    if (quoteIdFromUrl) {
+      setSelectedQuoteId(quoteIdFromUrl);
+    }
+  }, []);
   // Fetch customer info on mount
   useEffect(() => {
     async function fetchCustomer() {
