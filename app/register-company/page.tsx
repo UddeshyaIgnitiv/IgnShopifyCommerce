@@ -273,15 +273,16 @@ export default function RegisterCompanyPage() {
   return (
     <main className="flex flex-col items-center bg-gradient-to-br from-gray-100 to-white px-4 py-20">
       <div className="w-full max-w-3xl bg-white rounded-xl shadow-xl p-8 sm:p-10">
-        
         {/* Logo */}
         <div className="flex justify-center mb-6">
-          <IgnIcon className="h-[72px] w-[180px]" />
+          <IgnIcon className="h-[72px] w-[180px] object-contain" />
         </div>
 
         {/* Headline */}
         <div className="text-center mb-8">
-          <h2 className="text-2xl font-semibold text-gray-800">Register Your Company</h2>
+          <h2 className="text-2xl font-semibold text-gray-800">
+            Register Your Company
+          </h2>
           <p className="text-base text-gray-500 mt-1">
             Register your business to access exclusive pricing and services.
           </p>
@@ -293,20 +294,23 @@ export default function RegisterCompanyPage() {
           </pre>
         )}
         {/* Form */}
-        <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <form
+          onSubmit={handleSubmit}
+          className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+        >
           {/* Input fields */}
           {[
-            { name: 'firstName', placeholder: 'First Name' },
-            { name: 'lastName', placeholder: 'Last Name' },
-            { name: 'email', placeholder: 'Email', type: 'email' },
-            { name: 'phone', placeholder: 'Phone Number' },
-            { name: 'name', placeholder: 'Company Name' },
-            { name: 'externalId', placeholder: 'External ID Optional' },
-            { name: 'locationName', placeholder: 'Location Name' },
-            { name: 'address1', placeholder: 'Address Line 1' },
-            { name: 'city', placeholder: 'City' },
-            { name: 'zip', placeholder: 'Postal/ZIP Code' },
-          ].map(({ name, placeholder, type = 'text' }) => (
+            { name: "firstName", placeholder: "First Name" },
+            { name: "lastName", placeholder: "Last Name" },
+            { name: "email", placeholder: "Email", type: "email" },
+            { name: "phone", placeholder: "Phone Number" },
+            { name: "name", placeholder: "Company Name" },
+            { name: "externalId", placeholder: "External ID Optional" },
+            { name: "locationName", placeholder: "Location Name" },
+            { name: "address1", placeholder: "Address Line 1" },
+            { name: "city", placeholder: "City" },
+            { name: "zip", placeholder: "Postal/ZIP Code" },
+          ].map(({ name, placeholder, type = "text" }) => (
             <div key={name}>
               <input
                 type={type}
@@ -315,10 +319,14 @@ export default function RegisterCompanyPage() {
                 value={formData[name as keyof typeof formData]}
                 onChange={handleChange}
                 className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                  errors?.[name] ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                  errors?.[name]
+                    ? "border-red-500 focus:ring-red-500"
+                    : "border-gray-300 focus:ring-blue-500"
                 }`}
               />
-              {errors?.[name] && <span className="text-red-500 text-xs">{errors[name]}</span>}
+              {errors?.[name] && (
+                <span className="text-red-500 text-xs">{errors[name]}</span>
+              )}
             </div>
           ))}
 
@@ -329,15 +337,21 @@ export default function RegisterCompanyPage() {
               value={formData.country}
               onChange={handleChange}
               className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                errors?.country ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                errors?.country
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
               }`}
             >
               <option value="">Select Country</option>
               {countries.map((c) => (
-                <option key={c.code} value={c.code}>{c.name}</option>
+                <option key={c.code} value={c.code}>
+                  {c.name}
+                </option>
               ))}
             </select>
-            {errors?.country && <span className="text-red-500 text-xs">{errors.country}</span>}
+            {errors?.country && (
+              <span className="text-red-500 text-xs">{errors.country}</span>
+            )}
           </div>
 
           {/* Province */}
@@ -347,15 +361,21 @@ export default function RegisterCompanyPage() {
               value={formData.province}
               onChange={handleChange}
               className={`w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 ${
-                errors?.province ? 'border-red-500 focus:ring-red-500' : 'border-gray-300 focus:ring-blue-500'
+                errors?.province
+                  ? "border-red-500 focus:ring-red-500"
+                  : "border-gray-300 focus:ring-blue-500"
               }`}
             >
               <option value="">Select Province/State</option>
               {regions.map((r) => (
-                <option key={r.name} value={r.shortCode || r.name}>{r.name}</option>
+                <option key={r.name} value={r.shortCode || r.name}>
+                  {r.name}
+                </option>
               ))}
             </select>
-            {errors?.province && <span className="text-red-500 text-xs">{errors.province}</span>}
+            {errors?.province && (
+              <span className="text-red-500 text-xs">{errors.province}</span>
+            )}
           </div>
 
           {/* Submit */}
@@ -372,7 +392,9 @@ export default function RegisterCompanyPage() {
         {/* Divider */}
         <div className="flex items-center my-8">
           <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
-          <span className="mx-4 text-gray-500 text-sm font-medium">Already a customer?</span>
+          <span className="mx-4 text-gray-500 text-sm font-medium">
+            Already a customer?
+          </span>
           <div className="flex-grow h-px bg-gradient-to-r from-transparent via-gray-300 to-transparent"></div>
         </div>
 
@@ -385,7 +407,6 @@ export default function RegisterCompanyPage() {
             Log in to your account
           </Link>
         </div>
-
       </div>
     </main>
   );

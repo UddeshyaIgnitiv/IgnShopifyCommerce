@@ -97,7 +97,7 @@ export default function InvoiceModal({ orderId, onClose }: InvoiceModalProps) {
             <div className="bg-white w-[950px] max-h-[90vh] overflow-y-auto rounded shadow-lg p-8 relative print:shadow-none print:w-full print:p-0">
                 <button
                     onClick={onClose}
-                    className="absolute top-2 right-2 text-gray-600 hover:text-gray-900 print:hidden"
+                    className="absolute top-2 right-2 text-white hover:text-secondary print:hidden"
                 >
                     ✕
                 </button>
@@ -231,7 +231,7 @@ export default function InvoiceModal({ orderId, onClose }: InvoiceModalProps) {
                             <div className="mt-6 text-right print:hidden">
                                 <button
                                     onClick={handlePrint}
-                                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                                    className="px-4 py-2 text-white rounded"
                                 >
                                     Print
                                 </button>
