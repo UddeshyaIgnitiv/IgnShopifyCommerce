@@ -212,6 +212,14 @@ export default function RegisterCompanyPage() {
       companyId = company.id;
       setStatus((prev) => `${prev}\n✅ Company "${company.name}" created!`);
 
+      await fetch('/api/companies/delete', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            companyIds: [companyId],
+          }),
+        });
+
       // Step 2: Create customer and assign role
       const contactRes = await fetch('/api/register/customer', {
         method: 'POST',
@@ -224,12 +232,21 @@ export default function RegisterCompanyPage() {
       const contactErrors = contactResult?.error || customer?.userErrors;
 
       if (!contactRes.ok || !customer || (Array.isArray(contactErrors) && contactErrors.length > 0)) {
+
+        const contactDeleteRes = await fetch('/api/delete/company', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            companyIds: [companyId],
+          }),
+        });
+
+        const contactDeleteResult = await contactDeleteRes.json();
         const msg = Array.isArray(contactErrors)
           ? contactErrors[0]?.message
           : contactErrors || 'Unknown error during contact creation.';
         setStatus((prev) => `${prev}\n❌ Customer creation failed: ${msg}`);
 
-        await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });
         return;
       }
 
@@ -259,7 +276,13 @@ export default function RegisterCompanyPage() {
       //   setStatus((prev) => `${prev}\n❌ Invite failed: ${msg}`);
 
       //   await fetch(`/api/delete/customer/${customerId}`, { method: 'DELETE' });
-      //   await fetch(`/api/delete/company/${companyId}`, { method: 'DELETE' });
+      //   await fetch('/api/delete/company', {
+        //   method: 'POST',
+        //   headers: { 'Content-Type': 'application/json' },
+        //   body: JSON.stringify({
+        //     companyIds: [companyId],
+        //   }),
+        // });
       //   return;
       // }
 
