@@ -24,6 +24,10 @@ type CartAction =
   | {
     type: 'ADD_ITEM';
     payload: { variant: ProductVariant; product: Product };
+  }
+  | {
+    type: 'ADD_MULTIPLE_ITEMS';
+    payload: { items: { variantId: string; quantity: number }[] };
   };
 
 type CartContextType = {
@@ -171,6 +175,50 @@ function cartReducer(state: Cart | undefined, action: CartAction): Cart {
         lines: updatedLines
       };
     }
+    case 'ADD_MULTIPLE_ITEMS': {
+      const totalQuantity = currentCart.totalQuantity + action.payload.items.reduce((sum, i) => sum + i.quantity, 0);
+      return {
+        ...currentCart,
+        totalQuantity,
+      };
+    }
+    // case 'ADD_MULTIPLE_ITEMS': {
+    //   const newItems: CartItem[] = action.payload.items.map((i) => ({
+    //     id: crypto.randomUUID(),
+    //     quantity: i.quantity,
+    //     cost: {
+    //       totalAmount: {
+    //         amount: '0', // you can compute real cost if needed
+    //         currencyCode: 'USD',
+    //       },
+    //     },
+    //     merchandise: {
+    //       id: i.variantId,
+    //       title: '', // you can pass actual title from ProductOption if available
+    //       selectedOptions: [], // required field
+    //       product: {
+    //         id: '',
+    //         title: '',
+    //         handle: '',
+    //         featuredImage: {
+    //           url: '/placeholder.png', // fallback if no image
+    //           altText: 'Product image',
+    //           width: 0,
+    //           height: 0,
+    //         },
+    //       },
+    //     },
+    //   }));
+
+    //   const updatedLines = [...currentCart.lines, ...newItems];
+
+    //   return {
+    //     ...currentCart,
+    //     ...updateCartTotals(updatedLines),
+    //     lines: updatedLines,
+    //   };
+    // }
+
     case 'ADD_ITEM': {
       const { variant, product } = action.payload;
       const existingItem = currentCart.lines.find(
@@ -232,6 +280,10 @@ export function useCart() {
     });
   };
 
+  const addMultipleCartItems = (items: { variantId: string; quantity: number }[]) => {
+    updateOptimisticCart({ type: 'ADD_MULTIPLE_ITEMS', payload: { items } });
+  };
+
   const addCartItem = (variant: ProductVariant, product: Product) => {
     updateOptimisticCart({ type: 'ADD_ITEM', payload: { variant, product } });
   };
@@ -240,7 +292,8 @@ export function useCart() {
     () => ({
       cart: optimisticCart,
       updateCartItem,
-      addCartItem
+      addCartItem,
+      addMultipleCartItems
     }),
     [optimisticCart]
   );

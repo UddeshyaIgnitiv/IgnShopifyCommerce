@@ -24,22 +24,22 @@ type MerchandiseSearchParams = {
 };
 
 const PopupMessage = ({ message, onClose }: { message: string, onClose: () => void }) => (
-    <>
-      {/* Overlay */}
-      <div className="fixed inset-0 bg-black/50 z-[9998]" aria-hidden="true"></div>
+  <>
+    {/* Overlay */}
+    <div className="fixed inset-0 bg-black/50 z-[9998]" aria-hidden="true"></div>
 
-      {/* Popup Message */}
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] bg-white p-6 rounded-md w-80 text-center shadow-lg">
-        <p className="text-sm text-red-700">{message}</p>
-        <button
-          onClick={onClose} // Close the popup when clicked
-          className="mt-4 bg-red-500 text-white rounded-full px-4 py-2"
-        >
-          Close
-        </button>
-      </div>
-    </>
-  );
+    {/* Popup Message */}
+    <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[9999] bg-white p-6 rounded-md w-80 text-center shadow-lg">
+      <p className="text-sm text-red-700">{message}</p>
+      <button
+        onClick={onClose} // Close the popup when clicked
+        className="mt-4 bg-red-500 text-white rounded-full px-4 py-2"
+      >
+        Close
+      </button>
+    </div>
+  </>
+);
 
 export default function CartModal() {
   const { cart, updateCartItem } = useCart();
@@ -59,7 +59,7 @@ export default function CartModal() {
 
   const idToken = Cookies.get('shopify_id_token')?.valueOf;
 
-  if(!idToken) return (
+  if (!idToken) return (
     <>
       <button aria-label="Open cart" onClick={openCart} className="bg-transparent">
         <OpenCart quantity={cart?.totalQuantity} />
@@ -93,12 +93,12 @@ export default function CartModal() {
                   <CloseCart />
                 </button>
               </div>
-                <div className="mt-20 flex w-full flex-col items-center justify-center overflow-hidden">
-                  <ShoppingCartIcon className="h-16" />
-                  <p className="mt-6 text-center text-2xl font-bold">
-                    Your cart is empty.
-                  </p>
-                </div>
+              <div className="mt-20 flex w-full flex-col items-center justify-center overflow-hidden">
+                <ShoppingCartIcon className="h-16" />
+                <p className="mt-6 text-center text-2xl font-bold">
+                  Your cart is empty.
+                </p>
+              </div>
             </Dialog.Panel>
           </Transition.Child>
         </Dialog>
@@ -134,10 +134,10 @@ export default function CartModal() {
 
   // Handle checkout with error message handling
   const handleCheckout = async () => {
-    setMessage(null); 
+    setMessage(null);
 
     try {
-      await redirectToCheckout(); 
+      await redirectToCheckout();
     } catch (err: any) {
       let errorText = 'An unexpected error occurred during checkout. Please try again later.';
 
@@ -146,9 +146,9 @@ export default function CartModal() {
       } else {
         errorText = err.message || errorText;
       }
-      
-      setPopupMessage(errorText); 
-      setShowPopup(true); 
+
+      setPopupMessage(errorText);
+      setShowPopup(true);
       console.error('Checkout error:', err);
     }
   };
@@ -160,8 +160,8 @@ export default function CartModal() {
       </button>
       {/* Custom Popup Message */}
       {showPopup && (
-        <PopupMessage 
-          message={popupMessage} 
+        <PopupMessage
+          message={popupMessage}
           onClose={() => setShowPopup(false)} // Close the popup when clicked
         />
       )}

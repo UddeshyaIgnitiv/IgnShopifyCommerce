@@ -240,13 +240,13 @@ export default function AccountPage() {
     }
   }
 
-   //For Mail Link
+  //For Mail Link
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tabFromUrl = params.get('tab');
     const quoteIdFromUrl = params.get('quoteId');
     let quoteId;
-    if(quoteIdFromUrl){
+    if (quoteIdFromUrl) {
       quoteId = `gid://shopify/DraftOrder/${quoteIdFromUrl}`;
     }
     if (tabFromUrl === 'quotes') {
@@ -285,7 +285,7 @@ export default function AccountPage() {
     <div className="flex h-screen overflow-hidden">
       {/* Left Vertical Navigation */}
       <aside className={`
-          fixed lg:static z-50 inset-y-0 left-0 w-64 bg-white border-r border-gray-200
+          fixed lg:static z-5 inset-y-0 left-0 w-64 bg-white border-r border-gray-200
           transform transition-transform duration-300 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           lg:translate-x-0
