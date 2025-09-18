@@ -2,6 +2,7 @@
 
 export interface ProductOption {
   title: string;
+  availableForSale?: Boolean;
   variantId: string;
   imageSrc?: string;
   imageAlt?: string;

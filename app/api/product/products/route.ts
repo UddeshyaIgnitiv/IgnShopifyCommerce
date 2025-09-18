@@ -7,6 +7,7 @@ interface ShopifyGraphQLResponse {
       edges: Array<{
         node: {
           id: string;
+          availableForSale: Boolean;
           title: string;
           images: {
             edges: Array<{
@@ -53,6 +54,7 @@ export async function GET(req: Request) {
               edges {
                 node {
                   id
+                  availableForSale
                   title
                   images(first: 1) {
                     edges {
@@ -99,6 +101,7 @@ export async function GET(req: Request) {
       const imageNode = edge.node.images?.edges?.[0]?.node;
       const imageSrc = imageNode?.originalSrc || '';
       const imageAlt = imageNode?.altText || edge.node.title;
+      const availableForSale = edge.node.availableForSale;
 
       edge.node.variants.edges.forEach((variant) => {
         const product: ProductOption = {
@@ -106,6 +109,7 @@ export async function GET(req: Request) {
           variantId: variant.node.id,
           imageSrc,
           imageAlt,
+          availableForSale,
         };
         products.push(product);
       });
