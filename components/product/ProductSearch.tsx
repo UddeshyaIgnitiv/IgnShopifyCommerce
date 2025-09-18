@@ -26,7 +26,7 @@ export default function ProductSearch({ onSelectAction }: ProductSearchProps) {
   const { addMultipleCartItems } = useCart();
   const router = useRouter();
 
-  // ✅ Debounced fetch (runs 0.5s after user stops typing)
+  // Debounced fetch (runs 0.5s after user stops typing)
   const fetchProducts = useCallback(
     debounce(async (query: string) => {
       if (!query) {
