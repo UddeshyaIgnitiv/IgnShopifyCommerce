@@ -1,4 +1,5 @@
 'use client';
+import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/react/24/outline';
 import clsx from 'clsx';
 import 'keen-slider/keen-slider.min.css';
 import { useKeenSlider } from 'keen-slider/react';
@@ -17,7 +18,7 @@ export function Carousel({ products }: { products: any[] }) {
   });
 
   return (
-    <div className="relative w-full">
+    <div className="relative w-full mt-7">
       <div ref={sliderRef} className="keen-slider w-full pb-6 pt-1">
         {products.map((product, i) => {
           const productImage = product.featuredImage ? product?.featuredImage?.url : PlaceHolderImage.src;
@@ -58,13 +59,13 @@ export function Carousel({ products }: { products: any[] }) {
         onClick={() => slider.current?.prev()}
         className="absolute left-2 top-1/2 -translate-y-1/2 button rounded-full p-2 "
       >
-        ◀
+        <ChevronLeftIcon className="h-5 w-5 text-white" />
       </button>
       <button
         onClick={() => slider.current?.next()}
         className="absolute right-2 top-1/2 -translate-y-1/2 button rounded-full p-2 "
       >
-        ▶
+        <ChevronRightIcon className="h-5 w-5 text-white" />
       </button>
     </div>
   );
