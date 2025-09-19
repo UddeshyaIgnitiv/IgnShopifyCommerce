@@ -240,22 +240,20 @@ export default function AccountPage() {
     }
   }
 
-  //For Mail Link
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const tabFromUrl = params.get('tab');
     const quoteIdFromUrl = params.get('quoteId');
-    let quoteId;
+
+    if (tabFromUrl && tabs.some((t) => t.id === tabFromUrl)) {
+      setActiveTab(tabFromUrl);
+    }
+
     if (quoteIdFromUrl) {
-      quoteId = `gid://shopify/DraftOrder/${quoteIdFromUrl}`;
-    }
-    if (tabFromUrl === 'quotes') {
-      setActiveTab('quotes');
-    }
-    if (quoteId && quoteIdFromUrl) {
-      setSelectedQuoteId(quoteId);
+      setSelectedQuoteId(`gid://shopify/DraftOrder/${quoteIdFromUrl}`);
     }
   }, []);
+
 
   useEffect(() => {
     if (activeTab === 'quotes') {
@@ -312,7 +310,12 @@ export default function AccountPage() {
             {tabs.map((tab) => (
               <div
                 key={tab.id}
-                onClick={() => { setActiveTab(tab.id); setSidebarOpen(false); }}
+                onClick={() => {
+                  setActiveTab(tab.id);
+                  setSidebarOpen(false);
+                  router.replace(`/account?tab=${tab.id}`);
+                }}
+
 
                 className={`px-6 py-4 cursor-pointer hover:bg-gray-100 transition text-gray-700 ${activeTab === tab.id ? 'font-semibold text-teal-600 bg-gray-100' : ''
                   }`}

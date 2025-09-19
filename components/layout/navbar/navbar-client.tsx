@@ -99,9 +99,9 @@ export default function NavbarClient({ menu, idToken }: NavbarClientProps) {
                             <SideSliderMenu menu={menu} />
                         </div>
                         <ul className="hidden md:flex items-center space-x-6 text-sm ml-12">
-                            <li><Link href="/account" className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline">Profile</Link></li>
-                            <li><Link href="/" className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline">About Us</Link></li>
-                            <li><Link href="/" className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline">Contact Us</Link></li>
+                            <li><Link href="/account?tab=quotes" className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline">Quotes</Link></li>
+                            <li><Link href="/account?tab=manage-users" className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline">Users</Link></li>
+                            {/* <li><Link href="/" className="text-base text-dark hover:text-cyan font-semibold underline-offset-4 hover:underline">Contact Us</Link></li> */}
                             {idToken && (
                                 <li>
                                     <button
