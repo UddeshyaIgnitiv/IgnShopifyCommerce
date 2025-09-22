@@ -10,8 +10,12 @@ function mapUIRoleToShopifyRoleId(uiRole: string, shopifyRoles: any[]): string |
     non_purchaser: 'Ordering only',
   };
   const targetShopifyRoleName = roleMap[uiRole];
-  return shopifyRoles.find((r) => r.name === targetShopifyRoleName)?.id || null;
+  console.log('Mapped Shopify Role Name:', targetShopifyRoleName);
+  return shopifyRoles.find(
+    (r) => r.name?.toLowerCase() === targetShopifyRoleName?.toLowerCase()
+  )?.id || null;
 }
+
 
 export async function GET() {
   try {
@@ -440,4 +444,195 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
+
+export async function PUT(req: Request) {
+  try {
+    const body = await req.json();
+    const { contactId, firstName, lastName, role, location } = body;
+
+    console.log('PUT /api/users called with:', { contactId, firstName, lastName, role, location });
+
+    // Basic validation
+    if (!contactId || !role || !location) {
+      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    const allowedRoles = ['admin', 'purchaser', 'non_purchaser'];
+    if (!allowedRoles.includes(role)) {
+      return NextResponse.json({ error: 'Invalid role provided' }, { status: 400 });
+    }
+
+    const userEmail = (await cookies()).get('user_email')?.value;
+    if (!userEmail) {
+      return NextResponse.json({ error: 'Not logged in' }, { status: 401 });
+    }
+
+    // Step 1: Get company ID for logged-in user
+    const GET_CUSTOMER_COMPANY = `
+      query getCustomerCompany($q: String!) {
+        customers(first: 1, query: $q) {
+          edges {
+            node {
+              companyContactProfiles {
+                company { id }
+                customer { id }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const companyRes = await adminGraphql(GET_CUSTOMER_COMPANY, { q: `email:${userEmail}` });
+
+    const companyId = companyRes?.customers?.edges?.[0]?.node?.companyContactProfiles?.[0]?.company?.id;
+    const customerId = companyRes?.customers?.edges?.[0]?.node?.companyContactProfiles?.[0]?.customer?.id;
+
+    if (!companyId || !customerId) {
+      return NextResponse.json({ error: 'No company or customer found for user' }, { status: 404 });
+    }
+
+    // Step 2: Map UI role to Shopify role ID
+    const roleList = await getCompanyContactRoles(companyId);
+    const shopifyRoleId = mapUIRoleToShopifyRoleId(role, roleList);
+    if (!shopifyRoleId) {
+      return NextResponse.json({ error: 'Invalid role mapping' }, { status: 400 });
+    }
+
+    // Step 3: Query existing role assignment for this contact at that location
+    const GET_EXISTING_ASSIGNMENT = `
+      query getExistingAssignment($companyLocationId: ID!) {
+        companyLocation(id: $companyLocationId) {
+          roleAssignments(first: 50) {
+            edges {
+              node {
+                id
+                companyContact { id }
+                role { id name }
+              }
+            }
+          }
+        }
+      }
+    `;
+
+    const existingRes = await adminGraphql(GET_EXISTING_ASSIGNMENT, { companyLocationId: location });
+
+    if (!existingRes?.companyLocation) {
+      return NextResponse.json({ error: 'Invalid location ID' }, { status: 400 });
+    }
+
+    const assignments = existingRes.companyLocation.roleAssignments.edges || [];
+    const existingNode = assignments.find((e: any) => e?.node?.companyContact?.id === contactId);
+
+    let existingAssignmentId: string | null = null;
+    let existingRoleId: string | null = null;
+
+    if (existingNode) {
+      existingAssignmentId = existingNode.node.id;
+      existingRoleId = existingNode.node.role.id;
+    }
+
+    // Step 4: Revoke and reassign role if needed
+    if (existingRoleId === shopifyRoleId) {
+      console.log('Role already assigned. No changes needed.');
+    } else {
+      // Revoke old role
+      if (existingAssignmentId) {
+        const REVOKE_ROLE = `
+          mutation companyContactRevokeRole($companyContactId: ID!, $companyContactRoleAssignmentId: ID!) {
+            companyContactRevokeRole(
+              companyContactId: $companyContactId,
+              companyContactRoleAssignmentId: $companyContactRoleAssignmentId
+            ) {
+              revokedCompanyContactRoleAssignmentId
+              userErrors {
+                field
+                message
+              }
+            }
+          }
+        `;
+
+        const revokeRes = await adminGraphql(REVOKE_ROLE, {
+          companyContactId: contactId,
+          companyContactRoleAssignmentId: existingAssignmentId,
+        });
+
+        const revokeErrors = revokeRes?.companyContactRevokeRole?.userErrors || [];
+        if (revokeErrors.length > 0) {
+          return NextResponse.json({ error: revokeErrors[0].message }, { status: 400 });
+        }
+
+        console.log('Revoked old role assignment:', existingAssignmentId);
+      }
+
+      // Assign new role
+      const ASSIGN_ROLE = `
+        mutation companyContactAssignRole($companyContactId: ID!, $companyContactRoleId: ID!, $companyLocationId: ID!) {
+          companyContactAssignRole(
+            companyContactId: $companyContactId,
+            companyContactRoleId: $companyContactRoleId,
+            companyLocationId: $companyLocationId
+          ) {
+            companyContactRoleAssignment {
+              id
+              role { id name }
+            }
+            userErrors { field message }
+          }
+        }
+      `;
+
+      const assignRes = await adminGraphql(ASSIGN_ROLE, {
+        companyContactId: contactId,
+        companyContactRoleId: shopifyRoleId,
+        companyLocationId: location,
+      });
+
+      const assignErrors = assignRes?.companyContactAssignRole?.userErrors || [];
+      if (assignErrors.length > 0) {
+        return NextResponse.json({ error: assignErrors[0].message }, { status: 400 });
+      }
+
+      console.log('Assigned new role:', shopifyRoleId);
+    }
+
+    // Step 5: Update name (optional)
+    if (firstName || lastName) {
+      const UPDATE_NAME = `
+        mutation updateCustomerName($id: ID!, $firstName: String, $lastName: String) {
+          customerUpdate(input: {
+            id: $id,
+            firstName: $firstName,
+            lastName: $lastName
+          }) {
+            customer { id }
+            userErrors { field message }
+          }
+        }
+      `;
+
+      const nameRes = await adminGraphql(UPDATE_NAME, {
+        id: customerId,  // Use the correct customer ID here
+        firstName,
+        lastName,
+      });
+
+      const nameErrors = nameRes?.customerUpdate?.userErrors || [];
+      if (nameErrors.length > 0) {
+        return NextResponse.json({ error: nameErrors[0].message }, { status: 400 });
+      }
+
+      console.log('Updated name:', { firstName, lastName });
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (err: any) {
+    console.error('Error in PUT /api/users:', err?.message || err);
+    return NextResponse.json({ error: 'Server error' }, { status: 500 });
+  }
+}
+
+
 

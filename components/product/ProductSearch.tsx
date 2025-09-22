@@ -174,7 +174,7 @@ export default function ProductSearch({ onSelectAction }: ProductSearchProps) {
               handleSelect(product);
             }}
             className={`p-3 border-b last:border-b-0 flex items-center gap-3 ${product.availableForSale
-              ? "cursor-pointer hover:bg-blue-100"
+              ? "cursor-pointer"
               : "cursor-not-allowed bg-gray-100 text-gray-400"
               }`}
           >
