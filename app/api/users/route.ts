@@ -448,17 +448,17 @@ export async function DELETE(req: Request) {
 export async function PUT(req: Request) {
   try {
     const body = await req.json();
-    const { contactId, firstName, lastName, role, location } = body;
+    const { contactId, role, location, userB2bRole } = body;
 
-    console.log('PUT /api/users called with:', { contactId, firstName, lastName, role, location });
+    console.log('PUT /api/users called with:', { contactId, role, location });
 
     // Basic validation
     if (!contactId || !role || !location) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    const allowedRoles = ['admin', 'purchaser', 'non_purchaser'];
-    if (!allowedRoles.includes(role)) {
+    const allowedB2bRoles = ['admin', 'purchaser', 'non_purchaser'];
+    if (!allowedB2bRoles.includes(role)) {
       return NextResponse.json({ error: 'Invalid role provided' }, { status: 400 });
     }
 
@@ -486,10 +486,29 @@ export async function PUT(req: Request) {
     const companyRes = await adminGraphql(GET_CUSTOMER_COMPANY, { q: `email:${userEmail}` });
 
     const companyId = companyRes?.customers?.edges?.[0]?.node?.companyContactProfiles?.[0]?.company?.id;
-    const customerId = companyRes?.customers?.edges?.[0]?.node?.companyContactProfiles?.[0]?.customer?.id;
+    const loggedInCustomerId = companyRes?.customers?.edges?.[0]?.node?.companyContactProfiles?.[0]?.customer?.id;
 
-    if (!companyId || !customerId) {
+    if (!companyId || !loggedInCustomerId) {
       return NextResponse.json({ error: 'No company or customer found for user' }, { status: 404 });
+    }
+
+    // NEW Step: Get customerId for the given contactId (target user)
+    const GET_CUSTOMER_BY_CONTACT = `
+      query getCustomerByContactId($contactId: ID!) {
+        companyContact(id: $contactId) {
+          customer {
+            id
+          }
+        }
+      }
+    `;
+
+    const targetCustomerRes = await adminGraphql(GET_CUSTOMER_BY_CONTACT, { contactId });
+
+    const targetCustomerId = targetCustomerRes?.companyContact?.customer?.id;
+
+    if (!targetCustomerId) {
+      return NextResponse.json({ error: 'No customer found for given contactId' }, { status: 404 });
     }
 
     // Step 2: Map UI role to Shopify role ID
@@ -532,6 +551,9 @@ export async function PUT(req: Request) {
       existingAssignmentId = existingNode.node.id;
       existingRoleId = existingNode.node.role.id;
     }
+
+    console.log('Existing Role ID:', existingRoleId);
+    console.log('Shopify Role ID to assign:', shopifyRoleId);
 
     // Step 4: Revoke and reassign role if needed
     if (existingRoleId === shopifyRoleId) {
@@ -598,33 +620,30 @@ export async function PUT(req: Request) {
       console.log('Assigned new role:', shopifyRoleId);
     }
 
-    // Step 5: Update name (optional)
-    if (firstName || lastName) {
-      const UPDATE_NAME = `
-        mutation updateCustomerName($id: ID!, $firstName: String, $lastName: String) {
-          customerUpdate(input: {
-            id: $id,
-            firstName: $firstName,
-            lastName: $lastName
-          }) {
-            customer { id }
-            userErrors { field message }
-          }
+    // --- UPDATE b2b.role metafield on customer ---
+    const UPDATE_B2B_ROLE = `
+      mutation updateB2BRoleMetafield($customerId: ID!, $value: String!) {
+        customerUpdate(input: {
+          id: $customerId,
+          metafields: [{
+            namespace: "b2b",
+            key: "role",
+            type: "json",
+            value: $value
+          }]
+        }) {
+          userErrors { field message }
         }
-      `;
-
-      const nameRes = await adminGraphql(UPDATE_NAME, {
-        id: customerId,  // Use the correct customer ID here
-        firstName,
-        lastName,
-      });
-
-      const nameErrors = nameRes?.customerUpdate?.userErrors || [];
-      if (nameErrors.length > 0) {
-        return NextResponse.json({ error: nameErrors[0].message }, { status: 400 });
       }
+    `;
 
-      console.log('Updated name:', { firstName, lastName });
+    const b2bRoleRes = await adminGraphql(UPDATE_B2B_ROLE, {
+      customerId: targetCustomerId,
+      value: JSON.stringify(role), // admin | purchaser | non-purchaser
+    });
+
+    if (b2bRoleRes?.customerUpdate?.userErrors?.length) {
+      return NextResponse.json({ error: b2bRoleRes.customerUpdate.userErrors[0].message }, { status: 400 });
     }
 
     return NextResponse.json({ success: true });
@@ -633,6 +652,7 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: 'Server error' }, { status: 500 });
   }
 }
+
 
 
 
