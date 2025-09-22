@@ -27,7 +27,7 @@ export default function LoginPage() {
                 href="/api/auth/login"
                 role="button"
                 aria-label="Login to your account"
-                className="w-1/2 text-center text-white font-semibold py-3 rounded-md transition"
+                className="w-1/2 text-center bg-[var(--color-teal)] hover:bg-[var(--color-teal)] text-white font-semibold py-3 rounded-md transition"
             >
                 Log In
             </Link>
