@@ -49,8 +49,6 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
 
   // --- New state for edit ---
   const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [editFirstName, setEditFirstName] = useState('');
-  const [editLastName, setEditLastName] = useState('');
   const [editRole, setEditRole] = useState('');
   const [editLocation, setEditLocation] = useState('');
   const [editing, setEditing] = useState(false);  // track edit submission loading
@@ -157,8 +155,6 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
 
   const startEdit = (user: User) => {
     setEditingUser(user);
-    setEditFirstName(user.firstName || '');
-    setEditLastName(user.lastName || '');
     setEditRole(user.b2bRole || '');
     // If more than one permission, you might choose first, or allow multiple
     const firstPerm = user.permissions?.[0];
@@ -167,8 +163,6 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
 
   const cancelEdit = () => {
     setEditingUser(null);
-    setEditFirstName('');
-    setEditLastName('');
     setEditRole('');
     setEditLocation('');
   };
@@ -185,8 +179,6 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           contactId: editingUser.contactId,
-          firstName: editFirstName,
-          lastName: editLastName,
           role: editRole,
           location: editLocation,
         }),
@@ -276,6 +268,7 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
                         user.permissions.map((perm, i) => {
                           const permRole = perm.role?.toLowerCase() || '';
                           const userB2bRole = user.b2bRole?.toLowerCase() || '';
+                          console.log("userB2bRole", userB2bRole);
 
                           let label = 'Non-purchaser';
 
@@ -441,18 +434,16 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
               />
               <div className="grid grid-cols-2 gap-3">
                 <input
-                  className="border rounded p-2"
+                  className="border rounded p-2 bg-gray-100 text-gray-500"
                   placeholder="First name"
-                  value={editFirstName}
-                  onChange={(e) => setEditFirstName(e.target.value)}
-                  required
+                  value={editingUser.firstName}
+                  disabled
                 />
                 <input
-                  className="border rounded p-2"
+                  className="border rounded p-2 bg-gray-100 text-gray-500"
                   placeholder="Last name"
-                  value={editLastName}
-                  onChange={(e) => setEditLastName(e.target.value)}
-                  required
+                  value={editingUser.lastName}
+                  disabled
                 />
               </div>
 
