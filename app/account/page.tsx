@@ -508,13 +508,13 @@ export default function AccountPage() {
           {activeTab === 'manage-users' && (
             <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
               <h2 className="text-xl font-bold mb-6">Manage Users</h2>
-              {customer && !loading && !roleLoading && userRole === 'admin' && (
-                <UserAccountsManager isAdmin={isAdmin} />
-              )}
               {!roleLoading && userRole !== 'admin' && (
-                <div className="p-4 border border-yellow-200 bg-yellow-50 text-yellow-800 rounded">
+                <div className="p-4 border border-yellow-200 bg-yellow-50 text-yellow-800 rounded mb-2">
                   You must be an admin customer to manage users.
                 </div>
+              )}
+              {customer && !loading && !roleLoading && (
+                <UserAccountsManager isAdmin={isAdmin} />
               )}
             </div>
           )}

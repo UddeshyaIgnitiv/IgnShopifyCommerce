@@ -51,7 +51,14 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [editRole, setEditRole] = useState('');
   const [editLocation, setEditLocation] = useState('');
-  const [editing, setEditing] = useState(false);  // track edit submission loading
+  const [editing, setEditing] = useState(false); 
+
+  const currentUser = users.find(user => user.email === currentUserEmail);
+  const currentUserB2bRole = currentUser?.b2bRole?.toLowerCase() || '';
+
+  const canManageUsers = currentUserB2bRole === 'admin';
+
+  console.log("currentUser", currentUser, currentUserB2bRole, canManageUsers);
 
   const UI_ROLE_OPTIONS = [
     { id: 'admin', label: 'Admin' },
@@ -217,10 +224,15 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
       <div>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">List of Users</h2>
-          {!roleLoading && userRole === 'admin' && (
+          {!roleLoading && (
             <button
-              onClick={() => setShowAddForm(!showAddForm)}
-              className="px-3 py-1 text-sm text-white rounded focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+              onClick={() => canManageUsers && setShowAddForm(!showAddForm)}
+              disabled={!canManageUsers}
+              className={`px-3 py-1 text-sm rounded transition focus:outline-none focus:ring-2 ${
+                canManageUsers
+                  ? 'text-white bg-[var(--color-teal)] hover:bg-[var(--color-cyan)] focus:ring-blue-400'
+                  : 'bg-[var(--color-teal)]-300 cursor-not-allowed opacity-60'
+              }`}
             >
               {showAddForm ? 'Close Add Form' : 'Add User'}
             </button>
@@ -295,20 +307,23 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
                     </td>
                     <td className="border border-gray-300 px-4 py-2 text-center space-x-2">
                       {/* Edit button */}
-                      {!isProtected && (
                         <button
                           onClick={() => startEdit(user)}
-                          className="px-2 py-1 text-sm rounded bg-yellow-500 text-white hover:bg-yellow-600"
+                          className={`px-2 py-1 text-sm rounded ${
+                          isProtected || !canManageUsers
+                          ? 'bg-[var(--color-secondary)]-200 text-white cursor-not-allowed opacity-70'
+                          : 'bg-[var(--color-secondary)]-600 text-white hover:bg-[var(--color-secondary)]-700'
+                        }`}
+                          disabled={!canManageUsers || isProtected}
                         >
                           Edit
                         </button>
-                      )}
                       {/* Delete button */}
                       <button
                         onClick={() => !isProtected && deleteUser(user.contactId)}
-                        disabled={isProtected}
+                        disabled={!canManageUsers || isProtected}
                         className={`px-2 py-1 text-sm rounded ${
-                          isProtected
+                          isProtected || !canManageUsers
                           ? 'bg-red-200 text-white cursor-not-allowed opacity-70'
                           : 'bg-red-600 text-white hover:bg-red-700'
                         }`}
@@ -336,7 +351,7 @@ export default function UserAccountsManager({ isAdmin }: { isAdmin: boolean }) {
               <h3 className="text-lg font-semibold">Add User</h3>
               <button
                 onClick={() => setShowAddForm(false)}
-                className="text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="focus:outline-none"
               >
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" className="w-6 h-6">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
