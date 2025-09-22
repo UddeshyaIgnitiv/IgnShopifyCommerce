@@ -636,7 +636,6 @@ export async function PUT(req: Request) {
         }
       }
     `;
-    console.log('Metafield updated for customerId:', targetCustomerId, 'to role:', role);
 
     const b2bRoleRes = await adminGraphql(UPDATE_B2B_ROLE, {
       customerId: targetCustomerId,
