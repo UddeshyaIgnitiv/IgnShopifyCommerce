@@ -405,7 +405,7 @@ export default function RegisterCompanyPage() {
           <div className="col-span-1 sm:col-span-2 mt-6 text-center">
             <button
               type="submit"
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg w-full sm:w-auto font-semibold hover:bg-blue-700 transition"
+              className="text-white px-6 py-3 rounded-lg w-full sm:w-auto font-semibold hover:transition"
             >
               Register Company
             </button>
