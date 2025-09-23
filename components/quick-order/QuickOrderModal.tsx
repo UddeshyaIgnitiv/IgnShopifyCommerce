@@ -13,12 +13,19 @@ export default function QuickOrderModal({ onClose }: QuickOrderModalProps) {
     useEffect(() => {
         const handler = () => onClose();
         window.addEventListener('quick-order-close', handler);
-        return () => window.removeEventListener('quick-order-close', handler);
+
+        // Prevent body scroll
+        document.body.style.overflow = 'hidden';
+
+        return () => {
+            window.removeEventListener('quick-order-close', handler);
+            // Restore body scroll
+            document.body.style.overflow = '';
+        };
     }, [onClose]);
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm">
-            {/* <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto relative p-6"> */}
             <div className="bg-white rounded-2xl shadow-2xl w-[85vw] h-[85vh] relative p-6 overflow-hidden flex flex-col">
                 {/* Close Button */}
                 <button
