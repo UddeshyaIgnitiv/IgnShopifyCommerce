@@ -47,6 +47,7 @@ export default function CartModal() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [showPopup, setShowPopup] = useState(false);
   const [popupMessage, setPopupMessage] = useState('');
+  const [quoteNote, setQuoteNote] = useState('');
 
   const quantityRef = useRef(cart?.totalQuantity);
 
@@ -339,9 +340,60 @@ export default function CartModal() {
                   <form action={handleCheckout}>
                     <CheckoutButton disabled={roleLoading || isNonPurchaser} />
                   </form>
-                  <form>
-                    <RequestQuoteButton disabled={roleLoading || isNonPurchaser} setMessage={setMessage} />
-                  </form>
+                  <div className="quoteNote mt-4 space-y-4">
+                    {/* Message Box */}
+                    {message && (
+                      <div
+                        className={clsx(
+                          'relative flex items-start gap-3 rounded-lg px-4 py-3 text-sm shadow-sm border',
+                          message.type === 'error'
+                            ? 'bg-red-50 border-red-200 text-red-800 dark:bg-red-900/20 dark:text-red-300'
+                            : 'bg-green-50 border-green-200 text-green-800 dark:bg-green-900/20 dark:text-green-300'
+                        )}
+                        role="alert"
+                      >
+                        {/* Text */}
+                        <span className="flex-1">{message.text}</span>
+
+                        {/* Dismiss button */}
+                        <button
+                          onClick={() => setMessage(null)}
+                          className="ml-auto p-1 rounded hover:bg-gray-200 dark:hover:bg-gray-700 transition"
+                          aria-label="Close message"
+                          type="button"
+                        >
+                          <XMarkIcon className="h-5 w-5 text-current" aria-hidden="true" />
+                        </button>
+                      </div>
+                    )}
+                    {/* Textarea */}
+                    <div>
+                      <label
+                        htmlFor="quote-note"
+                        className="block text-sm font-medium text-gray-800 dark:text-gray-200"
+                      >
+                        Add a note to your quote:
+                      </label>
+                      <textarea
+                        id="quote-note"
+                        name="note"
+                        rows={2}
+                        value={quoteNote}
+                        onChange={(e) => setQuoteNote(e.target.value)}
+                        className="mt-2 block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-all duration-150"
+                        placeholder="E.g., Add extra details here..."
+                      />
+                    </div>
+
+                    {/* Quote Request Button */}
+                    <RequestQuoteButton
+                      disabled={roleLoading || isNonPurchaser}
+                      setMessage={setMessage}
+                      note={quoteNote}
+                      setQuoteNote={setQuoteNote}
+                    />
+                  </div>
+
                 </div>
               )}
             </Dialog.Panel>
@@ -385,34 +437,43 @@ function CheckoutButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-function RequestQuoteButton({ disabled, setMessage }: { disabled?: boolean, setMessage: (msg: { type: 'success' | 'error'; text: string } | null) => void; }) {
-  const { pending } = useFormStatus();
+function RequestQuoteButton({ disabled, setMessage, note, setQuoteNote }: { disabled?: boolean, setMessage: (msg: { type: 'success' | 'error'; text: string } | null) => void; note: string; setQuoteNote: React.Dispatch<React.SetStateAction<string>>;}) {
+  const [loading, setLoading] = useState(false);
 
-  async function handleAction(formData: FormData) {
+  async function handleAction() {
+    setLoading(true);
     try {
-      await requestQuote(formData); // run server action
+      const formData = new FormData();
+      formData.append('note', note);
+
+      await requestQuote(formData);
+      
       setMessage({ type: 'success', text: 'Your quote request has been submitted' });
+      setQuoteNote('');
       setTimeout(() => setMessage(null), 20000);
     } catch (err: any) {
-      setMessage({ type: 'error', text: 'Something went wrong while creating quote' });
+      const errorText = err?.message || 'Something went wrong while creating quote';
+      setMessage({ type: 'error', text: errorText });
       console.log("Quote error", err);
       setTimeout(() => setMessage(null), 20000);
+    } finally {
+      setLoading(false);
     }
   }
 
   return (
     <button
-      formAction={handleAction}
+      onClick={handleAction}
       className={clsx(
         'mt-2 block w-full rounded-full p-3 text-center text-sm font-medium transition-all duration-200 ease-in-out',
-        pending
+        loading || disabled
           ? 'bg-gray-600 text-white opacity-50 cursor-not-allowed pointer-events-none'
           : 'bg-gray-600 text-white opacity-90 hover:opacity-100 cursor-pointer'
       )}
-      type="submit"
-      disabled={pending}
+      type="button"
+      disabled={loading || disabled}
     >
-      {pending ? <LoadingDots className="bg-white" /> : 'Request Quote'}
+      {loading ? <LoadingDots className="bg-white" /> : 'Request Quote'}
     </button>
   );
 }

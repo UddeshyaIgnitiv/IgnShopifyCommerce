@@ -246,10 +246,13 @@ export async function requestQuote(_formData: FormData): Promise<NextResponse | 
   }).filter(Boolean); 
 
     //console.log('🧱 Line items for draft order:', lineItems);
+  const note = _formData.get('note')?.toString().slice(0, 500);
+  if (!note) throw new Error("Please include a note with your quote request.");
+
 
   const draftOrderInput: any = {
     lineItems,
-    note: 'Requested quote from storefront',
+    note: note || 'Requested quote from storefront',
     tags: ['request_quote'],
     email: customerEmail,
   };
