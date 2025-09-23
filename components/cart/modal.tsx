@@ -342,7 +342,7 @@ export default function CartModal() {
                   </form>
                   <div className="quoteNote mt-4 space-y-4">
                     {/* Message Box */}
-                    {message && message.type === 'error' && (
+                    {message && (
                       <div
                         className={clsx(
                           'relative flex items-start gap-3 rounded-lg px-4 py-3 text-sm shadow-sm border',
