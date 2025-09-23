@@ -341,7 +341,7 @@ export default function CartModal() {
                     <CheckoutButton disabled={roleLoading || isNonPurchaser} />
                   </form>
                   <div className="quoteNote mt-4 space-y-4">
-                    {/* Message Box */}
+                  {/* Message Box */}
                     {message && (
                       <div
                         className={clsx(
