@@ -501,7 +501,7 @@ export async function getCollectionProducts({
     }
 
     // 1. Fetch admin products (with contextual prices)
-    const adminProducts = await getAdminProducts({ companyLocationId });
+    const adminProducts = await getAdminProducts({ companyLocationId }); //Need to use storefront API's later as this is hampering page load
 
     // console.log("Admin Products: ", adminProducts);
 

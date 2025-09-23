@@ -1,5 +1,6 @@
 'use client';
 
+import { XMarkIcon } from '@heroicons/react/24/outline';
 import { ProductOption } from 'app/types/product';
 import { useCart } from 'components/cart/cart-context';
 import { debounce } from 'lib/utils/debounce';
@@ -129,40 +130,33 @@ export default function ProductSearch({ onSelectAction }: ProductSearchProps) {
       <h2 className="text-xl font-semibold mb-4">Search and Select Product</h2>
 
       {/* Search box */}
-      <input
-        type="text"
-        value={searchTerm}
-        onChange={handleInputChange}
-        placeholder="Search for a product..."
-        className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
+      <div className="relative w-full">
+        <input
+          type="text"
+          value={searchTerm}
+          onChange={handleInputChange}
+          placeholder="Search for a product..."
+          className="w-full border border-gray-300 p-3 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 pr-10"
+        />
+        {searchTerm && (
+          <button
+            type="button"
+            onClick={() => {
+              setSearchTerm('');
+              setProducts([]);
+            }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 bg-transparent text-teal hover:text-cyan"
+            aria-label="Clear search"
+          >
+            <XMarkIcon className="w-6 h-6" />
+          </button>
+        )}
+      </div>
+
 
       {loading && <p className="mt-2 text-sm text-gray-500">Loading...</p>}
 
-      {/* Search results */}
-      {/* <ul className="border mt-2 rounded-md max-h-48 overflow-y-auto shadow-sm bg-white">
-        {products.map((product) => (
-          <li
-            key={product.variantId}
-            onClick={() => handleSelect(product)}
-            className="cursor-pointer p-3 hover:bg-blue-100 border-b last:border-b-0 flex items-center gap-3"
-          >
-            {product.imageSrc && (
-              <img
-                src={product.imageSrc}
-                alt={product.imageAlt || product.title}
-                className="w-10 h-10 object-cover rounded"
-              />
-            )}
-            <span>{product.title}</span>
-          </li>
-        ))}
-        {!loading && products.length === 0 && searchTerm.length > 0 && (
-          <li className="p-3 text-gray-500 italic">No products found</li>
-        )}
-      </ul> */}
-
-      <ul className="border mt-2 rounded-md max-h-48 overflow-y-auto shadow-sm bg-white">
+      <ul className="border mt-2 rounded-md max-h-40 overflow-y-auto shadow-sm bg-white">
         {products.map((product) => (
           <li
             key={product.variantId}

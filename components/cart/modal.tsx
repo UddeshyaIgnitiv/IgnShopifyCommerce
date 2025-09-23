@@ -368,12 +368,12 @@ export default function CartModal() {
                     )}
                     {/* Textarea */}
                     <div>
-                      <label
+                      {/* <label
                         htmlFor="quote-note"
                         className="block text-sm font-medium text-gray-800 dark:text-gray-200"
                       >
                         Add a note to your quote:
-                      </label>
+                      </label> */}
                       <textarea
                         id="quote-note"
                         name="note"
@@ -381,7 +381,7 @@ export default function CartModal() {
                         value={quoteNote}
                         onChange={(e) => setQuoteNote(e.target.value)}
                         className="mt-2 block w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-black px-3 py-2 text-sm text-gray-900 dark:text-white shadow-sm focus:border-teal-500 focus:ring-teal-500 transition-all duration-150"
-                        placeholder="E.g., Add extra details here..."
+                        placeholder="Add a note to your quote."
                       />
                     </div>
 
@@ -437,7 +437,7 @@ function CheckoutButton({ disabled }: { disabled?: boolean }) {
   );
 }
 
-function RequestQuoteButton({ disabled, setMessage, note, setQuoteNote }: { disabled?: boolean, setMessage: (msg: { type: 'success' | 'error'; text: string } | null) => void; note: string; setQuoteNote: React.Dispatch<React.SetStateAction<string>>;}) {
+function RequestQuoteButton({ disabled, setMessage, note, setQuoteNote }: { disabled?: boolean, setMessage: (msg: { type: 'success' | 'error'; text: string } | null) => void; note: string; setQuoteNote: React.Dispatch<React.SetStateAction<string>>; }) {
   const [loading, setLoading] = useState(false);
 
   async function handleAction() {
@@ -449,7 +449,7 @@ function RequestQuoteButton({ disabled, setMessage, note, setQuoteNote }: { disa
       formData.append('note', noteToSend);
 
       await requestQuote(formData);
-      
+
       setMessage({ type: 'success', text: 'Your quote request has been submitted' });
       setQuoteNote('');
       setTimeout(() => setMessage(null), 20000);
@@ -469,8 +469,8 @@ function RequestQuoteButton({ disabled, setMessage, note, setQuoteNote }: { disa
       className={clsx(
         'mt-2 block w-full rounded-full p-3 text-center text-sm font-medium transition-all duration-200 ease-in-out',
         loading || disabled
-          ? 'bg-gray-600 text-white opacity-50 cursor-not-allowed pointer-events-none'
-          : 'bg-gray-600 text-white opacity-90 hover:opacity-100 cursor-pointer'
+          ? 'text-white opacity-50 cursor-not-allowed pointer-events-none'
+          : 'text-white cursor-pointer'
       )}
       type="button"
       disabled={loading || disabled}
