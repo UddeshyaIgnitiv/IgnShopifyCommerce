@@ -342,7 +342,7 @@ export default function CartModal() {
                   </form>
                   <div className="quoteNote mt-4 space-y-4">
                     {/* Message Box */}
-                    {message && (
+                    {message && message.type === 'error' && (
                       <div
                         className={clsx(
                           'relative flex items-start gap-3 rounded-lg px-4 py-3 text-sm shadow-sm border',
@@ -450,7 +450,7 @@ function RequestQuoteButton({ disabled, setMessage, note, setQuoteNote }: { disa
 
       await requestQuote(formData);
       
-      //setMessage({ type: 'success', text: 'Your quote request has been submitted' });
+      setMessage({ type: 'success', text: 'Your quote request has been submitted' });
       setQuoteNote('');
       setTimeout(() => setMessage(null), 20000);
     } catch (err: any) {
