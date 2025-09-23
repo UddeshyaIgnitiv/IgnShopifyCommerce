@@ -444,7 +444,9 @@ function RequestQuoteButton({ disabled, setMessage, note, setQuoteNote }: { disa
     setLoading(true);
     try {
       const formData = new FormData();
-      formData.append('note', note);
+      const defaultNote = "Requested quote from storefront";
+      const noteToSend = note.trim() || defaultNote;
+      formData.append('note', noteToSend);
 
       await requestQuote(formData);
       
