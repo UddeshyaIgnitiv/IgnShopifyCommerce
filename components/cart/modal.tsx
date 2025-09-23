@@ -450,7 +450,7 @@ function RequestQuoteButton({ disabled, setMessage, note, setQuoteNote }: { disa
 
       await requestQuote(formData);
       
-      setMessage({ type: 'success', text: 'Your quote request has been submitted' });
+      //setMessage({ type: 'success', text: 'Your quote request has been submitted' });
       setQuoteNote('');
       setTimeout(() => setMessage(null), 20000);
     } catch (err: any) {
