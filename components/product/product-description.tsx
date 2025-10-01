@@ -17,7 +17,7 @@ export function ProductDescription({ product, inventoryResult, pricelistID }: { 
   }
 
   const price = selectedVariant?.price ?? product.priceRange.maxVariantPrice;
-  //console.log('💰 Displayed Price:', price);
+  //console.log('Displayed Price:', price);
 
   return (
     <>
