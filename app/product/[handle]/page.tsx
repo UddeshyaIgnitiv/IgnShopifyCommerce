@@ -19,6 +19,11 @@ function extractIdFromGid(gid: string): string {
   return gid.split("/").pop() || "";
 }
 
+const locationMap = [
+  { id: '10', name: 'Main Warehouse' },
+  { id: '15', name: 'Marlboro Warehouse' },
+  { id: '40', name: 'NJ Warehouse' },
+];
 
 export async function generateMetadata(props: {
   params: Promise<{ handle: string }>;
@@ -85,6 +90,21 @@ export async function generateMetadata(props: {
 export default async function ProductPage(props: { params: Promise<{ handle: string }> }) {
   const params = await props.params;
   const { handle } = await params;
+
+  const cookieStore = await cookies();
+  const selectedInventoryCookie = cookieStore.get('selectedInventory')?.value;
+
+  let warehouseCode = "10"; // default
+  if (selectedInventoryCookie) {
+    try {
+      const parsed = JSON.parse(selectedInventoryCookie);
+      const mapped = locationMap.find(loc => loc.name === parsed.locationName);
+      if (mapped) warehouseCode = mapped.id;
+    } catch (e) {
+      console.error("Error parsing selectedInventory cookie:", e);
+    }
+  }
+
   const companyLocationId = (await cookies()).get('companyLocationId')?.value;
   const shopify_id_token = (await cookies()).get('shopify_id_token')?.value;
   const company_id = (await cookies()).get('company_id')?.value || "";
@@ -180,10 +200,10 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
   let customPrices;
   try {
     // Extract SKUs from the product variants.
-     const skus = product.tags[0];
+    const skus = product.tags[0];
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL;
     if (!baseUrl) {
-        throw new Error("Missing NEXT_PUBLIC_SITE_URL environment variable.");
+      throw new Error("Missing NEXT_PUBLIC_SITE_URL environment variable.");
     }
     if (!external_company_id) {
       throw new Error("Missing external_company_id cookie.");
@@ -192,6 +212,9 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
       throw new Error("Missing externalID cookie.");
     }
     // Call your custom API endpoint from the server component.
+
+    // console.log("This is warehouseCode in api ---> ", warehouseCode)
+
     const response = await fetch(`${baseUrl}/api/customprice`, {
       method: 'POST',
       headers: {
@@ -203,7 +226,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
           {
             "quantity_ordered": 0,
             "sku": skus,
-            "warehouse_code": "10"
+            "warehouse_code": warehouseCode
           }
         ],
         "ship_to_code": externalID
@@ -238,12 +261,12 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
   const CatalogID = CompanyCatalog?.data.company.locations.edges[0].node.catalogs.edges[0].node.id
 
   let pricelistID;
-  if(customPrices){
+  if (customPrices) {
     console.log("customPrices pdp", customPrices.prices[0].price.toFixed(2));
   }
-  
 
-  if (customPrices && customPrices.prices[0].price > 0 && adminProduct?.priceRange.minVariantPrice.amount !== customPrices.prices[0].price.toFixed(2) && customPrices.prices.length > 0 ) {
+
+  if (customPrices && customPrices.prices[0].price > 0 && adminProduct?.priceRange.minVariantPrice.amount !== customPrices.prices[0].price.toFixed(2) && customPrices.prices.length > 0) {
     // Find the custom price for this product.
     // Adjust the matching key if required.
     // console.log("customPrices", customPrices);
@@ -279,7 +302,7 @@ export default async function ProductPage(props: { params: Promise<{ handle: str
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      ownerId: product.variants[0]? product.variants[0].id : '',
+      ownerId: product.variants[0] ? product.variants[0].id : '',
     }),
   });
 
